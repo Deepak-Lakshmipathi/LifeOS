@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Databases (regenerable from seed)
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets — never commit
+.env
+.*_token
+
+# Local harness/editor config
+.claude/settings.local.json
+.idea/
+.gradle/
+local.properties
+
+# OS
+Thumbs.db
+.DS_Store

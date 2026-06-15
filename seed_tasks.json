@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "generated_at": "2026-04-21",
+  "note": "Seed data for the tasks app. Format is stable; see tasks_project_scope.md §16. Priority: 0=none, 1=low, 2=med, 3=high.",
+  "projects": [
+    {
+      "name": "🚀 Startup — OPC & Company Setup",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 1,
+      "scope_doc": "deepak_startup_roadmap_agent_brief.md",
+      "tasks": [
+        {"title": "Finalize company structure (OPC vs Pvt Ltd)", "done_when": "Written decision in ~/docs/startup/structure.md with rationale", "priority": 3, "tags": "active"},
+        {"title": "Reserve company name with MCA", "done_when": "Name approval letter received and filed", "priority": 3, "tags": "active"},
+        {"title": "Complete registration filing", "done_when": "Certificate of Incorporation PDF saved", "priority": 3, "tags": "active"},
+        {"title": "Open current account in company name", "done_when": "Bank account number + welcome kit in hand", "priority": 2, "tags": "active"},
+        {"title": "Set up bookkeeping (Zoho Books or similar)", "done_when": "First dummy transaction recorded and reconciled", "priority": 2, "tags": "active"},
+        {"title": "GST registration (if turnover requires)", "done_when": "GSTIN issued and saved", "priority": 1, "tags": "active"},
+        {"title": "Draft founder agreement / MOA clarity", "done_when": "Signed PDF in records folder", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🧵 Streetweave",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 2,
+      "scope_doc": "streetweave_project_scope.md",
+      "tasks": [
+        {"title": "Complete v1 product scope document review", "done_when": "Scope doc marked final with version tag", "priority": 3, "tags": "active"},
+        {"title": "Validate problem with 5 target users", "done_when": "5 interview notes filed with direct quotes", "priority": 3, "tags": "active"},
+        {"title": "Build MVP prototype", "done_when": "Clickable prototype or early working version exists", "priority": 3, "tags": "active"},
+        {"title": "First landing page live", "done_when": "Public URL collecting signups", "priority": 2, "tags": "active"},
+        {"title": "Pilot with first 10 users", "done_when": "10 users onboarded with usage data tracked", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🛠️ Job Tracker App",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 3,
+      "scope_doc": "Job_tracker_project_scope.md",
+      "tasks": [
+        {"title": "Build Claude skill for career-ops: link → resume tailoring", "done_when": "Skill takes a job URL and produces tailored resume file", "priority": 3, "tags": "active"},
+        {"title": "Add ad-hoc job submission to tracker dashboard", "done_when": "UI accepts job URL, runs through pipeline, appears in tracker", "priority": 3, "tags": "active"},
+        {"title": "Wire 'Apply' button to trigger career-ops skill", "done_when": "Clicking Apply runs the skill in background and marks status", "priority": 2, "tags": "active"},
+        {"title": "Build follow-up email Claude skill", "done_when": "Skill generates follow-up email draft given job context", "priority": 2, "tags": "active"},
+        {"title": "Build hiring-manager outreach Claude skill", "done_when": "Skill generates cold outreach given company + role", "priority": 2, "tags": "active"},
+        {"title": "Use tracker to apply to 20 jobs", "done_when": "20 applications logged via tracker", "priority": 3, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🧩 Life Hub App",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 4,
+      "tasks": [
+        {"title": "Draft life_hub_project_scope.md", "done_when": "Scope doc exists matching other project scope docs in format", "priority": 2, "tags": "active"},
+        {"title": "Design card grid layout (each card = a dashboard)", "done_when": "Wireframe or working layout with all 8 card slots", "priority": 2, "tags": "active"},
+        {"title": "Wire Wishlist card", "done_when": "Card renders live data from wishlist DB", "priority": 1, "tags": "active"},
+        {"title": "Wire Job Tracker card", "done_when": "Card renders live data from job tracker", "priority": 1, "tags": "active"},
+        {"title": "Wire Workout card", "done_when": "Card renders live data from workout DB", "priority": 1, "tags": "active"},
+        {"title": "Wire Company Setup status card", "done_when": "Card reflects Startup project progress", "priority": 1, "tags": "active"},
+        {"title": "Wire Game Development card", "done_when": "Card renders Scoundrel + other game progress", "priority": 1, "tags": "active"},
+        {"title": "Wire Finances tracking card", "done_when": "Card renders live finance data", "priority": 1, "tags": "active"},
+        {"title": "Wire Movies/TV/Games Review card", "done_when": "Card renders reviews DB", "priority": 1, "tags": "active"},
+        {"title": "Wire Calorie Tracker card", "done_when": "Card renders calorie DB", "priority": 1, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🃏 Scoundrel Roguelike",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 5,
+      "scope_doc": "Scoundrel_Roguelike_PROJECT_SCOPE.md",
+      "tasks": [
+        {"title": "Complete core game loop", "done_when": "Game is playable start-to-finish without crashes", "priority": 3, "tags": "active"},
+        {"title": "Implement full card set", "done_when": "All designed cards playable in game", "priority": 2, "tags": "active"},
+        {"title": "Polish pass: audio + visual feedback", "done_when": "Every action has audio + visual response", "priority": 2, "tags": "active"},
+        {"title": "Playtesting with 5 external testers", "done_when": "5 feedback sessions completed and notes filed", "priority": 2, "tags": "active"},
+        {"title": "Ship to itch.io", "done_when": "Public itch.io page with downloadable build", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🤖 AI Monthly Builds",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 6,
+      "tasks": [
+        {"title": "Set up monthly AI idea cadence", "done_when": "Calendar recurring 'pick idea on 1st, ship by month-end' event exists", "priority": 2, "tags": "active"},
+        {"title": "Subscribe to 3 high-signal AI newsletters", "done_when": "3 newsletters confirmed in inbox", "priority": 1, "tags": "active"},
+        {"title": "Build and ship Idea #1", "done_when": "Working demo published or shared with user", "priority": 2, "tags": "active"},
+        {"title": "Build and ship Idea #2", "done_when": "Working demo published or shared", "priority": 1, "tags": "weekly"},
+        {"title": "Build and ship Idea #3", "done_when": "Working demo published or shared", "priority": 1, "tags": "weekly"}
+      ]
+    },
+    {
+      "name": "⚙️ Tasks App Build",
+      "folder": "Building Things",
+      "color": "#6E6FEA",
+      "sort_order": 7,
+      "scope_doc": "tasks_project_scope.md",
+      "tasks": [
+        {"title": "Ship v0.1 MVP", "done_when": "All v0.1 checklist items in §12 ticked", "priority": 3, "tags": "active"},
+        {"title": "Ship v0.2 Quality of Life", "done_when": "All v0.2 checklist items in §12 ticked", "priority": 2, "tags": "active"},
+        {"title": "Ship v0.3 Android Read", "done_when": "All v0.3 checklist items in §12 ticked", "priority": 2, "tags": "active"},
+        {"title": "Ship v0.4 Android Widget", "done_when": "All v0.4 checklist items in §12 ticked", "priority": 2, "tags": "active"},
+        {"title": "Ship v0.5 Seed Import", "done_when": "cli.py seed imports seed_tasks.json idempotently", "priority": 2, "tags": "active"},
+        {"title": "Ship v1.0 Polish", "done_when": "All v1.0 checklist items in §12 ticked", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "💼 Job Hunt",
+      "folder": "Career",
+      "color": "#3B82F6",
+      "sort_order": 8,
+      "tasks": [
+        {"title": "Update resume master copy", "done_when": "Current resume reflects latest role, saved in Drive", "priority": 3, "tags": "active"},
+        {"title": "Update LinkedIn headline + About section", "done_when": "LinkedIn profile matches resume and reads well", "priority": 3, "tags": "active"},
+        {"title": "Define target role + 20 target companies", "done_when": "List saved with role criteria and company names", "priority": 3, "tags": "active"},
+        {"title": "Apply to 20 roles via Job Tracker", "done_when": "20 applications logged in tracker", "priority": 3, "tags": "active"},
+        {"title": "Complete mock interview rounds (technical + behavioral)", "done_when": "2 mock interviews done with feedback captured", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "📚 AI Certifications",
+      "folder": "Growth",
+      "color": "#10B981",
+      "sort_order": 9,
+      "tasks": [
+        {"title": "AI-900 Microsoft Fundamentals: study plan", "done_when": "Week-by-week plan to exam date saved", "priority": 2, "tags": "active"},
+        {"title": "AI-900: complete all practice exams", "done_when": "Passing scores on 2 consecutive practice exams", "priority": 2, "tags": "active"},
+        {"title": "AI-900: book and pass exam", "done_when": "Certificate issued", "priority": 2, "tags": "active"},
+        {"title": "AWS AI Practitioner: study plan", "done_when": "Week-by-week plan saved", "priority": 2, "tags": "active"},
+        {"title": "AWS AI Practitioner: complete practice exams", "done_when": "Passing scores on 2 consecutive practice exams", "priority": 2, "tags": "active"},
+        {"title": "AWS AI Practitioner: book and pass exam", "done_when": "Certificate issued", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🎨 Skills & Hobbies",
+      "folder": "Growth",
+      "color": "#10B981",
+      "sort_order": 10,
+      "tasks": [
+        {"title": "Game design: work through one foundational resource", "done_when": "Book or course completed with notes", "priority": 1, "tags": "active"},
+        {"title": "Digital art: 30-day daily sketch habit", "done_when": "30 dated sketches saved", "priority": 1, "tags": "active"},
+        {"title": "Game dev weekly practice session", "done_when": "Recurring weekly session has happened 4 weeks in a row", "priority": 1, "tags": "weekly"},
+        {"title": "Learn animation fundamentals", "done_when": "One short animated scene completed", "priority": 1, "tags": "long-term"},
+        {"title": "Find and join D&D group in Hyderabad", "done_when": "First session attended", "priority": 1, "tags": "active"},
+        {"title": "Read 6 books this year", "done_when": "6 books logged in reading tracker", "priority": 1, "tags": "long-term"},
+        {"title": "LeetCode: weekly problem habit", "done_when": "4 weeks with at least 1 problem solved each", "priority": 1, "tags": "weekly"},
+        {"title": "Learn guitar (long-term)", "done_when": "Can play one song start-to-finish", "priority": 0, "tags": "long-term"},
+        {"title": "Learn drums (long-term)", "done_when": "Can play one full song with basic beat", "priority": 0, "tags": "long-term"},
+        {"title": "Learn piano (long-term)", "done_when": "Can play one song hands-together", "priority": 0, "tags": "long-term"},
+        {"title": "Learn Japanese (long-term)", "done_when": "Reach N5 level competency", "priority": 0, "tags": "long-term"},
+        {"title": "Learn to farm: one container/balcony plant", "done_when": "One plant grown from seed to harvest", "priority": 0, "tags": "long-term"},
+        {"title": "Learn to fix cars: complete one mechanical basics course", "done_when": "Course finished with notes", "priority": 0, "tags": "long-term"},
+        {"title": "Kit car project", "done_when": "Defined project scope doc exists", "priority": 0, "tags": "long-term"}
+      ]
+    },
+    {
+      "name": "🤝 Networking",
+      "folder": "Growth",
+      "color": "#10B981",
+      "sort_order": 11,
+      "tasks": [
+        {"title": "Identify 20 people to network with (industry/role fit)", "done_when": "List of 20 saved with LinkedIn links", "priority": 2, "tags": "active"},
+        {"title": "Weekly networking slot: 1 cold email OR 1 coffee meet", "done_when": "4 weeks with one networking action each", "priority": 2, "tags": "weekly"},
+        {"title": "Reconnect with 5 former colleagues", "done_when": "5 conversations completed", "priority": 1, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🏠 Home — 57 Surya Enclave",
+      "folder": "Life Admin",
+      "color": "#F59E0B",
+      "sort_order": 12,
+      "tasks": [
+        {"title": "Clear up upstairs storage room", "done_when": "Room has clear floor + organized labeled boxes", "priority": 2, "tags": "active"},
+        {"title": "Sell or dispose of drum set", "done_when": "Drum set gone from house", "priority": 1, "tags": "active"},
+        {"title": "Sell or dispose of old table", "done_when": "Table gone from house", "priority": 1, "tags": "active"},
+        {"title": "Sell or dispose of cycling machine", "done_when": "Machine gone from house", "priority": 1, "tags": "active"},
+        {"title": "Sell or dispose of treadmill", "done_when": "Treadmill gone from house", "priority": 1, "tags": "active"},
+        {"title": "Parents' bathroom: walk-in shower retrofit", "done_when": "Shower installed and working", "priority": 2, "tags": "active"},
+        {"title": "Fix Seltos driver seat electric panel", "done_when": "All seat controls functional", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🏍️ Vehicles",
+      "folder": "Life Admin",
+      "color": "#F59E0B",
+      "sort_order": 13,
+      "tasks": [
+        {"title": "Decide: River Indie vs second-hand small car", "done_when": "Written decision with rationale + budget", "priority": 2, "tags": "active"},
+        {"title": "Test ride/drive shortlisted options", "done_when": "At least 2 vehicles test ridden/driven", "priority": 2, "tags": "active"},
+        {"title": "Purchase chosen vehicle", "done_when": "Registration + delivery completed", "priority": 2, "tags": "active"},
+        {"title": "Fix Royal Enfield", "done_when": "Bike starts reliably and is roadworthy", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "✈️ Travel",
+      "folder": "Life Admin",
+      "color": "#F59E0B",
+      "sort_order": 14,
+      "tasks": [
+        {"title": "Decide on next trip destination + dates", "done_when": "Destination and dates locked", "priority": 1, "tags": "active"},
+        {"title": "Set travel budget", "done_when": "Budget number agreed and saved", "priority": 1, "tags": "active"},
+        {"title": "Book flights + accommodation in advance", "done_when": "All bookings confirmed emails received", "priority": 1, "tags": "active"},
+        {"title": "Build rough itinerary", "done_when": "Day-by-day plan document exists", "priority": 1, "tags": "active"}
+      ]
+    },
+    {
+      "name": "💪 Fitness",
+      "folder": "Body & Mind",
+      "color": "#EF4444",
+      "sort_order": 15,
+      "tasks": [
+        {"title": "Compare 3 gyms near me (price, distance, equipment)", "done_when": "Comparison table with decision", "priority": 2, "tags": "active"},
+        {"title": "Start gym membership", "done_when": "Membership active and first visit done", "priority": 2, "tags": "active"},
+        {"title": "Design workout routine (≤2hr per session, specific goals)", "done_when": "Written routine with exercises, sets, reps", "priority": 2, "tags": "active"},
+        {"title": "Complete first 4 weeks of routine", "done_when": "16 workouts logged", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "🩺 Health Maintenance",
+      "folder": "Body & Mind",
+      "color": "#EF4444",
+      "sort_order": 16,
+      "tasks": [
+        {"title": "Metformin: daily intake habit", "done_when": "30 consecutive days tracked", "priority": 3, "tags": "active"},
+        {"title": "Blood sugar test (every 3 months)", "done_when": "Most recent test result on file, next scheduled", "priority": 3, "tags": "active"},
+        {"title": "Full blood panel (every 6 months)", "done_when": "Most recent panel on file, next scheduled", "priority": 3, "tags": "active"},
+        {"title": "Dental check-up (per dentist recommendation)", "done_when": "Checkup completed, next booked", "priority": 2, "tags": "active"},
+        {"title": "Colonoscopy (schedule per guidelines)", "done_when": "Scheduled OR completed with report on file", "priority": 2, "tags": "active"},
+        {"title": "Set up appropriate hair care routine", "done_when": "Products + cadence documented and in use 4 weeks", "priority": 1, "tags": "active"}
+      ]
+    },
+    {
+      "name": "📈 Investing Setup",
+      "folder": "Finance",
+      "color": "#14B8A6",
+      "sort_order": 17,
+      "tasks": [
+        {"title": "Open demat + trading account", "done_when": "Account active, login working", "priority": 2, "tags": "active"},
+        {"title": "Complete KYC + all paperwork", "done_when": "All required docs uploaded and verified", "priority": 2, "tags": "active"},
+        {"title": "Fund account with initial investment amount", "done_when": "Funds reflected in account", "priority": 2, "tags": "active"},
+        {"title": "Weekly markets learning slot (1 hour)", "done_when": "4 consecutive weeks with session completed", "priority": 1, "tags": "weekly"},
+        {"title": "Make first investment (defined strategy)", "done_when": "First trade executed per written strategy", "priority": 2, "tags": "active"}
+      ]
+    },
+    {
+      "name": "💍 Engagement & Romance",
+      "folder": "Relationship",
+      "color": "#EC4899",
+      "sort_order": 18,
+      "tasks": [
+        {"title": "Research ring price ranges + designs", "done_when": "Document with 3+ options in target price range", "priority": 2, "tags": "active"},
+        {"title": "Scout 3 engagement spots in Hyderabad", "done_when": "List of 3 visited or shortlisted with notes", "priority": 2, "tags": "active"},
+        {"title": "Choose and purchase ring", "done_when": "Ring in hand", "priority": 3, "tags": "active"},
+        {"title": "Plan and execute the proposal", "done_when": "Proposal happened", "priority": 3, "tags": "active"},
+        {"title": "Ongoing: small romantic gestures (flowers, surprises)", "done_when": "Done consistently — this is a recurring habit, never 'complete'", "priority": 2, "tags": "weekly,active"}
+      ]
+    }
+  ]
+}
