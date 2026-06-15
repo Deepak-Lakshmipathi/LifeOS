@@ -23,3 +23,6 @@ local.properties
 # OS
 Thumbs.db
 .DS_Store
+
+# afk-pipeline intermediate issue bodies (canonical = GitHub issues)
+afk-pipeline-out/_*

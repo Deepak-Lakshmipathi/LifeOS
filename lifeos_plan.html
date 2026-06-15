@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeOS — Build Plan</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --card:#ffffff; --ink:#1d1d1f; --sub:#6e6e73;
+    --line:#e5e5ea; --accent:#6e6fea; --red:#ea5e6e; --green:#6eea9a;
+    --yellow:#eaea6e; --orange:#ea8e6e; --radius:22px;
+    --shadow:0 1px 3px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.06);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Inter,system-ui,sans-serif;
+    --mono:"SF Mono",ui-monospace,"Cascadia Code",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#000;--card:#1c1c1e;--ink:#f5f5f7;--sub:#98989d;--line:#2c2c2e;
+      --shadow:0 1px 3px rgba(0,0,0,.4),0 12px 40px rgba(0,0,0,.5);}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased;padding:0 0 120px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 22px}
+  header{text-align:center;padding:96px 22px 56px}
+  header .eyebrow{font-size:13px;letter-spacing:.4px;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin-bottom:14px}
+  header h1{font-size:clamp(44px,8vw,76px);font-weight:700;letter-spacing:-.03em;
+    background:linear-gradient(135deg,var(--accent),var(--red));
+    -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.02}
+  header p{font-size:21px;color:var(--sub);max-width:600px;margin:22px auto 0;font-weight:400}
+  .pill{display:inline-block;margin-top:26px;font-size:13px;color:var(--sub);
+    background:var(--card);border:1px solid var(--line);padding:8px 16px;border-radius:100px}
+  section{margin-top:64px}
+  h2{font-size:14px;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);
+    font-weight:600;margin-bottom:22px;padding-left:4px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:30px 32px;margin-bottom:18px;border:.5px solid var(--line)}
+  .card h3{font-size:22px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+  .card .role{font-size:13px;color:var(--accent);font-weight:600;margin-bottom:16px}
+  .card p{color:var(--ink);font-size:16px;margin-bottom:10px}
+  .card .verdict{margin-top:14px;padding-top:14px;border-top:.5px solid var(--line);
+    font-size:14px;color:var(--sub)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:680px){.grid{grid-template-columns:1fr}}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .tag{display:inline-block;font-size:11px;font-family:var(--mono);text-transform:uppercase;
+    letter-spacing:.4px;padding:3px 9px;border-radius:7px;background:var(--bg);
+    color:var(--sub);margin:2px 4px 2px 0;border:.5px solid var(--line)}
+  .ruling{background:linear-gradient(135deg,rgba(110,111,234,.08),rgba(234,94,110,.06));
+    border:1px solid rgba(110,111,234,.2)}
+  ul.clean{list-style:none}
+  ul.clean li{padding:10px 0 10px 28px;position:relative;border-bottom:.5px solid var(--line);font-size:16px}
+  ul.clean li:last-child{border-bottom:0}
+  ul.clean li::before{content:"";position:absolute;left:4px;top:17px;width:7px;height:7px;
+    border-radius:50%;background:var(--accent)}
+  ul.out li::before{background:var(--red)}
+  ul.in li::before{background:var(--green)}
+  .stack-row{display:flex;justify-content:space-between;align-items:center;
+    padding:14px 0;border-bottom:.5px solid var(--line);gap:16px}
+  .stack-row:last-child{border-bottom:0}
+  .stack-row .k{font-weight:600;font-size:16px;white-space:nowrap}
+  .stack-row .v{color:var(--sub);font-size:15px;text-align:right}
+  code{font-family:var(--mono);font-size:13px;background:var(--bg);padding:2px 7px;border-radius:6px}
+  pre{background:var(--ink);color:#f5f5f7;border-radius:18px;padding:26px;overflow-x:auto;
+    font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  pre .c{color:#8b8b95}
+  .prompt-wrap{position:relative}
+  .copy{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);color:#fff;
+    border:0;border-radius:9px;padding:8px 14px;font-size:13px;font-family:var(--font);
+    cursor:pointer;backdrop-filter:blur(8px)}
+  .copy:active{transform:scale(.96)}
+  .phase{display:flex;gap:16px;align-items:flex-start;padding:18px 0;border-bottom:.5px solid var(--line)}
+  .phase:last-child{border-bottom:0}
+  .phase .n{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--accent);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px}
+  .phase .b h4{font-size:17px;font-weight:600;margin-bottom:3px}
+  .phase .b p{font-size:14px;color:var(--sub)}
+  footer{text-align:center;color:var(--sub);font-size:13px;margin-top:72px}
+  /* phone mockup */
+  .mock{max-width:300px;margin:0 auto;background:var(--card);border-radius:34px;
+    border:.5px solid var(--line);box-shadow:var(--shadow);padding:18px 16px;overflow:hidden}
+  .mock .time{font-size:34px;font-weight:700;letter-spacing:-.02em;margin-bottom:2px}
+  .mock .day{color:var(--sub);font-size:14px;margin-bottom:20px}
+  .mock .sec{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);margin:16px 0 8px}
+  .mock .task{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:.5px solid var(--line)}
+  .mock .task:last-child{border-bottom:0}
+  .mock .circ{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto}
+  .mock .task .t{flex:1;font-size:15px}
+  .mock .task .pd{width:8px;height:8px;border-radius:50%}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Coordinator Verdict · 4-Agent Debate</div>
+  <h1>LifeOS</h1>
+  <p>A calm, Apple-grade place to keep track of everything you want — running offline on your phone and your laptop.</p>
+  <div class="pill">PWA · Local-first · React + TypeScript · Semi-offline sync</div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <h2>The Question</h2>
+    <div class="card">
+      <p>One user. ~17 projects across 7 life domains, each task carrying a <code>done_when</code>, a priority, and tags. Build a <strong>simple, elegant, Apple-feel</strong> personal tracker that works <strong>semi-offline on Android + Windows</strong>. Four specialist agents debated. Coordinator ruled below.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The Panel — Positions</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>The Architect</h3>
+        <div class="role">Stack &amp; sync</div>
+        <p>Tauri (React + Rust) for one codebase, SQLite local, Git-backed sync (local commit → push to private repo). Lamport clock for conflicts; one-device-at-a-time until proven.</p>
+        <div class="verdict">Strong on durability. Heavy: Rust + Tauri-Android raises the floor for a solo+AI builder.</div>
+      </div>
+      <div class="card">
+        <h3>The Interaction Designer</h3>
+        <div class="role">Apple-feel UX</div>
+        <p>Kill the grid. Home = a <strong>Today / overdue priority timeline</strong> grouped by domain. SF type, generous whitespace, priority = a single colored dot, tags on-demand. Signature detail: spring-physics drag with haptic bounce.</p>
+        <div class="verdict">Adopted. Focus over dashboard. Grid demoted to a browse view.</div>
+      </div>
+      <div class="card">
+        <h3>The Data Modeler</h3>
+        <div class="role">Schema</div>
+        <p>Three entities: <strong>Task</strong> (with a <code>cadence</code> field), <strong>Project</strong>, <strong>RecurringCompletionLog</strong>. Habits are not a separate type — just a cadence + completion log. UUID + updated_at + soft-delete for clean merges.</p>
+        <div class="verdict">Adopted whole. Lean, sync-friendly, captures habits without bloat.</div>
+      </div>
+      <div class="card">
+        <h3>The Minimalist PM</h3>
+        <div class="role">Scope &amp; survival</div>
+        <p>Core job: add a task, check it off, see the 3 things to do today. Apps die when servant becomes secretary. Cut sync, dashboards, analytics from v1. Done = used daily for 14 days.</p>
+        <div class="verdict">Adopted as the discipline. One concession: cross-device is a hard user requirement, so sync is deferred — not cut.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Coordinator Ruling</h2>
+    <div class="card ruling">
+      <p><strong>PWA, not Tauri.</strong> An installable PWA runs on Windows (Edge/Chrome) and Android from one web codebase — the fastest path for AI-assisted iteration and for the spring-animation polish that sells the Apple feel. Tauri+Rust is real power the project doesn't need yet.</p>
+      <p style="margin-top:12px"><strong>Sync, simplified.</strong> Reject Git/CRDT for v1. Every record carries <code>id (UUID)</code>, <code>updated_at</code>, <code>deleted_at</code>. Sync = push/pull the change-set with <strong>last-write-wins per record</strong>. v1 ships local-first with JSON export/import; v1.1 turns on a thin sync backend (Supabase or Turso/libSQL). "Semi-offline" satisfied, complexity contained.</p>
+      <p style="margin-top:12px"><strong>UX.</strong> Designer's Today-timeline is home. The card grid survives as a secondary <em>Domains</em> browse — your "Life Hub" — but cards show task progress only, no separate mini-trackers in v1.</p>
+      <p style="margin-top:12px"><strong>Schema.</strong> Modeler's 3 entities, verbatim. <strong>Scope.</strong> PM's ruthlessness, verbatim.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The Stack</h2>
+    <div class="card">
+      <div class="stack-row"><span class="k">Shell</span><span class="v">Installable PWA — one URL, installs on Windows &amp; Android</span></div>
+      <div class="stack-row"><span class="k">Framework</span><span class="v">Vite + React + TypeScript</span></div>
+      <div class="stack-row"><span class="k">UI</span><span class="v">Tailwind w/ Apple tokens · Framer Motion (springs) · SF-stack fonts</span></div>
+      <div class="stack-row"><span class="k">Local data</span><span class="v">IndexedDB via Dexie — reactive, offline by default</span></div>
+      <div class="stack-row"><span class="k">Offline</span><span class="v">vite-plugin-pwa (service worker, app cache)</span></div>
+      <div class="stack-row"><span class="k">Sync (v1.1)</span><span class="v">Supabase / Turso · last-write-wins on updated_at</span></div>
+      <div class="stack-row"><span class="k">Seed</span><span class="v">Import existing <code>seed_tasks_detailed.json</code> on first run</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The Schema</h2>
+    <div class="card">
+      <p style="margin-bottom:14px"><strong>Project</strong> — <code>id, name, folder, color, sort_order, created_at, updated_at, deleted_at</code></p>
+      <p style="margin-bottom:14px"><strong>Task</strong> — <code>id, project_id, folder, title, done_when, priority(0–3), cadence(once|daily|weekly|every-3mo|every-6mo), tags[], status(todo|doing|done), created_at, updated_at, completed_at, deleted_at</code></p>
+      <p><strong>RecurringCompletionLog</strong> — <code>id, task_id, completed_date, created_at</code></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The Feel — Home Screen</h2>
+    <div class="card">
+      <div class="mock">
+        <div class="time">Today</div>
+        <div class="day">Tuesday, 16 June</div>
+        <div class="sec">Building Things</div>
+        <div class="task"><div class="circ"></div><div class="t">Build MVP prototype</div><div class="pd" style="background:var(--red)"></div></div>
+        <div class="task"><div class="circ"></div><div class="t">Validate problem with 5 users</div><div class="pd" style="background:var(--red)"></div></div>
+        <div class="sec">Body &amp; Mind</div>
+        <div class="task"><div class="circ"></div><div class="t">Metformin <span class="tag">daily</span></div><div class="pd" style="background:var(--red)"></div></div>
+        <div class="sec">Career</div>
+        <div class="task"><div class="circ"></div><div class="t">Apply to 20 roles</div><div class="pd" style="background:var(--yellow)"></div></div>
+      </div>
+      <p style="text-align:center;color:var(--sub);font-size:14px;margin-top:20px">Tap the circle → haptic pop + a brief, restrained celebration. Tap the title → an upward sheet with title, priority, tags, and <code>done_when</code>. Empty day → "All clear today."</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Scope — v1</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 style="font-size:18px">Ships in v1</h3>
+        <ul class="clean in">
+          <li>Task + Project CRUD, local-first</li>
+          <li>Today timeline (priority + overdue, by domain)</li>
+          <li>Domains browse (card grid, progress only)</li>
+          <li>done_when, priority dot, tags</li>
+          <li>Cadence + completion log for habits</li>
+          <li>Seed import from JSON</li>
+          <li>JSON export / import (manual cross-device)</li>
+          <li>Installable PWA on Windows + Android</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="font-size:18px">Deferred / Out</h3>
+        <ul class="clean out">
+          <li>Live cloud sync → <strong>v1.1</strong></li>
+          <li>Mini-trackers (calories, workout, finance)</li>
+          <li>Analytics &amp; charts</li>
+          <li>Sub-tasks, dependencies, templates</li>
+          <li>Parsing done_when into structured criteria</li>
+          <li>Onboarding, settings, smart suggestions</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <p><strong>v1 done when:</strong> the builder uses it daily for 14 days, the Today view earns the first tap of the morning, and adding a task is faster than typing it into a notes file.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Build Order</h2>
+    <div class="card">
+      <div class="phase"><div class="n">1</div><div class="b"><h4>Skeleton</h4><p>Vite + React + TS + Tailwind + Dexie. Schema + seed import. Plain list that renders the 17 projects.</p></div></div>
+      <div class="phase"><div class="n">2</div><div class="b"><h4>Core loop</h4><p>Add / complete / edit task. Today view with priority sort. This is the whole product — make it feel instant.</p></div></div>
+      <div class="phase"><div class="n">3</div><div class="b"><h4>Apple polish</h4><p>SF type, whitespace, priority dots, completion sheet, Framer Motion springs + haptics on mobile.</p></div></div>
+      <div class="phase"><div class="n">4</div><div class="b"><h4>Habits + Domains</h4><p>Cadence field, completion log ("4 weeks running"), Domains card-grid browse.</p></div></div>
+      <div class="phase"><div class="n">5</div><div class="b"><h4>Ship it offline</h4><p>vite-plugin-pwa, install on Windows + Android, JSON export/import. Use it for 14 days before touching v1.1 sync.</p></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Starter Prompt — paste into a new session</h2>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="prompt-wrap">
+        <button class="copy" onclick="navigator.clipboard.writeText(document.getElementById('p').innerText);this.textContent='Copied'">Copy</button>
+        <pre id="p"><span class="c"># LifeOS — v1 build kickoff</span>
+
+Build LifeOS: a calm, Apple-feel personal life tracker for one user
+(me). Installable PWA that runs offline on Windows and Android.
+Local-first now; cross-device sync comes in v1.1.
+
+STACK
+- Vite + React + TypeScript, installable PWA (vite-plugin-pwa).
+- Tailwind with Apple-style tokens; Framer Motion for spring motion;
+  SF-stack system fonts. Light + dark.
+- IndexedDB via Dexie. No backend in v1.
+
+SCHEMA (UUID ids; updated_at + deleted_at on every record for future
+last-write-wins sync)
+- Project: id, name, folder, color, sort_order, created_at,
+  updated_at, deleted_at
+- Task: id, project_id, folder, title, done_when, priority (0-3),
+  cadence (once|daily|weekly|every-3mo|every-6mo), tags[],
+  status (todo|doing|done), created_at, updated_at, completed_at,
+  deleted_at
+- RecurringCompletionLog: id, task_id, completed_date, created_at
+
+SEED
+- On first run, import ./seed_tasks_detailed.json (folders -> projects
+  -> tasks). Idempotent. ~17 projects across 7 domains.
+
+UX (this is the product — make it feel effortless)
+- Home = "Today": tasks due/overdue + selected, grouped by domain,
+  sorted priority 3->0. Empty state: "All clear today."
+- Priority = one colored dot (0 gray,1 blue,2 yellow,3 red). No numbers.
+- Tap circle to complete: haptic pop (mobile) + brief restrained
+  celebration. Tap title -> upward sheet: title, priority, tags,
+  done_when.
+- Tags shown on demand, not cluttering the row.
+- Second view "Domains": card grid, one card per life domain, showing
+  task-progress only (no separate trackers in v1).
+- Habits: cadence field; completing a recurring task writes a
+  RecurringCompletionLog row; show streaks like "4 weeks running".
+
+SCOPE
+- IN: task/project CRUD, Today view, Domains grid, done_when, priority,
+  tags, cadence+streaks, seed import, JSON export/import, installable
+  offline PWA.
+- OUT (v1): live cloud sync, calorie/workout/finance mini-trackers,
+  analytics, sub-tasks, onboarding, settings.
+
+BUILD ORDER
+1 Skeleton: project + schema + seed import + plain list.
+2 Core loop: add/complete/edit + Today view. Make it instant.
+3 Apple polish: type, whitespace, dots, sheet, springs, haptics.
+4 Habits + Domains grid.
+5 PWA offline + install on Windows/Android + JSON export/import.
+
+DONE WHEN: I use it daily for 14 days, Today earns the morning's first
+tap, and adding a task beats typing it into a notes file.
+
+Start with step 1. Show me the running skeleton before polishing.</pre>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Synthesized from a 4-agent debate · Architect · Designer · Modeler · PM<br>
+    Coordinator ruling, LifeOS restart · 2026-06-16
+  </footer>
+
+</div>
+</body>
+</html>
