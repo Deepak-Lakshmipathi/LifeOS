@@ -1,28 +1,29 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-
-# Databases (regenerable from seed)
-*.db
-*.sqlite
-*.sqlite3
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
 
 # Secrets — never commit
 .env
+.env.*
 .*_token
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
 # Local harness/editor config
 .claude/settings.local.json
-.idea/
-.gradle/
-local.properties
-
-# OS
-Thumbs.db
-.DS_Store
 
 # afk-pipeline intermediate issue bodies (canonical = GitHub issues)
 afk-pipeline-out/_*
