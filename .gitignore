@@ -26,3 +26,8 @@ Thumbs.db
 
 # afk-pipeline intermediate issue bodies (canonical = GitHub issues)
 afk-pipeline-out/_*
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
