@@ -87,7 +87,7 @@ try {
   const context = await browser.newContext()
   const page = await context.newPage()
 
-  await page.goto(BASE_URL, { waitUntil: 'networkidle' })
+  await page.goto(BASE_URL, { waitUntil: 'load', timeout: 15_000 })
 
   // --- Audit 1: installable-manifest ---
   const manifestCheck = await page.evaluate(async (baseUrl) => {
@@ -148,7 +148,7 @@ try {
 
   // Reload to confirm the SW controls the page
   if (swCheck.pass) {
-    await page.reload({ waitUntil: 'networkidle' })
+    await page.reload({ waitUntil: 'load', timeout: 15_000 })
     const controlled = await page.evaluate(() => !!navigator.serviceWorker.controller)
     if (!controlled) {
       results.push({
