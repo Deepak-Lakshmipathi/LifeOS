@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LifeOS — Slice Backbone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { display: ['Sora','system-ui','sans-serif'], body: ['Inter','system-ui','sans-serif'] },
+    colors: {
+      gA:'#8b7df5', gB:'#38bdf8', gC:'#f472b6', gD:'#fbbf24', gE:'#34d399',
+      ink:'#e7e7f0', mute:'#9aa0b5'
+    }
+  }}
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  html,body{ background:#06060c; color:#e7e7f0; font-family:'Inter',sans-serif; }
+  body{ overflow-x:hidden; }
+  .font-display{ font-family:'Sora',sans-serif; }
+  /* aurora */
+  .aurora{ position:fixed; inset:-20% -10% auto -10%; height:140vh; z-index:0; pointer-events:none; filter:blur(80px); opacity:.55; }
+  .blob{ position:absolute; border-radius:50%; will-change:transform; mix-blend-mode:screen; }
+  .b1{ width:46vw; height:46vw; left:-6vw; top:-6vw; background:radial-gradient(circle at 30% 30%,#8b7df5,transparent 70%); }
+  .b2{ width:42vw; height:42vw; right:-4vw; top:4vw; background:radial-gradient(circle at 60% 40%,#38bdf8,transparent 70%); }
+  .b3{ width:40vw; height:40vw; left:24vw; top:34vh; background:radial-gradient(circle at 50% 50%,#f472b6,transparent 70%); }
+  .b4{ width:34vw; height:34vw; right:8vw; top:48vh; background:radial-gradient(circle at 50% 50%,#34d399,transparent 70%); }
+  /* glass */
+  .glass{ background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09);
+          backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%);
+          border-radius:24px; }
+  .glass-soft{ background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:18px; }
+  .reveal{ opacity:0; transform:translateY(34px); will-change:transform,opacity; }
+  .pill{ transition:all .25s ease; white-space:nowrap; }
+  .pill[data-active="true"]{ background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.25); }
+  .tab-section{ display:none; }
+  .tab-section.active{ display:block; }
+  .fluid-xl{ font-size:clamp(2.8rem,9vw,8.5rem); line-height:.92; letter-spacing:-.03em; }
+  .fluid-lg{ font-size:clamp(2rem,5.5vw,4.5rem); line-height:.98; letter-spacing:-.02em; }
+  .fluid-md{ font-size:clamp(1.4rem,3vw,2.4rem); line-height:1.05; letter-spacing:-.01em; }
+  .grad-text{ background:linear-gradient(100deg,#fff 10%,#bfb6ff 40%,#7fd8ff 70%,#ffc4e6 100%);
+              -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .chip{ font-size:.72rem; padding:.28rem .6rem; border-radius:999px; border:1px solid rgba(255,255,255,.14); }
+  .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  ::-webkit-scrollbar{ height:8px; width:8px; } ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.14); border-radius:8px; }
+  @media (prefers-reduced-motion:reduce){ .reveal{opacity:1!important; transform:none!important;} .blob{display:none;} }
+</style>
+</head>
+<body>
+
+<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+
+<!-- NAV -->
+<header class="fixed top-0 inset-x-0 z-50">
+  <div class="glass mx-3 mt-3 rounded-2xl px-4 py-2.5 flex items-center gap-4">
+    <button onclick="showTab('home')" class="font-display font-extrabold text-lg tracking-tight shrink-0">Life<span class="grad-text">OS</span></button>
+    <nav id="pills" class="flex items-center gap-2 overflow-x-auto py-1"></nav>
+  </div>
+</header>
+
+<main class="relative z-10 pt-28">
+
+  <!-- ============ HOME ============ -->
+  <section id="home" class="tab-section active">
+    <!-- HERO -->
+    <div class="max-w-6xl mx-auto px-5 pt-6 pb-20">
+      <p class="reveal chip inline-block text-mute mb-6">One software to rule them all</p>
+      <h1 class="reveal font-display font-extrabold fluid-xl grad-text">The LifeOS<br>Slice Roadmap</h1>
+      <p class="reveal text-mute text-lg md:text-xl max-w-2xl mt-7 leading-relaxed">
+        A single-user, Apple-feel life mirror. One source of truth — an <b class="text-ink">Obsidian vault</b> —
+        with three faces: a <b class="text-ink">PWA command center</b>, a <b class="text-ink">Telegram bot</b>, and Obsidian itself.
+        Built as <b class="text-ink">18 thin tracer-bullet slices</b>.
+      </p>
+      <div class="reveal flex flex-wrap gap-3 mt-9">
+        <div class="glass-soft px-5 py-3"><div class="text-3xl font-display font-bold">19</div><div class="text-xs text-mute">slices total</div></div>
+        <div class="glass-soft px-5 py-3"><div class="text-3xl font-display font-bold text-gE">2</div><div class="text-xs text-mute">shipped</div></div>
+        <div class="glass-soft px-5 py-3"><div class="text-3xl font-display font-bold text-gC">13</div><div class="text-xs text-mute">to MVP</div></div>
+        <div class="glass-soft px-5 py-3"><div class="text-3xl font-display font-bold text-gB">5</div><div class="text-xs text-mute">groups</div></div>
+      </div>
+    </div>
+
+    <!-- PROGRESS + CHARTS BENTO -->
+    <div class="max-w-6xl mx-auto px-5 pb-20">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="reveal glass p-6 md:row-span-2 flex flex-col">
+          <h3 class="font-display font-semibold text-xl mb-1">Build progress</h3>
+          <p class="text-mute text-sm mb-4">Slices 1–2 shipped. The rest planned.</p>
+          <div class="relative grow grid place-items-center min-h-[220px]">
+            <canvas id="donut"></canvas>
+            <div class="absolute text-center"><div class="text-4xl font-display font-bold">11%</div><div class="text-xs text-mute">2 / 19</div></div>
+          </div>
+        </div>
+        <div class="reveal glass p-6 md:col-span-2">
+          <h3 class="font-display font-semibold text-xl mb-1">Slices per group</h3>
+          <p class="text-mute text-sm mb-3">Where the work concentrates.</p>
+          <canvas id="bars" height="120"></canvas>
+        </div>
+        <div class="reveal glass p-6 md:col-span-2">
+          <h3 class="font-display font-semibold text-xl mb-3">The MVP line</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-3"><span class="chip text-gA shrink-0">A·B·C</span><span class="text-mute">S2–S13 — complete local dashboard. Ship & live on it.</span></div>
+            <div class="border-t border-dashed border-white/15 my-2"></div>
+            <div class="flex items-center gap-3"><span class="chip text-gD shrink-0">D</span><span class="text-mute">S14–S15 — Obsidian vault becomes the truth.</span></div>
+            <div class="flex items-center gap-3"><span class="chip text-gE shrink-0">E</span><span class="text-mute">S16–S19 — Telegram bot, the capture payoff.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROADMAP TIMELINE -->
+    <div class="max-w-6xl mx-auto px-5 pb-24">
+      <h2 class="reveal font-display font-bold fluid-md mb-2">The backbone</h2>
+      <p class="reveal text-mute mb-10">Five groups, top to bottom. Each card opens its full brief.</p>
+      <div id="roadmap" class="space-y-10"></div>
+    </div>
+  </section>
+
+  <!-- ============ SLICE SECTIONS (rendered) ============ -->
+  <div id="slices"></div>
+
+  <footer class="relative z-10 max-w-6xl mx-auto px-5 py-16 text-center text-mute text-sm">
+    LifeOS slice backbone · full briefs in <span class="mono text-ink">docs/slices/</span> · built for the afk-pipeline
+  </footer>
+</main>
+
+<script>
+/* ---------------- SLICE DATA ---------------- */
+const GROUPS = {
+  A:{name:'Grow the Task', color:'#8b7df5', cls:'gA'},
+  B:{name:'Daily Driver',  color:'#38bdf8', cls:'gB'},
+  C:{name:'The Skin',      color:'#f472b6', cls:'gC'},
+  D:{name:'The Vault',     color:'#fbbf24', cls:'gD'},
+  E:{name:'The Bot',       color:'#34d399', cls:'gE'},
+};
+const SHIPPED = { id:'S1', title:'Local-first task loop + PWA', group:'A', status:'shipped' };
+
+const SLICES = [
+  { id:'S2', g:'A', title:'Task gains done_when', depends:'S1', status:'shipped',
+    why:'A task’s real finish line — how you know it’s truly done — not just a checkbox. First step toward the vault shape. Shipped via PRs #11 (seam) + #12 (UI); seam decision in ADR-0003.',
+    layers:['UI','Model','Seam'],
+    scope:['Add optional done_when to Task','Set/edit on create and existing tasks','Render under the title, secondary'],
+    out:['Priority, project, domain','Styling overhaul'],
+    accept:['Persists across reload','Renders when present, hidden when absent','Editable; unit-tested seam add + update'],
+    files:['types/task.ts','sync/SyncProvider.ts','sync/LocalOnly.ts','components/AddTaskInput.tsx','components/TaskItem.tsx'] },
+
+  { id:'S3', g:'A', title:'Task gains priority (1–3)', depends:'S2', status:'planned',
+    why:'Priority is what the balance brain ranks on. Seed data already carries 1–3. Capture it so NOW has signal.',
+    layers:['UI','Model','Seam','Dexie'],
+    scope:['Add priority 1|2|3 (3 = highest)','Set on create + edit','Weight indicator on the card'],
+    out:['Ranking by priority (that’s S6)'],
+    accept:['Round-trips + persists','Dexie schema → v2 with index','Legacy tasks survive upgrade'],
+    files:['types/task.ts','db/LifeOSDb.ts','sync/LocalOnly.ts','components/AddTaskInput.tsx','components/TaskItem.tsx'] },
+
+  { id:'S4', g:'A', title:'Task belongs to a Project', depends:'S3', status:'planned',
+    why:'A Project is a named effort holding related Tasks. First structural shape of the vault (Project = note).',
+    layers:['UI','Model','Seam'],
+    scope:['Add project: string','Assign on create/edit (pick existing or new)','Group list by project; unparented → Inbox'],
+    out:['Domain (S5)','Project-as-entity / color'],
+    accept:['Assignable + persists','Groups under project headers','Pure groupByProject() helper tested'],
+    files:['types/task.ts','sync/LocalOnly.ts','hooks/useTasks.ts','components/TaskList.tsx'] },
+
+  { id:'S5', g:'A', title:'Domains + seed the vault shape', depends:'S4', status:'planned',
+    why:'A Domain holds Projects. Completes Domain → Project → Task. Seeds realistic data from seed_tasks_detailed.json.',
+    layers:['UI','Model','Data','Seam'],
+    scope:['Add domain (one of 7)','Default domain from chosen project','Idempotent seed importer (folder→domain)','Domain color palette constant'],
+    out:['NOW, warmth, glass, tab bar'],
+    accept:['Carries valid domain; persists','Seed imports all projects/tasks once, no dupes','Domain→Project→Task grouping; palette exported'],
+    files:['types/task.ts','data/seed.ts','data/domains.ts','sync/LocalOnly.ts','components/TaskList.tsx'] },
+
+  { id:'S6', g:'B', title:'NOW view (dumb brain)', depends:'S5', status:'planned',
+    why:'The command center answers “what do I do now?” Start with the simplest honest ranking: pure priority.',
+    layers:['UI','Logic','Seam'],
+    scope:['Ranked cross-domain queue of open tasks','priority desc, age asc; domain-blind','Top 3–5 live + folded Up next / Later'],
+    out:['Per-domain cap, coldest injection (S10)'],
+    accept:['Open tasks ranked; done excluded','Remainder folded with counts','Pure rankNow() unit-tested'],
+    files:['now/rankNow.ts','components/NowView.tsx','App.tsx'] },
+
+  { id:'S7', g:'B', title:'Tab bar navigation', depends:'S6', status:'planned',
+    why:'The app’s navigation shape: a bottom tab bar (Now / Domains / Pulse / +), thumb-reachable, Apple-native.',
+    layers:['UI','PWA'],
+    scope:['4 tabs: Now / Domains / Pulse / +','Now→NowView, Domains→grouped list, Pulse→placeholder, +→add','Safe-area aware, fixed bottom'],
+    out:['Warmth tiles, Pulse content, glass'],
+    accept:['Tabs switch views; active state visible','Now/Domains/+ functional, Pulse placeholder','Offline-safe; e2e navigates via tabs'],
+    files:['components/TabBar.tsx','App.tsx','e2e/pwa.spec.ts'] },
+
+  { id:'S8', g:'B', title:'Tap-the-dot complete + undo', depends:'S7', status:'planned',
+    why:'The action you do most. Tap ● → fill to ✓, ring pulse, card folds away, 3s Undo toast.',
+    layers:['UI','Hook'],
+    scope:['Tappable status dot on each card','fill→✓→fade→fold animation','Undo toast 3s; keep haptic'],
+    out:['completed_at + warmth (S9)','Glass styling'],
+    accept:['Tap completes with animation','Undo reverts; auto-dismiss after 3s','Works in NOW + Domains; reduced-motion respected'],
+    files:['components/TaskItem.tsx','components/UndoToast.tsx','hooks/useTasks.ts'] },
+
+  { id:'S9', g:'B', title:'Domain warmth (derived) + map', depends:'S8', status:'planned',
+    why:'The core loop: warmth is derived, never logged. Completing heats a domain; silence cools it. Feel neglect before it bites.',
+    layers:['UI','Logic','Model','Dexie'],
+    scope:['Set completed_at on done (clear on un-done)','Bucket warmth: hot/warm/ok/stale/cold','Domains tiles: glow + one word'],
+    out:['Using warmth to rank NOW (S10)'],
+    accept:['completed_at set/cleared correctly','Pure computeWarmth(now) tested across buckets','Coldest visibly frosted; Dexie upgrade safe'],
+    files:['types/task.ts','warmth/computeWarmth.ts','components/DomainsMap.tsx','data/domains.ts'] },
+
+  { id:'S10', g:'B', title:'Balance brain v1', depends:'S9', status:'planned', tag:'soul',
+    why:'The command center lives or dies on how NOW is chosen. Loud where it matters, but forces balance + rescues the cold.',
+    layers:['Logic','UI'],
+    scope:['Order by priority/age','Cap ~2 tasks per domain in live NOW','Inject 1 rescue from the coldest domain (❄)'],
+    out:['Momentum/streaks, nightly pick'],
+    accept:['Never exceeds per-domain cap','Exactly one cold-rescue when one exists','rankNow fully unit-tested incl. edges'],
+    files:['now/rankNow.ts','warmth/computeWarmth.ts','components/NowView.tsx'] },
+
+  { id:'S11', g:'C', title:'Glass / depth visual pass', depends:'S10', status:'planned',
+    why:'The chosen identity: visionOS-ish glass. Frosted panels, time-of-day gradient, domain-color glow. A list becomes a mirror.',
+    layers:['UI','CSS','PWA'],
+    scope:['Glass material + elevation system','Time-of-day gradient background','Domain glow on NOW cards + warmth tiles'],
+    out:['New features (purely visual)'],
+    accept:['Glass consistent across NOW/Domains/tabs/top bar','Gradient shifts by time of day','reduced-transparency fallback; Lighthouse PWA green'],
+    files:['tailwind.config.js','index.css','components/GlassPanel.tsx','data/domains.ts'] },
+
+  { id:'S12', g:'C', title:'Smart capture on the + tab', depends:'S11', status:'planned',
+    why:'Manual capture, fast and forgiving. One field parses #domain !priority “when…” /project into a structured task.',
+    layers:['UI','Logic','Seam'],
+    scope:['Parse inline tokens in any order','Live preview before commit','Unmatched → Inbox'],
+    out:['Voice/photo/Claude NLU (that’s the bot)'],
+    accept:['Pure parseCapture() tested, tokens any order','Unmatched domain → Inbox','Preview shows parsed result; commit persists'],
+    files:['capture/parseCapture.ts','components/CaptureSheet.tsx','components/TabBar.tsx'] },
+
+  { id:'S13', g:'C', title:'Pulse tab (light)', depends:'S12', status:'planned', tag:'MVP',
+    why:'A light reflection — not quantified-self. Done this week, per-domain warmth standings, a 7-day sparkline. All derived.',
+    layers:['UI','Logic'],
+    scope:['Done-this-week count','Per-domain warmth standings','7-day completions sparkline'],
+    out:['Streaks, goals, configurable ranges'],
+    accept:['All metrics derived + deterministic (injected now)','Replaces S7 placeholder; glass-styled','MVP complete — update KANBAN'],
+    files:['pulse/metrics.ts','components/PulseView.tsx','warmth/computeWarmth.ts'] },
+
+  { id:'S14', g:'D', title:'Obsidian vault read (VaultSync)', depends:'S13', status:'planned', tag:'gate',
+    why:'The promised source of truth. Swap the seam body to a VaultSync that reads the vault. Read-only first to de-risk parsing.',
+    layers:['Logic','Seam','Config'],
+    scope:['Parse Domain folders → Project notes → - [ ] lines + inline fields','VaultSync.list() via chosen transport','Feature-flag the provider swap'],
+    out:['Writing back (S15); the bot'],
+    accept:['ADR-0003 captures transport choice','parseVault/parseTaskLine fixture-tested','Flag on → dashboard reads a sample vault; LocalOnly default off'],
+    files:['sync/VaultSync.ts','vault/parseVault.ts','App.tsx','docs/adr/0003-vault-transport.md'] },
+
+  { id:'S15', g:'D', title:'Obsidian vault write', depends:'S14', status:'planned',
+    why:'Make the vault live: dashboard edits flow back to markdown. The box you check in the PWA is checked in Obsidian.',
+    layers:['Logic','Seam'],
+    scope:['toggleDone flips - [ ]/- [x]','add appends line; create note/folder; Inbox for unsorted','update rewrites inline fields; delete removes line'],
+    out:['Bot; heavy multi-writer conflict resolution'],
+    accept:['Toggle/add/update/delete mutate the right note safely','Round-trip property test passes','Unrelated note content preserved'],
+    files:['sync/VaultSync.ts','vault/parseVault.ts (serializer)','docs/adr/0003-vault-transport.md'] },
+
+  { id:'S16', g:'E', title:'Telegram bot — text → create', depends:'S15', status:'planned',
+    why:'Capture-from-anywhere. Text a task; Claude parses; it lands in the vault and appears on the dashboard.',
+    layers:['Service','Claude','Vault'],
+    scope:['Telegram bot service; owner chat-id only','Claude classifies create + extracts fields','Write via shared vault layer; reply ✓ summary'],
+    out:['update/delete (S17), voice (S18), photo (S19)'],
+    accept:['Only owner served; others ignored','Free text → correct task in vault → shows on dashboard','Structured Claude schema; secrets via env; mapping tested'],
+    files:['services/bot/ (handler, Claude client)','shared vault write module'] },
+
+  { id:'S17', g:'E', title:'Bot — confirm update/delete', depends:'S16', status:'planned',
+    why:'Edit conversationally, but safely. Trust model = confirm-destructive: create fires, update/delete echo then wait for yes.',
+    layers:['Service','Claude'],
+    scope:['Classify update/delete','Find target by fuzzy ref; disambiguate if many','Confirm before acting; apply via vault'],
+    out:['Voice (S18), photo (S19)'],
+    accept:['“mark/delete/change X” resolved to a task','Ambiguous → lists candidates','No mutation before confirm; create still instant'],
+    files:['services/bot/ (intent, convo state, task-search)'] },
+
+  { id:'S18', g:'E', title:'Bot — voice notes', depends:'S17', status:'planned',
+    why:'The most natural capture: talk from the car. Voice → transcript → the same intent pipeline.',
+    layers:['Service','STT'],
+    scope:['Download Telegram voice file','Transcribe to text','Feed transcript to existing intent pipeline'],
+    out:['Photo (S19); multi-language tuning'],
+    accept:['Voice downloaded, transcribed, routed','Create fires; update/delete still confirm','Reply shows transcript; transcription behind interface'],
+    files:['services/bot/ (voice handler, transcription adapter)'] },
+
+  { id:'S19', g:'E', title:'Bot — photos (vision)', depends:'S18', status:'planned', tag:'vision',
+    why:'The richest capture: photograph a whiteboard or receipt → tasks. Closes the “rule them all” loop.',
+    layers:['Service','Vision'],
+    scope:['Download image + caption','Claude vision → one or more tasks','Batch-confirm before creating'],
+    out:['Storing the image; PDF/multi-page'],
+    accept:['Image read into a structured task list','Multiple tasks confirmed before creation','Caption guides extraction; latest vision model; mocked test'],
+    files:['services/bot/ (photo handler, vision client)'] },
+];
+
+/* ---------------- RENDER ---------------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,c,h)=>{ const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+
+// pills
+const pills = $('#pills');
+pills.appendChild(mkPill('home','Home','#fff'));
+SLICES.forEach(s=> pills.appendChild(mkPill(s.id, s.id, GROUPS[s.g].color)));
+function mkPill(id,label,color){
+  const b = el('button','pill text-sm px-3 py-1.5 rounded-full border border-white/10 text-ink');
+  b.dataset.tab=id; b.dataset.active = id==='home';
+  b.innerHTML = `<span style="color:${color}">●</span> <span class="ml-1">${label}</span>`;
+  b.onclick = ()=>showTab(id);
+  return b;
+}
+
+// roadmap (home)
+const roadmap = $('#roadmap');
+Object.entries(GROUPS).forEach(([key,g])=>{
+  const items = SLICES.filter(s=>s.g===key);
+  const wrap = el('div','reveal');
+  wrap.innerHTML = `<div class="flex items-center gap-3 mb-4">
+      <span class="w-2.5 h-2.5 rounded-full" style="background:${g.color}"></span>
+      <h3 class="font-display font-semibold text-xl">Group ${key} · ${g.name}</h3>
+      <span class="text-xs text-mute">${items.length} slices</span></div>`;
+  const grid = el('div','grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3');
+  items.forEach(s=>{
+    const tag = s.tag? `<span class="chip ml-2" style="color:${g.color};border-color:${g.color}66">${s.tag.toUpperCase()}</span>`:'';
+    const card = el('button','glass-soft p-4 text-left hover:bg-white/10 transition');
+    card.onclick=()=>showTab(s.id);
+    card.innerHTML = `<div class="flex items-center justify-between mb-2">
+        <span class="mono text-sm" style="color:${g.color}">${s.id}</span>${tag}</div>
+      <div class="font-medium leading-snug">${s.title}</div>
+      <div class="text-xs text-mute mt-2 line-clamp-2">${s.why}</div>`;
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid); roadmap.appendChild(wrap);
+});
+
+// slice sections
+const slicesRoot = $('#slices');
+SLICES.forEach((s,i)=>{
+  const g = GROUPS[s.g];
+  const prev = SLICES[i-1], next = SLICES[i+1];
+  const list = (arr,mark)=> arr.map(x=>`<li class="flex gap-2.5 text-sm text-ink/90"><span style="color:${g.color}">${mark}</span><span>${x}</span></li>`).join('');
+  const layers = s.layers.map(l=>`<span class="chip text-mute">${l}</span>`).join('');
+  const files = s.files.map(f=>`<span class="mono text-xs glass-soft px-2.5 py-1">${f}</span>`).join(' ');
+  const tag = s.tag? `<span class="chip" style="color:${g.color};border-color:${g.color}66">${s.tag.toUpperCase()}</span>`:'';
+
+  const sec = el('section','tab-section'); sec.id=s.id;
+  sec.innerHTML = `
+   <div class="max-w-6xl mx-auto px-5 pb-24">
+    <div class="reveal flex items-center gap-3 pt-4 mb-5">
+      <span class="chip" style="color:${g.color};border-color:${g.color}66">Group ${s.g} · ${g.name}</span>
+      <span class="chip text-mute">depends → ${s.depends}</span>
+      <span class="chip text-mute">${s.status}</span>${tag}
+    </div>
+    <div class="reveal flex items-end gap-5 flex-wrap mb-3">
+      <div class="font-display font-extrabold fluid-lg" style="color:${g.color}">${s.id}</div>
+      <h2 class="font-display font-bold fluid-md text-ink">${s.title}</h2>
+    </div>
+    <p class="reveal text-mute text-lg max-w-3xl leading-relaxed mb-6">${s.why}</p>
+    <div class="reveal flex flex-wrap gap-2 mb-8">${layers}</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="reveal glass p-6"><h3 class="font-display font-semibold mb-3" style="color:${g.color}">Scope</h3><ul class="space-y-2.5">${list(s.scope,'▸')}</ul></div>
+      <div class="reveal glass p-6"><h3 class="font-display font-semibold mb-3 text-mute">Out of scope</h3><ul class="space-y-2.5">${list(s.out,'✕')}</ul></div>
+      <div class="reveal glass p-6"><h3 class="font-display font-semibold mb-3" style="color:${g.color}">Acceptance · done_when</h3><ul class="space-y-2.5">${list(s.accept,'✓')}</ul></div>
+      <div class="reveal glass p-6 md:col-span-3"><h3 class="font-display font-semibold mb-3 text-ink">Relevant files</h3><div class="flex flex-wrap gap-2">${files}</div></div>
+    </div>
+
+    <div class="reveal flex items-center justify-between mt-8 gap-3">
+      ${prev? `<button onclick="showTab('${prev.id}')" class="glass-soft px-4 py-2.5 text-sm hover:bg-white/10 transition">← ${prev.id} ${prev.title}</button>`:'<span></span>'}
+      ${next? `<button onclick="showTab('${next.id}')" class="glass-soft px-4 py-2.5 text-sm hover:bg-white/10 transition">${next.id} ${next.title} →</button>`:'<span></span>'}
+    </div>
+   </div>`;
+  slicesRoot.appendChild(sec);
+});
+
+/* ---------------- LENIS + GSAP ---------------- */
+const lenis = new Lenis({ duration:1.1, smoothWheel:true });
+function raf(t){ lenis.raf(t); requestAnimationFrame(raf); } requestAnimationFrame(raf);
+gsap.registerPlugin(ScrollTrigger);
+lenis.on('scroll', ScrollTrigger.update);
+
+// aurora drift (transform only)
+gsap.to('.b1',{xPercent:12,yPercent:10,duration:18,repeat:-1,yoyo:true,ease:'sine.inOut'});
+gsap.to('.b2',{xPercent:-14,yPercent:8,duration:22,repeat:-1,yoyo:true,ease:'sine.inOut'});
+gsap.to('.b3',{xPercent:10,yPercent:-12,duration:26,repeat:-1,yoyo:true,ease:'sine.inOut'});
+gsap.to('.b4',{xPercent:-8,yPercent:-10,duration:20,repeat:-1,yoyo:true,ease:'sine.inOut'});
+
+// home scroll reveals
+ScrollTrigger.batch('#home .reveal',{
+  start:'top 88%', once:true,
+  onEnter: b=> gsap.to(b,{opacity:1,y:0,duration:.8,stagger:.08,ease:'power3.out'})
+});
+
+/* ---------------- TABS ---------------- */
+let charted=false;
+function showTab(id){
+  document.querySelectorAll('.tab-section').forEach(s=> s.classList.toggle('active', s.id===id));
+  document.querySelectorAll('#pills .pill').forEach(p=> p.dataset.active = (p.dataset.tab===id));
+  lenis.scrollTo(0,{immediate:true});
+  ScrollTrigger.refresh();
+  if(id!=='home'){
+    const t = gsap.utils.toArray(`#${id} .reveal`);
+    gsap.set(t,{opacity:0,y:34});
+    gsap.to(t,{opacity:1,y:0,duration:.6,stagger:.06,ease:'power3.out',delay:.05});
+  } else if(!charted){ drawCharts(); charted=true; }
+}
+
+/* ---------------- CHARTS ---------------- */
+function drawCharts(){
+  Chart.defaults.color='#9aa0b5'; Chart.defaults.borderColor='rgba(255,255,255,.08)';
+  new Chart($('#donut'),{ type:'doughnut',
+    data:{ labels:['Shipped','Planned'], datasets:[{ data:[2,17],
+      backgroundColor:['#34d399','rgba(255,255,255,.10)'], borderWidth:0, cutout:'72%' }]},
+    options:{ plugins:{legend:{display:false}}, animation:{animateRotate:true,duration:1100} }});
+
+  const counts = ['A','B','C','D','E'].map(k=>SLICES.filter(s=>s.g===k).length);
+  new Chart($('#bars'),{ type:'bar',
+    data:{ labels:['A · Task','B · Driver','C · Skin','D · Vault','E · Bot'],
+      datasets:[{ data:counts, backgroundColor:['#8b7df5','#38bdf8','#f472b6','#fbbf24','#34d399'],
+        borderRadius:8, barThickness:34 }]},
+    options:{ indexAxis:'y', plugins:{legend:{display:false}},
+      scales:{ x:{ grid:{color:'rgba(255,255,255,.06)'}, ticks:{stepSize:1} }, y:{ grid:{display:false} } },
+      animation:{duration:1100,easing:'easeOutQuart'} }});
+}
+// draw on first paint (home is default)
+drawCharts(); charted=true;
+</script>
+</body>
+</html>
