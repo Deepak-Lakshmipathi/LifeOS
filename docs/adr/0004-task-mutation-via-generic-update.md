@@ -20,3 +20,7 @@ Field-growth slices extend the `input` shape and the `Pick` union — they do **
 Why this is worth recording: a future reader sees `add` taking an object and a single generic setter and will ask why. The answer is that the seam is deliberately mutation-generic so the S2–S9 field-growth sequence — and the eventual `VaultSync` body that replaces `LocalOnly` at the seam — never has to widen the seam's method surface, only its types.
 
 Trade-off accepted: one breaking change to `add` at S2 (five in-repo call sites, no external consumers) buys a method surface that stays fixed while the `Task` model keeps growing.
+
+## Addendum (S3) — clearing non-string fields
+
+`done_when` is unset by passing empty/whitespace (a string can be "emptied"). Numeric/enum fields like `priority` (S3) have no empty form, so the canonical **clear-to-unset signal is the key present in the patch with value `undefined`**: `update(id, { priority: undefined })` (guarded by `'priority' in patch`) **deletes** the key. The field is never stored as `null` or `undefined` — an unset task simply has no key, matching `done_when`'s "never store `''`". Omitting the key entirely still means "leave untouched". Future non-string field-slices follow this same pattern. The seam also **validates** an in-range value (`priority ∈ {1,2,3}`) and throws otherwise, mirroring the empty-title throw, because the seam is the trust boundary for non-typed callers (seed import, Telegram bot).
