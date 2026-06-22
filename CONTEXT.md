@@ -17,7 +17,7 @@ A named effort inside a Domain, holding related Tasks.
 _Avoid_: list, board
 
 **done_when**:
-A Task's written acceptance criterion — how the user knows it is truly finished.
+A Task's written acceptance criterion — how the user knows it is truly finished. A live optional field on the Task as of Slice S2; a single short line, not a notes field.
 _Avoid_: definition of done, acceptance, note
 
 **Slice**:
@@ -32,8 +32,8 @@ _Avoid_: sync layer, backend (the backend does not exist yet)
 
 - A **Domain** contains one or more **Projects** (out of Slice 1 scope)
 - A **Project** contains one or more **Tasks** (out of Slice 1 scope; Slice 1 Tasks are unparented)
-- A **Task** may carry a **done_when** (out of Slice 1 scope)
-- The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op
+- A **Task** may carry a **done_when** (added in Slice S2)
+- The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op; the seam mutates Tasks via `add(input)` + a generic `update(id, patch)` (ADR-0003)
 
 ## Flagged ambiguities
 
