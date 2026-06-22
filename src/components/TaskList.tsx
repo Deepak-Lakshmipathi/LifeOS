@@ -8,7 +8,7 @@ interface TaskListProps {
   onDelete: (id: string) => Promise<void>
   onUpdate: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>
   ) => Promise<void>
 }
 
