@@ -146,7 +146,7 @@ const SHIPPED = { id:'S1', title:'Local-first task loop + PWA', group:'A', statu
 
 const SLICES = [
   { id:'S2', g:'A', title:'Task gains done_when', depends:'S1', status:'shipped',
-    why:'A task’s real finish line — how you know it’s truly done — not just a checkbox. First step toward the vault shape. Shipped via PRs #11 (seam) + #12 (UI); seam decision in ADR-0003.',
+    why:'A task’s real finish line — how you know it’s truly done — not just a checkbox. First step toward the vault shape. Shipped via PRs #11 (seam) + #12 (UI); seam decision in ADR-0004.',
     layers:['UI','Model','Seam'],
     scope:['Add optional done_when to Task','Set/edit on create and existing tasks','Render under the title, secondary'],
     out:['Priority, project, domain','Styling overhaul'],
@@ -246,8 +246,8 @@ const SLICES = [
     layers:['Logic','Seam','Config'],
     scope:['Parse Domain folders → Project notes → - [ ] lines + inline fields','VaultSync.list() via chosen transport','Feature-flag the provider swap'],
     out:['Writing back (S15); the bot'],
-    accept:['ADR-0003 captures transport choice','parseVault/parseTaskLine fixture-tested','Flag on → dashboard reads a sample vault; LocalOnly default off'],
-    files:['sync/VaultSync.ts','vault/parseVault.ts','App.tsx','docs/adr/0003-vault-transport.md'] },
+    accept:['ADR-0005 captures transport choice','parseVault/parseTaskLine fixture-tested','Flag on → dashboard reads a sample vault; LocalOnly default off'],
+    files:['sync/VaultSync.ts','vault/parseVault.ts','App.tsx','docs/adr/0005-vault-transport.md'] },
 
   { id:'S15', g:'D', title:'Obsidian vault write', depends:'S14', status:'planned',
     why:'Make the vault live: dashboard edits flow back to markdown. The box you check in the PWA is checked in Obsidian.',
@@ -255,7 +255,7 @@ const SLICES = [
     scope:['toggleDone flips - [ ]/- [x]','add appends line; create note/folder; Inbox for unsorted','update rewrites inline fields; delete removes line'],
     out:['Bot; heavy multi-writer conflict resolution'],
     accept:['Toggle/add/update/delete mutate the right note safely','Round-trip property test passes','Unrelated note content preserved'],
-    files:['sync/VaultSync.ts','vault/parseVault.ts (serializer)','docs/adr/0003-vault-transport.md'] },
+    files:['sync/VaultSync.ts','vault/parseVault.ts (serializer)','docs/adr/0005-vault-transport.md'] },
 
   { id:'S16', g:'E', title:'Telegram bot — text → create', depends:'S15', status:'planned',
     why:'Capture-from-anywhere. Text a task; Claude parses; it lands in the vault and appears on the dashboard.',

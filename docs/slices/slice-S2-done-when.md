@@ -2,7 +2,7 @@
 
 > Read `docs/slices/README.md` + `CONTEXT.md` first. This is a tracer-bullet vertical slice.
 
-**Group:** A · **Depends on:** Slice 1 (shipped) · **Status:** ✅ shipped (PRs #11 seam + #12 UI; PRD #8, ADR-0003)
+**Group:** A · **Depends on:** Slice 1 (shipped) · **Status:** ✅ shipped (PRs #11 seam + #12 UI; PRD #8, ADR-0004)
 
 ## Why
 A Task's real finish line is its `done_when` — *how you know it's truly done* — not just a checkbox. It's core domain language (`CONTEXT.md`) and the first step toward the vault shape. Without it a task is just a title.

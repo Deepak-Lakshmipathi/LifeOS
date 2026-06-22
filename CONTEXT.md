@@ -33,7 +33,7 @@ _Avoid_: sync layer, backend (the backend does not exist yet)
 - A **Domain** contains one or more **Projects** (out of Slice 1 scope)
 - A **Project** contains one or more **Tasks** (out of Slice 1 scope; Slice 1 Tasks are unparented)
 - A **Task** may carry a **done_when** (added in Slice S2)
-- The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op; the seam mutates Tasks via `add(input)` + a generic `update(id, patch)` (ADR-0003)
+- The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op; the seam mutates Tasks via `add(input)` + a generic `update(id, patch)` (ADR-0004)
 
 ## Flagged ambiguities
 
