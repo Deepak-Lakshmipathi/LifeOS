@@ -26,8 +26,8 @@ describe('SyncProvider CRUD', () => {
   })
 
   it('create two tasks, read back, toggle one done, delete one — final state matches', async () => {
-    const t1 = await provider.add('Buy oat milk')
-    const t2 = await provider.add('Ship Slice A')
+    const t1 = await provider.add({ title: 'Buy oat milk' })
+    const t2 = await provider.add({ title: 'Ship Slice A' })
 
     const listAfterAdd = await provider.list()
     expect(listAfterAdd).toHaveLength(2)
@@ -87,13 +87,13 @@ describe('Input validation', () => {
   })
 
   it('rejects empty title — no task created', async () => {
-    await expect(provider.add('')).rejects.toThrow()
+    await expect(provider.add({ title: '' })).rejects.toThrow()
     const tasks = await provider.list()
     expect(tasks).toHaveLength(0)
   })
 
   it('rejects whitespace-only title — no task created', async () => {
-    await expect(provider.add('   ')).rejects.toThrow()
+    await expect(provider.add({ title: '   ' })).rejects.toThrow()
     const tasks = await provider.list()
     expect(tasks).toHaveLength(0)
   })
@@ -106,8 +106,8 @@ describe('Persistence', () => {
 
     // First "session" — add tasks
     const session1 = makeProvider()
-    await session1.add('Persist me')
-    await session1.add('Me too')
+    await session1.add({ title: 'Persist me' })
+    await session1.add({ title: 'Me too' })
 
     // Second "session" — new provider instance, same underlying DB name
     const session2 = makeProvider()
@@ -134,7 +134,7 @@ describe('Haptic feedback', () => {
       configurable: true,
     })
 
-    const task = await provider.add('Vibrate on complete')
+    const task = await provider.add({ title: 'Vibrate on complete' })
 
     // useTasks hook calls vibrate; test it at the hook level
     // Import the hook and call toggleDone through it
@@ -153,5 +153,103 @@ describe('Haptic feedback', () => {
     })
 
     expect(vibrateSpy).toHaveBeenCalledWith(10)
+  })
+})
+
+// ─── TEST 6: done_when seam — add + generic update (Slice S2a, ADR-0003) ─────
+describe('done_when seam', () => {
+  let provider: SyncProvider
+
+  beforeEach(async () => {
+    await Dexie.delete('LifeOS')
+    provider = makeProvider()
+  })
+
+  it('add without done_when — field absent on the stored task', async () => {
+    const t = await provider.add({ title: 'No criterion' })
+    expect(t.done_when).toBeUndefined()
+
+    const [stored] = await provider.list()
+    expect(stored.done_when).toBeUndefined()
+    expect('done_when' in stored).toBe(false)
+  })
+
+  it('add with done_when — round-trips via list', async () => {
+    await provider.add({ title: 'Ship it', done_when: 'PR merged to master' })
+
+    const [stored] = await provider.list()
+    expect(stored.done_when).toBe('PR merged to master')
+  })
+
+  it('add with whitespace done_when — treated as absent (never stored)', async () => {
+    const t = await provider.add({ title: 'Blank criterion', done_when: '   ' })
+    expect(t.done_when).toBeUndefined()
+
+    const [stored] = await provider.list()
+    expect('done_when' in stored).toBe(false)
+  })
+
+  it('update sets done_when on an existing task', async () => {
+    const t = await provider.add({ title: 'Needs criterion' })
+    const updated = await provider.update(t.id, { done_when: 'Tests green' })
+    expect(updated.done_when).toBe('Tests green')
+
+    const [stored] = await provider.list()
+    expect(stored.done_when).toBe('Tests green')
+  })
+
+  it('update with empty/whitespace done_when UNSETS the field (absent, not "")', async () => {
+    const t = await provider.add({ title: 'Has criterion', done_when: 'Originally set' })
+    expect(t.done_when).toBe('Originally set')
+
+    const updated = await provider.update(t.id, { done_when: '   ' })
+    expect(updated.done_when).toBeUndefined()
+    expect('done_when' in updated).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.done_when).toBeUndefined()
+    expect('done_when' in stored).toBe(false)
+  })
+
+  it('update can change the title', async () => {
+    const t = await provider.add({ title: 'Old title' })
+    const updated = await provider.update(t.id, { title: '  New title  ' })
+    expect(updated.title).toBe('New title')
+
+    const [stored] = await provider.list()
+    expect(stored.title).toBe('New title')
+  })
+
+  it('update with empty/whitespace title THROWS', async () => {
+    const t = await provider.add({ title: 'Keep me' })
+    await expect(provider.update(t.id, { title: '   ' })).rejects.toThrow()
+
+    // unchanged on disk
+    const [stored] = await provider.list()
+    expect(stored.title).toBe('Keep me')
+  })
+
+  it('update on unknown id THROWS "Task <id> not found"', async () => {
+    await expect(
+      provider.update('nonexistent-id', { done_when: 'whatever' }),
+    ).rejects.toThrow('Task nonexistent-id not found')
+  })
+
+  it('a key omitted from the patch leaves that field untouched (partial merge)', async () => {
+    const t = await provider.add({ title: 'Original', done_when: 'Original criterion' })
+
+    // patch only the title — done_when must survive untouched
+    const updated = await provider.update(t.id, { title: 'Renamed' })
+    expect(updated.title).toBe('Renamed')
+    expect(updated.done_when).toBe('Original criterion')
+
+    const [stored] = await provider.list()
+    expect(stored.title).toBe('Renamed')
+    expect(stored.done_when).toBe('Original criterion')
+
+    // patch only done_when — title must survive untouched
+    const updated2 = await provider.update(t.id, { done_when: 'New criterion' })
+    expect(updated2.title).toBe('Renamed')
+    expect(updated2.done_when).toBe('New criterion')
   })
 })

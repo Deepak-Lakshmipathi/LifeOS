@@ -5,7 +5,11 @@ import type { SyncProvider } from '../sync/SyncProvider'
 export interface UseTasksResult {
   tasks: Task[]
   loading: boolean
-  addTask: (title: string) => Promise<void>
+  addTask: (input: { title: string; done_when?: string }) => Promise<void>
+  updateTask: (
+    id: string,
+    patch: Partial<Pick<Task, 'title' | 'done_when'>>
+  ) => Promise<void>
   toggleDone: (id: string) => Promise<void>
   deleteTask: (id: string) => Promise<void>
 }
@@ -27,10 +31,18 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   }, [provider])
 
   const addTask = useCallback(
-    async (title: string) => {
-      const trimmed = title.trim()
+    async (input: { title: string; done_when?: string }) => {
+      const trimmed = input.title.trim()
       if (!trimmed) return
-      await provider.add(trimmed)
+      await provider.add({ title: trimmed, done_when: input.done_when })
+      await refresh()
+    },
+    [provider, refresh]
+  )
+
+  const updateTask = useCallback(
+    async (id: string, patch: Partial<Pick<Task, 'title' | 'done_when'>>) => {
+      await provider.update(id, patch)
       await refresh()
     },
     [provider, refresh]
@@ -56,5 +68,5 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
     [provider, refresh]
   )
 
-  return { tasks, loading, addTask, toggleDone, deleteTask }
+  return { tasks, loading, addTask, updateTask, toggleDone, deleteTask }
 }
