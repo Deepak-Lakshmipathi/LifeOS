@@ -9,11 +9,18 @@ import { db } from '../db/LifeOSDb'
 import type { Task } from '../types'
 import type { SyncProvider } from './SyncProvider'
 
+/** Allowed priority values; anything outside this set is rejected. */
+const VALID_PRIORITIES = new Set<number>([1, 2, 3])
+
 export class LocalOnly implements SyncProvider {
-  async add(input: { title: string; done_when?: string }): Promise<Task> {
+  async add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }): Promise<Task> {
     const trimmed = input.title.trim()
     if (!trimmed) {
       throw new Error('Task title must not be empty or whitespace.')
+    }
+    // Validate priority before writing anything (ADR-0004).
+    if (input.priority !== undefined && !VALID_PRIORITIES.has(input.priority)) {
+      throw new Error('Task priority must be 1, 2, or 3.')
     }
     const task: Task = {
       id: uuidv4(),
@@ -26,16 +33,25 @@ export class LocalOnly implements SyncProvider {
     if (doneWhen) {
       task.done_when = doneWhen
     }
+    // Only persist priority when explicitly provided (never store undefined).
+    if (input.priority !== undefined) {
+      task.priority = input.priority
+    }
     await db.tasks.add(task)
     return task
   }
 
   async update(
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when'>>,
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>,
   ): Promise<Task> {
     const task = await db.tasks.get(id)
     if (!task) throw new Error(`Task ${id} not found`)
+
+    // Validate priority before mutating anything (ADR-0004).
+    if ('priority' in patch && patch.priority !== undefined && !VALID_PRIORITIES.has(patch.priority)) {
+      throw new Error('Task priority must be 1, 2, or 3.')
+    }
 
     const updated: Task = { ...task }
 
@@ -54,6 +70,15 @@ export class LocalOnly implements SyncProvider {
       } else {
         // Empty/whitespace unsets the field — never store ''.
         delete updated.done_when
+      }
+    }
+
+    if ('priority' in patch) {
+      if (patch.priority !== undefined) {
+        updated.priority = patch.priority
+      } else {
+        // `priority: undefined` in patch explicitly clears the field.
+        delete updated.priority
       }
     }
 

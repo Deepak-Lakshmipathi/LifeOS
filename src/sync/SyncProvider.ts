@@ -10,23 +10,26 @@ export interface SyncProvider {
   /**
    * Add a new task atomically with its initial fields. Returns the persisted task.
    * `done_when` is optional; empty/whitespace is treated as absent.
+   * `priority` is optional; when present must be 1, 2, or 3 (3 = highest).
    */
-  add(input: { title: string; done_when?: string }): Promise<Task>
+  add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }): Promise<Task>
 
   /**
-   * The ONE generic field setter (ADR-0003). Applies a partial patch to the
+   * The ONE generic field setter (ADR-0004). Applies a partial patch to the
    * task and returns it. Later slices widen the patch's value types rather
    * than adding new mutation methods.
    *
    * Semantics:
    * - a key omitted from the patch leaves that field untouched (partial merge);
    * - empty/whitespace `done_when` UNSETS the field (never stores '');
+   * - `priority` present with value `undefined` CLEARS the field (never stores null/undefined);
    * - empty/whitespace `title` throws;
+   * - out-of-range `priority` (not 1, 2, or 3) throws;
    * - unknown id throws.
    */
   update(
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when'>>,
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>,
   ): Promise<Task>
 
   /** Return all tasks, newest first. */

@@ -253,3 +253,159 @@ describe('done_when seam', () => {
     expect(updated2.done_when).toBe('New criterion')
   })
 })
+
+// ─── TEST 7: priority seam (Slice S3a, ADR-0004) ─────────────────────────────
+describe('priority seam', () => {
+  let provider: SyncProvider
+
+  beforeEach(async () => {
+    await Dexie.delete('LifeOS')
+    provider = makeProvider()
+  })
+
+  it('add without priority — field ABSENT on stored task', async () => {
+    const t = await provider.add({ title: 'No priority' })
+    expect(t.priority).toBeUndefined()
+    expect('priority' in t).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBeUndefined()
+    expect('priority' in stored).toBe(false)
+  })
+
+  it('add with priority 3 — round-trips via list', async () => {
+    await provider.add({ title: 'High priority', priority: 3 })
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(3)
+  })
+
+  it('add with priority 1 — round-trips via list', async () => {
+    await provider.add({ title: 'Low priority', priority: 1 })
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(1)
+  })
+
+  it('add with priority 2 — round-trips via list', async () => {
+    await provider.add({ title: 'Medium priority', priority: 2 })
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(2)
+  })
+
+  it('update sets priority on an existing task', async () => {
+    const t = await provider.add({ title: 'Needs priority' })
+    const updated = await provider.update(t.id, { priority: 2 })
+    expect(updated.priority).toBe(2)
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(2)
+  })
+
+  it('update changes existing priority', async () => {
+    const t = await provider.add({ title: 'Change priority', priority: 1 })
+    const updated = await provider.update(t.id, { priority: 3 })
+    expect(updated.priority).toBe(3)
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(3)
+  })
+
+  it('update with priority: undefined CLEARS the field (absent after reload)', async () => {
+    const t = await provider.add({ title: 'Has priority', priority: 2 })
+    expect(t.priority).toBe(2)
+
+    const updated = await provider.update(t.id, { priority: undefined })
+    expect(updated.priority).toBeUndefined()
+    expect('priority' in updated).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBeUndefined()
+    expect('priority' in stored).toBe(false)
+  })
+
+  it('update omitting priority leaves it untouched (partial merge)', async () => {
+    const t = await provider.add({ title: 'Keep priority', priority: 3 })
+
+    // patch only title — priority must survive
+    const updated = await provider.update(t.id, { title: 'Renamed' })
+    expect(updated.title).toBe('Renamed')
+    expect(updated.priority).toBe(3)
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(3)
+  })
+
+  it('add rejects out-of-range priority 0 — no record written', async () => {
+    // priority 0 is not in {1,2,3}
+    await expect(
+      provider.add({ title: 'Bad priority', priority: 0 as unknown as 1 }),
+    ).rejects.toThrow('Task priority must be 1, 2, or 3.')
+    const tasks = await provider.list()
+    expect(tasks).toHaveLength(0)
+  })
+
+  it('add rejects out-of-range priority 4 — no record written', async () => {
+    await expect(
+      provider.add({ title: 'Bad priority', priority: 4 as unknown as 1 }),
+    ).rejects.toThrow('Task priority must be 1, 2, or 3.')
+    const tasks = await provider.list()
+    expect(tasks).toHaveLength(0)
+  })
+
+  it('add rejects non-integer priority 2.5 — no record written', async () => {
+    await expect(
+      provider.add({ title: 'Bad priority', priority: 2.5 as unknown as 1 }),
+    ).rejects.toThrow('Task priority must be 1, 2, or 3.')
+    const tasks = await provider.list()
+    expect(tasks).toHaveLength(0)
+  })
+
+  it('update rejects out-of-range priority 0 — record unchanged', async () => {
+    const t = await provider.add({ title: 'Keep me', priority: 2 })
+    await expect(
+      provider.update(t.id, { priority: 0 as unknown as 1 }),
+    ).rejects.toThrow('Task priority must be 1, 2, or 3.')
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(2)
+  })
+
+  it('update rejects out-of-range priority 4 — record unchanged', async () => {
+    const t = await provider.add({ title: 'Keep me', priority: 1 })
+    await expect(
+      provider.update(t.id, { priority: 4 as unknown as 3 }),
+    ).rejects.toThrow('Task priority must be 1, 2, or 3.')
+
+    const [stored] = await provider.list()
+    expect(stored.priority).toBe(1)
+  })
+})
+
+// ─── TEST 8: migration — v1 rows load correctly through v2 LocalOnly ──────────
+describe('priority migration — v1 rows survive Dexie v2 upgrade', () => {
+  it('a record written via raw Dexie v1 loads without priority through LocalOnly (v2)', async () => {
+    // Phase 1: write a row via a raw Dexie at schema version 1 only.
+    // This simulates a pre-S3a row on disk.
+    await Dexie.delete('LifeOS')
+
+    const rawDb = new Dexie('LifeOS')
+    rawDb.version(1).stores({ tasks: 'id, created_at, done' })
+    await rawDb.table('tasks').add({
+      id: 'legacy-001',
+      title: 'Legacy task',
+      done: false,
+      created_at: 1000,
+    })
+    rawDb.close()
+
+    // Phase 2: open through LocalOnly (which uses LifeOSDb at version 2).
+    // The schema upgrade adds the priority index but does NOT backfill rows.
+    const provider = makeProvider()
+    const tasks = await provider.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0].id).toBe('legacy-001')
+    expect(tasks[0].title).toBe('Legacy task')
+    expect(tasks[0].priority).toBeUndefined()
+    expect('priority' in tasks[0]).toBe(false)
+  })
+})

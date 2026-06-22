@@ -14,6 +14,12 @@ class LifeOSDatabase extends Dexie {
     this.version(1).stores({
       tasks: 'id, created_at, done',
     })
+    // v2: adds `priority` index. No upgrade()/backfill — legacy rows have no
+    // `priority` key and simply fall out of the priority index. They continue
+    // to load correctly via get() and orderBy('created_at').
+    this.version(2).stores({
+      tasks: 'id, created_at, done, priority',
+    })
   }
 }
 

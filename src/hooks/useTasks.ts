@@ -5,10 +5,10 @@ import type { SyncProvider } from '../sync/SyncProvider'
 export interface UseTasksResult {
   tasks: Task[]
   loading: boolean
-  addTask: (input: { title: string; done_when?: string }) => Promise<void>
+  addTask: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }) => Promise<void>
   updateTask: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>
   ) => Promise<void>
   toggleDone: (id: string) => Promise<void>
   deleteTask: (id: string) => Promise<void>
@@ -31,17 +31,17 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   }, [provider])
 
   const addTask = useCallback(
-    async (input: { title: string; done_when?: string }) => {
+    async (input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }) => {
       const trimmed = input.title.trim()
       if (!trimmed) return
-      await provider.add({ title: trimmed, done_when: input.done_when })
+      await provider.add({ title: trimmed, done_when: input.done_when, priority: input.priority })
       await refresh()
     },
     [provider, refresh]
   )
 
   const updateTask = useCallback(
-    async (id: string, patch: Partial<Pick<Task, 'title' | 'done_when'>>) => {
+    async (id: string, patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>) => {
       await provider.update(id, patch)
       await refresh()
     },
