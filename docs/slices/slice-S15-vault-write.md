@@ -34,7 +34,7 @@ Make the vault the *live* source of truth: dashboard edits flow back to markdown
 - [ ] Seam discipline intact; flag-gated; MVP `LocalOnly` unaffected when off.
 
 ## Relevant files
-`src/sync/VaultSync.ts`, `src/vault/parseVault.ts` (+ serializer + tests), transport adapter (write), ADR-0003 (update with write/conflict notes).
+`src/sync/VaultSync.ts`, `src/vault/parseVault.ts` (+ serializer + tests), transport adapter (write), ADR-0005 (update with write/conflict notes).
 
 ## Notes for executor
 Edit lines surgically — never rewrite a whole note from the model (you'd lose user prose). Test round-trip and "preserve unrelated content" explicitly.

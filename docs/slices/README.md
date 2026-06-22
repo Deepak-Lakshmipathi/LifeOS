@@ -25,7 +25,7 @@ LifeOS = a single-user, Apple-feel life tracker. **One source of truth (an Obsid
 
 ## Current waterline — Slice S2 (shipped)
 
-`Task { id, title, done, created_at, done_when? }`. Seam grew mutation-generic (ADR-0003): `add(input: { title, done_when? }) / update(id, patch: Partial<Pick<Task,'title'|'done_when'>>) / list() / toggleDone(id) / delete(id)`. `useTasks` exposes `addTask(input) / updateTask(id, patch)`. `done_when` is a single-line, always-visible create field + tap-title inline edit, rendered as a dim secondary line on the card. `LocalOnly` over IndexedDB (no schema bump — `done_when` unindexed). Installable offline PWA, Apple-feel UI.
+`Task { id, title, done, created_at, done_when? }`. Seam grew mutation-generic (ADR-0004): `add(input: { title, done_when? }) / update(id, patch: Partial<Pick<Task,'title'|'done_when'>>) / list() / toggleDone(id) / delete(id)`. `useTasks` exposes `addTask(input) / updateTask(id, patch)`. `done_when` is a single-line, always-visible create field + tap-title inline edit, rendered as a dim secondary line on the card. `LocalOnly` over IndexedDB (no schema bump — `done_when` unindexed). Installable offline PWA, Apple-feel UI.
 
 **Shipped slices:** S1 (PRs #4/#6) · S2 (PRD #8 → #11 seam + #12 UI). **Next:** S3 priority — first Dexie index + schema-version(2) bump.
 

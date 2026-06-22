@@ -39,7 +39,7 @@ Recommended for a clean first cut: **bridge service read API**. Capture the choi
 - [ ] Seam discipline intact (UI unchanged; only the provider body swapped).
 
 ## Relevant files
-New `src/sync/VaultSync.ts`, new `src/vault/parseVault.ts` (+ fixtures + test), new transport adapter, `src/App.tsx`, new `docs/adr/0003-vault-transport.md`.
+New `src/sync/VaultSync.ts`, new `src/vault/parseVault.ts` (+ fixtures + test), new transport adapter, `src/App.tsx`, new `docs/adr/0005-vault-transport.md`.
 
 ## Notes for executor
 The parser is the risky part — fixture-test it hard, including malformed lines (skip gracefully). Keep transport behind an interface so it can change without touching the parser.
