@@ -32,8 +32,9 @@ node_modules/
 dist/
 .vite/
 
-# Playwright
+# Playwright / Lighthouse artifacts
 test-results/
 playwright-report/
+.lighthouseci/
 .lh.json
 lh.json

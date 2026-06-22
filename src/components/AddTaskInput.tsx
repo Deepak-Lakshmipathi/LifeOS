@@ -1,11 +1,12 @@
 import { useState, type KeyboardEvent } from 'react'
 
 interface AddTaskInputProps {
-  onAdd: (title: string) => Promise<void>
+  onAdd: (input: { title: string; done_when?: string }) => Promise<void>
 }
 
 export function AddTaskInput({ onAdd }: AddTaskInputProps) {
   const [value, setValue] = useState('')
+  const [doneWhen, setDoneWhen] = useState('')
   const [shaking, setShaking] = useState(false)
 
   const commit = async () => {
@@ -16,8 +17,11 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
       setTimeout(() => setShaking(false), 400)
       return
     }
-    await onAdd(trimmed)
+    // Normalize empty/whitespace done_when to undefined before hitting the seam.
+    const trimmedDoneWhen = doneWhen.trim()
+    await onAdd({ title: trimmed, done_when: trimmedDoneWhen || undefined })
     setValue('')
+    setDoneWhen('')
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -30,12 +34,12 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
   return (
     <div className="px-4 py-3">
       <div
-        className={`flex items-center gap-3 bg-apple-gray-6 rounded-ios px-4 py-3 transition-all ${
+        className={`flex items-start gap-3 bg-apple-gray-6 rounded-ios px-4 py-3 transition-all ${
           shaking ? 'animate-shake' : ''
         }`}
       >
         <svg
-          className="w-5 h-5 text-apple-gray-1 flex-shrink-0"
+          className="w-5 h-5 text-apple-gray-1 flex-shrink-0 mt-0.5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -43,15 +47,26 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="New task"
-          className="flex-1 bg-transparent text-apple-label placeholder-apple-gray-1 text-base outline-none"
-          aria-label="New task title"
-        />
+        <div className="flex-1 flex flex-col gap-1">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="New task"
+            className="bg-transparent text-apple-label placeholder-apple-gray-1 text-base outline-none"
+            aria-label="New task title"
+          />
+          <input
+            type="text"
+            value={doneWhen}
+            onChange={(e) => setDoneWhen(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Done when…"
+            className="bg-transparent text-apple-gray-1 placeholder-apple-gray-2 text-sm outline-none"
+            aria-label="Done when"
+          />
+        </div>
       </div>
     </div>
   )
