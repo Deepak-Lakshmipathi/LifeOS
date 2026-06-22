@@ -10,8 +10,8 @@ import type { Task } from '../types'
 import type { SyncProvider } from './SyncProvider'
 
 export class LocalOnly implements SyncProvider {
-  async add(title: string): Promise<Task> {
-    const trimmed = title.trim()
+  async add(input: { title: string; done_when?: string }): Promise<Task> {
+    const trimmed = input.title.trim()
     if (!trimmed) {
       throw new Error('Task title must not be empty or whitespace.')
     }
@@ -21,8 +21,44 @@ export class LocalOnly implements SyncProvider {
       done: false,
       created_at: Date.now(),
     }
+    // Only persist done_when when it carries a real value (never store '').
+    const doneWhen = input.done_when?.trim()
+    if (doneWhen) {
+      task.done_when = doneWhen
+    }
     await db.tasks.add(task)
     return task
+  }
+
+  async update(
+    id: string,
+    patch: Partial<Pick<Task, 'title' | 'done_when'>>,
+  ): Promise<Task> {
+    const task = await db.tasks.get(id)
+    if (!task) throw new Error(`Task ${id} not found`)
+
+    const updated: Task = { ...task }
+
+    if ('title' in patch) {
+      const trimmed = patch.title?.trim()
+      if (!trimmed) {
+        throw new Error('Task title must not be empty or whitespace.')
+      }
+      updated.title = trimmed
+    }
+
+    if ('done_when' in patch) {
+      const trimmed = patch.done_when?.trim()
+      if (trimmed) {
+        updated.done_when = trimmed
+      } else {
+        // Empty/whitespace unsets the field — never store ''.
+        delete updated.done_when
+      }
+    }
+
+    await db.tasks.put(updated)
+    return updated
   }
 
   async list(): Promise<Task[]> {

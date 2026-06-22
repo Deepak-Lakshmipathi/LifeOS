@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react'
 
 interface AddTaskInputProps {
-  onAdd: (title: string) => Promise<void>
+  onAdd: (input: { title: string }) => Promise<void>
 }
 
 export function AddTaskInput({ onAdd }: AddTaskInputProps) {
@@ -16,7 +16,7 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
       setTimeout(() => setShaking(false), 400)
       return
     }
-    await onAdd(trimmed)
+    await onAdd({ title: trimmed })
     setValue('')
   }
 
