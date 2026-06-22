@@ -6,9 +6,13 @@ interface TaskListProps {
   tasks: Task[]
   onToggle: (id: string) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  onUpdate: (
+    id: string,
+    patch: Partial<Pick<Task, 'title' | 'done_when'>>
+  ) => Promise<void>
 }
 
-export function TaskList({ tasks, onToggle, onDelete }: TaskListProps) {
+export function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <motion.div
@@ -53,6 +57,7 @@ export function TaskList({ tasks, onToggle, onDelete }: TaskListProps) {
             task={task}
             onToggle={onToggle}
             onDelete={onDelete}
+            onUpdate={onUpdate}
           />
         ))}
       </AnimatePresence>

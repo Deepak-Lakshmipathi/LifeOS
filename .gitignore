@@ -31,3 +31,8 @@ afk-pipeline-out/_*
 node_modules/
 dist/
 .vite/
+
+# Playwright / Lighthouse artifacts
+test-results/
+playwright-report/
+.lighthouseci/

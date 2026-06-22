@@ -13,7 +13,7 @@ const provider: SyncProvider = new LocalOnly()
 export default function App() {
   // Memoize to ensure stable reference across re-renders
   const stableProvider = useMemo(() => provider, [])
-  const { tasks, loading, addTask, toggleDone, deleteTask } = useTasks(stableProvider)
+  const { tasks, loading, addTask, updateTask, toggleDone, deleteTask } = useTasks(stableProvider)
 
   return (
     <div
@@ -38,7 +38,7 @@ export default function App() {
           </div>
         ) : (
           <AnimatePresence mode="wait">
-            <TaskList tasks={tasks} onToggle={toggleDone} onDelete={deleteTask} />
+            <TaskList tasks={tasks} onToggle={toggleDone} onDelete={deleteTask} onUpdate={updateTask} />
           </AnimatePresence>
         )}
       </main>
