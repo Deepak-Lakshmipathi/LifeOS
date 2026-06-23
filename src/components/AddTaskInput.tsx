@@ -1,12 +1,14 @@
 import { useState, type KeyboardEvent } from 'react'
+import { PriorityControl, type Priority } from './PriorityControl'
 
 interface AddTaskInputProps {
-  onAdd: (input: { title: string; done_when?: string }) => Promise<void>
+  onAdd: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }) => Promise<void>
 }
 
 export function AddTaskInput({ onAdd }: AddTaskInputProps) {
   const [value, setValue] = useState('')
   const [doneWhen, setDoneWhen] = useState('')
+  const [priority, setPriority] = useState<Priority>(undefined)
   const [shaking, setShaking] = useState(false)
 
   const commit = async () => {
@@ -19,9 +21,14 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
     }
     // Normalize empty/whitespace done_when to undefined before hitting the seam.
     const trimmedDoneWhen = doneWhen.trim()
-    await onAdd({ title: trimmed, done_when: trimmedDoneWhen || undefined })
+    await onAdd({
+      title: trimmed,
+      done_when: trimmedDoneWhen || undefined,
+      priority,
+    })
     setValue('')
     setDoneWhen('')
+    setPriority(undefined)
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -66,6 +73,7 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
             className="bg-transparent text-apple-gray-1 placeholder-apple-gray-2 text-sm outline-none"
             aria-label="Done when"
           />
+          <PriorityControl name="add-task-priority" value={priority} onChange={setPriority} />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Task } from '../types'
+import { PriorityControl, priorityLabel, type Priority } from './PriorityControl'
 
 interface TaskItemProps {
   task: Task
@@ -8,7 +9,7 @@ interface TaskItemProps {
   onDelete: (id: string) => Promise<void>
   onUpdate: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>
   ) => Promise<void>
 }
 
@@ -16,6 +17,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
   const [editing, setEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [doneWhenDraft, setDoneWhenDraft] = useState(task.done_when ?? '')
+  const [priorityDraft, setPriorityDraft] = useState<Priority>(task.priority)
   const titleInputRef = useRef<HTMLInputElement>(null)
   // Guards against double-commit (Enter then blur) and re-entrant commits.
   const committingRef = useRef(false)
@@ -23,6 +25,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
   const enterEdit = () => {
     setTitleDraft(task.title)
     setDoneWhenDraft(task.done_when ?? '')
+    setPriorityDraft(task.priority)
     setEditing(true)
   }
 
@@ -46,10 +49,12 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
       return
     }
 
-    const patch: Partial<Pick<Task, 'title' | 'done_when'>> = {}
+    const patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>> = {}
     if (trimmedTitle !== task.title) patch.title = trimmedTitle
     // Emptying done_when clears it (seam unsets on empty/whitespace).
     if (trimmedDoneWhen !== (task.done_when ?? '')) patch.done_when = trimmedDoneWhen
+    // Priority: include in patch when changed (undefined clears it).
+    if (priorityDraft !== task.priority) patch.priority = priorityDraft
 
     committingRef.current = true
     try {
@@ -74,6 +79,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
       e.preventDefault()
       setTitleDraft(task.title)
       setDoneWhenDraft(task.done_when ?? '')
+      setPriorityDraft(task.priority)
       setEditing(false)
     }
   }
@@ -119,7 +125,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
         </AnimatePresence>
       </motion.button>
 
-      {/* Title + done_when */}
+      {/* Title + done_when + priority */}
       <div className="flex-1 min-w-0">
         {editing ? (
           <div className="flex flex-col gap-1">
@@ -142,6 +148,11 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
               placeholder="Done when…"
               className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
               aria-label="Edit done when"
+            />
+            <PriorityControl
+              name={`edit-priority-${task.id}`}
+              value={priorityDraft}
+              onChange={setPriorityDraft}
             />
           </div>
         ) : (
@@ -171,6 +182,18 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
                 transition={{ duration: 0.2 }}
               >
                 {task.done_when}
+              </motion.span>
+            )}
+            {task.priority != null && (
+              <motion.span
+                layout
+                animate={{ opacity: task.done ? 0.38 : 1 }}
+                transition={{ duration: 0.2 }}
+                className="inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-full border border-apple-gray-3 text-apple-gray-1 select-none"
+                aria-label={`Priority ${priorityLabel(task.priority)}`}
+                title={`Priority ${priorityLabel(task.priority)}`}
+              >
+                {priorityLabel(task.priority)}
               </motion.span>
             )}
           </button>
