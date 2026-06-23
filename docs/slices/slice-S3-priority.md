@@ -16,7 +16,7 @@ Priority is what the balance brain (S6/S10) ranks on. The seed data already carr
 - Sorting/ranking by priority (that's the NOW view, S6). This slice only stores + displays.
 
 ## Data / model change
-- `src/types/task.ts`: add `priority?: 1 | 2 | 3`.
+- `src/types/index.ts`: add `priority?: 1 | 2 | 3`.
 - Reuse `update(id, patch)` from S2; extend `add(input)` to accept `priority`.
 - Add `priority` to the Dexie index in `LifeOSDb.ts` (NOW will query/sort by it) → **bump schema to version(2)** with the new index string.
 
@@ -33,7 +33,7 @@ Priority is what the balance brain (S6/S10) ranks on. The seed data already carr
 - [ ] PWA e2e green.
 
 ## Relevant files
-`src/types/task.ts`, `src/db/LifeOSDb.ts`, `src/sync/LocalOnly.ts`, `src/sync/SyncProvider.ts`, `src/hooks/useTasks.ts`, `src/components/AddTaskInput.tsx`, `src/components/TaskItem.tsx`, `src/test/syncProvider.test.ts`.
+`src/types/index.ts`, `src/db/LifeOSDb.ts`, `src/sync/LocalOnly.ts`, `src/sync/SyncProvider.ts`, `src/hooks/useTasks.ts`, `src/components/AddTaskInput.tsx`, `src/components/TaskItem.tsx`, `src/test/syncProvider.test.ts`.
 
 ## Notes for executor
 Test the Dexie v1→v2 upgrade path: a task stored before the index exists must still load. Keep `priority` optional so legacy/un-prioritized tasks are valid.

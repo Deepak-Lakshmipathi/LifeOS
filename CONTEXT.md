@@ -20,6 +20,10 @@ _Avoid_: list, board
 A Task's written acceptance criterion — how the user knows it is truly finished. A live optional field on the Task as of Slice S2; a single short line, not a notes field.
 _Avoid_: definition of done, acceptance, note
 
+**priority**:
+A Task's importance, `1 | 2 | 3` (3 = highest); absent = none. A live optional field as of Slice S3 — the first Dexie-indexed Task field (schema v2). Set via a Low/Med/High control on create + inline edit; shown as a weight badge.
+_Avoid_: weight, importance, urgency, rank
+
 **Slice**:
 A tracer-bullet vertical increment that pierces every architectural layer (UI → local data → PWA shell → sync seam), shippable on its own.
 _Avoid_: phase, milestone, sprint
@@ -32,7 +36,7 @@ _Avoid_: sync layer, backend (the backend does not exist yet)
 
 - A **Domain** contains one or more **Projects** (out of Slice 1 scope)
 - A **Project** contains one or more **Tasks** (out of Slice 1 scope; Slice 1 Tasks are unparented)
-- A **Task** may carry a **done_when** (added in Slice S2)
+- A **Task** may carry a **done_when** (added in Slice S2) and a **priority** (added in Slice S3)
 - The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op; the seam mutates Tasks via `add(input)` + a generic `update(id, patch)` (ADR-0004)
 
 ## Flagged ambiguities

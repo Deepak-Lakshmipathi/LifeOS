@@ -16,7 +16,7 @@ A Task's real finish line is its `done_when` — *how you know it's truly done* 
 - Priority (S3), project/domain (S4/S5), NOW view, styling overhaul. Keep current Apple-feel.
 
 ## Data / model change
-- `src/types/task.ts`: add `done_when?: string`.
+- `src/types/index.ts`: add `done_when?: string`.
 - `LocalOnly.add` grows to accept an optional `done_when`. **Seam decision:** change `add(title: string)` → `add(input: { title: string; done_when?: string })` OR add `update(id, patch)` for editing. Recommended: introduce `add(input)` + a generic `update(id, patch: Partial<Pick<Task,'title'|'done_when'>>)` now — future field slices reuse `update`.
 - No Dexie index needed (`done_when` is not queried); no schema version bump.
 
@@ -35,7 +35,7 @@ A Task's real finish line is its `done_when` — *how you know it's truly done* 
 - [ ] PWA install/offline e2e still green.
 
 ## Relevant files
-`src/types/task.ts`, `src/sync/SyncProvider.ts`, `src/sync/LocalOnly.ts`, `src/hooks/useTasks.ts`, `src/components/AddTaskInput.tsx`, `src/components/TaskItem.tsx`, `src/test/syncProvider.test.ts`.
+`src/types/index.ts`, `src/sync/SyncProvider.ts`, `src/sync/LocalOnly.ts`, `src/hooks/useTasks.ts`, `src/components/AddTaskInput.tsx`, `src/components/TaskItem.tsx`, `src/test/syncProvider.test.ts`.
 
 ## Notes for executor
 Maintain seam discipline — components never touch Dexie. Prefer the generic `update(id, patch)` so S3–S5 don't each invent their own setter.

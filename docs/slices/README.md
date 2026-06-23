@@ -20,14 +20,16 @@ LifeOS = a single-user, Apple-feel life tracker. **One source of truth (an Obsid
 - **The sync seam** (`src/sync/SyncProvider.ts`, ADR-0002): UI, components and hooks depend **only** on the `SyncProvider` interface and `src/types`. They never import Dexie or the db.
 - Only `src/db/LifeOSDb.ts` imports Dexie. Only `src/sync/LocalOnly.ts` imports `../db`. The provider is swapped in one place: `src/App.tsx`.
 - **Interim truth = IndexedDB** via `LocalOnly`. The Obsidian vault becomes the real truth in Group D as a new `SyncProvider` body (`VaultSync`) — swapped at the seam, call sites unchanged.
-- Growing the `Task` model = update `src/types/task.ts` **and** bump the Dexie schema version in `LifeOSDb.ts` when an indexed field changes.
+- Growing the `Task` model = update `src/types/index.ts` **and** bump the Dexie schema version in `LifeOSDb.ts` when an indexed field changes.
 - Every slice must keep the PWA **installable + offline** (no regression). CI gates build/test + emulated PWA install/offline checks (`docs/testing/pwa-emulation-protocol.md`).
 
-## Current waterline — Slice S2 (shipped)
+## Current waterline — Slice S3 (shipped)
 
-`Task { id, title, done, created_at, done_when? }`. Seam grew mutation-generic (ADR-0004): `add(input: { title, done_when? }) / update(id, patch: Partial<Pick<Task,'title'|'done_when'>>) / list() / toggleDone(id) / delete(id)`. `useTasks` exposes `addTask(input) / updateTask(id, patch)`. `done_when` is a single-line, always-visible create field + tap-title inline edit, rendered as a dim secondary line on the card. `LocalOnly` over IndexedDB (no schema bump — `done_when` unindexed). Installable offline PWA, Apple-feel UI.
+`Task { id, title, done, created_at, done_when?, priority? }`. Seam mutation-generic (ADR-0004): `add(input: { title, done_when?, priority? }) / update(id, patch: Partial<Pick<Task,'title'|'done_when'|'priority'>>) / list() / toggleDone(id) / delete(id)`. `priority` is `1 | 2 | 3` — the first Dexie-indexed Task field, schema bumped to **v2** (legacy rows fall out of the index, still load). UI: a shared `PriorityControl` (`src/components/PriorityControl.tsx`) keyed directly on `1|2|3|undefined` — Low/Med/High segmented control on create + inline edit, read-only weight badge on the card. `LocalOnly` over IndexedDB. Installable offline PWA, Apple-feel UI.
 
-**Shipped slices:** S1 (PRs #4/#6) · S2 (PRD #8 → #11 seam + #12 UI). **Next:** S3 priority — first Dexie index + schema-version(2) bump.
+**Shipped slices:** S1 (PRs #4/#6) · S2 (PRD #8 → #11 seam + #12 UI) · S3 (PRD #15 → #18 seam + #21 UI). **Next:** S4 project — `project?: string` on the Task (Group A continues).
+
+> Repo hygiene: `src/types` is a single `index.ts` (the old `task.ts` was folded in); ids use native `crypto.randomUUID()` (no `uuid` dep); the dead `src/sync/index.ts` barrel was removed (ponytail audit, PR #20). Import `Task` from `'../types'`.
 
 ## Target Task model (assembled across Group A + S9)
 
@@ -61,4 +63,4 @@ Group E  S16–S19  Telegram bot (text → confirm edits → voice → photo)
 - TypeScript + React + Vite + Tailwind + Dexie + framer-motion. Tests: Vitest unit (see `src/test/syncProvider.test.ts`), Playwright e2e (`e2e/pwa.spec.ts`).
 - Each slice adds/updates unit tests for new seam behaviour and keeps the e2e PWA suite green.
 - Keep changes scoped to the slice. Push deferred concerns to the named later slice.
-- Update `KANBAN.md` when a slice ships.
+- Update `kanban.html` when a slice ships.

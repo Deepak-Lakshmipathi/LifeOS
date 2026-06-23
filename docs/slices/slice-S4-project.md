@@ -16,7 +16,7 @@ A Project is a named effort that holds related Tasks (`CONTEXT.md`). Grouping ta
 - Domain (S5), project color, project-as-its-own-entity. Keep Project denormalized as a string on the Task for thinness — Projects are *derived* by grouping.
 
 ## Data / model change
-- `src/types/task.ts`: add `project?: string`.
+- `src/types/index.ts`: add `project?: string`.
 - Reuse `update`/`add`. Optionally index `project` in Dexie (cheap; helps grouping) → schema version(3) if added.
 
 ## Vertical
@@ -32,7 +32,7 @@ A Project is a named effort that holds related Tasks (`CONTEXT.md`). Grouping ta
 - [ ] PWA e2e green.
 
 ## Relevant files
-`src/types/task.ts`, `src/sync/LocalOnly.ts`, `src/db/LifeOSDb.ts`, `src/hooks/useTasks.ts`, `src/components/AddTaskInput.tsx`, `src/components/TaskList.tsx`, `src/components/TaskItem.tsx`.
+`src/types/index.ts`, `src/sync/LocalOnly.ts`, `src/db/LifeOSDb.ts`, `src/hooks/useTasks.ts`, `src/components/AddTaskInput.tsx`, `src/components/TaskList.tsx`, `src/components/TaskItem.tsx`.
 
 ## Notes for executor
 Keep grouping logic in a pure, testable helper (`groupByProject(tasks)`), not buried in JSX. Project names are plain strings; no separate table.
