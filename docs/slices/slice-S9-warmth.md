@@ -16,7 +16,7 @@ The core feedback loop: **warmth is derived, never logged.** Completing a task h
 - Using warmth to rank NOW (that's S10). Glass material (S11) — tiles can be styled-but-simple now. Pulse trends (S13).
 
 ## Data / model change
-- `src/types/task.ts`: add `completed_at?: number`.
+- `src/types/index.ts`: add `completed_at?: number`.
 - `LocalOnly.toggleDone`: set `completed_at = Date.now()` when completing, unset when un-completing.
 - Dexie: index `completed_at` if needed for the "latest per domain" query → schema bump.
 
@@ -34,7 +34,7 @@ The core feedback loop: **warmth is derived, never logged.** Completing a task h
 - [ ] PWA e2e green.
 
 ## Relevant files
-`src/types/task.ts`, `src/sync/LocalOnly.ts`, `src/db/LifeOSDb.ts`, new `src/warmth/computeWarmth.ts` (+ test), new `src/components/DomainsMap.tsx`, `src/data/domains.ts`.
+`src/types/index.ts`, `src/sync/LocalOnly.ts`, `src/db/LifeOSDb.ts`, new `src/warmth/computeWarmth.ts` (+ test), new `src/components/DomainsMap.tsx`, `src/data/domains.ts`.
 
 ## Notes for executor
 Inject `now` for testability; never call `Date.now()` inside the pure helper. Thresholds live in one named constant so they're tunable.

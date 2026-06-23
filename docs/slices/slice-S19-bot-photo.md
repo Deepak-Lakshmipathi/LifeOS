@@ -29,10 +29,10 @@ The richest capture: photograph a whiteboard, a receipt, a handwritten list, a s
 - [ ] Caption guides extraction when present.
 - [ ] Owner-guarded; uses the latest vision-capable Claude model.
 - [ ] Integration test with a fixture image/mocked vision response.
-- [ ] **Vision complete** — update `KANBAN.md`; the three faces (dashboard, bot, Obsidian) all operate over one vault.
+- [ ] **Vision complete** — update `kanban.html`; the three faces (dashboard, bot, Obsidian) all operate over one vault.
 
 ## Relevant files
-`services/bot/` (photo handler, Claude vision client), reuse confirmation state (S17) + vault write (S15), `KANBAN.md`.
+`services/bot/` (photo handler, Claude vision client), reuse confirmation state (S17) + vault write (S15), `kanban.html`.
 
 ## Notes for executor
 Bulk creation is effectively destructive-by-volume — confirm the set before writing. Use the latest vision-capable Claude model per `claude-api`. Keep extraction prompt-driven and testable with a mocked response.

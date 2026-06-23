@@ -31,10 +31,10 @@ A light trends surface — not a quantified-self dashboard (the user chose comma
 - [ ] All metrics derived from task data; deterministic with injected `now`; unit-tested.
 - [ ] Replaces the S7 placeholder; glass-styled.
 - [ ] PWA e2e green.
-- [ ] **MVP complete** — update `KANBAN.md` marking Groups A–C shipped.
+- [ ] **MVP complete** — update `kanban.html` marking Groups A–C shipped.
 
 ## Relevant files
-New `src/pulse/metrics.ts` (+ test), new `src/components/PulseView.tsx`, `src/warmth/computeWarmth.ts`, `src/components/TabBar.tsx`, `KANBAN.md`.
+New `src/pulse/metrics.ts` (+ test), new `src/components/PulseView.tsx`, `src/warmth/computeWarmth.ts`, `src/components/TabBar.tsx`, `kanban.html`.
 
 ## Notes for executor
 Resist scope creep — Pulse stays light intentionally. Inject `now` everywhere; no `Date.now()` in pure helpers.
