@@ -43,8 +43,11 @@ describe('AddTaskInput — create with priority', () => {
     fireEvent.change(screen.getByLabelText('New task title'), { target: { value: 'Quick capture' } })
     fireEvent.keyDown(screen.getByLabelText('New task title'), { key: 'Enter' })
 
-    await vi.waitFor(() => expect(onAdd).toHaveBeenCalled())
-    expect(onAdd.mock.calls[0][0].priority).toBeUndefined()
+    await vi.waitFor(() =>
+      expect(onAdd).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Quick capture', priority: undefined }),
+      ),
+    )
   })
 
   it('"None" is the selected radio by default', () => {
