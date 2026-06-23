@@ -4,13 +4,12 @@
  * This is the ONLY non-db file that may import from ../db.
  * UI and components must never import this file or the db directly.
  */
-import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db/LifeOSDb'
 import type { Task } from '../types'
 import type { SyncProvider } from './SyncProvider'
 
 /** Allowed priority values; anything outside this set is rejected. */
-const VALID_PRIORITIES = new Set<number>([1, 2, 3])
+const isValidPriority = (p: number) => p === 1 || p === 2 || p === 3
 
 export class LocalOnly implements SyncProvider {
   async add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }): Promise<Task> {
@@ -19,11 +18,11 @@ export class LocalOnly implements SyncProvider {
       throw new Error('Task title must not be empty or whitespace.')
     }
     // Validate priority before writing anything (ADR-0004).
-    if (input.priority !== undefined && !VALID_PRIORITIES.has(input.priority)) {
+    if (input.priority !== undefined && !isValidPriority(input.priority)) {
       throw new Error('Task priority must be 1, 2, or 3.')
     }
     const task: Task = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       title: trimmed,
       done: false,
       created_at: Date.now(),
@@ -49,7 +48,7 @@ export class LocalOnly implements SyncProvider {
     if (!task) throw new Error(`Task ${id} not found`)
 
     // Validate priority before mutating anything (ADR-0004).
-    if ('priority' in patch && patch.priority !== undefined && !VALID_PRIORITIES.has(patch.priority)) {
+    if ('priority' in patch && patch.priority !== undefined && !isValidPriority(patch.priority)) {
       throw new Error('Task priority must be 1, 2, or 3.')
     }
 

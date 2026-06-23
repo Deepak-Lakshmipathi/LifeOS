@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { LocalOnly } from './sync/LocalOnly'
 import type { SyncProvider } from './sync/SyncProvider'
@@ -11,9 +10,7 @@ import { TaskList } from './components/TaskList'
 const provider: SyncProvider = new LocalOnly()
 
 export default function App() {
-  // Memoize to ensure stable reference across re-renders
-  const stableProvider = useMemo(() => provider, [])
-  const { tasks, loading, addTask, updateTask, toggleDone, deleteTask } = useTasks(stableProvider)
+  const { tasks, loading, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
 
   return (
     <div
