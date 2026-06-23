@@ -1,0 +1,24 @@
+---
+type: community
+members: 7
+---
+
+# Lighthouse PWA Audit
+
+**Members:** 7 nodes
+
+## Members
+- [[DIST]] - code - scripts/lh-pwa.mjs
+- [[MIME]] - code - scripts/lh-pwa.mjs
+- [[ROOT]] - code - scripts/lh-pwa.mjs
+- [[__dirname]] - code - scripts/lh-pwa.mjs
+- [[lh-pwa.mjs]] - code - scripts/lh-pwa.mjs
+- [[results]] - code - scripts/lh-pwa.mjs
+- [[server]] - code - scripts/lh-pwa.mjs
+
+## Live Query (requires Dataview plugin)
+
+```dataview
+TABLE source_file, type FROM #community/Lighthouse_PWA_Audit
+SORT file.name ASC
+```
