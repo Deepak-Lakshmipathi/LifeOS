@@ -38,3 +38,8 @@ playwright-report/
 .lighthouseci/
 .lh.json
 lh.json
+
+# graphify internal (machine-specific paths + regenerable cache)
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/cache/

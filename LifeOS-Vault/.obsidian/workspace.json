@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "1267790c1a29b0d5",
+    "type": "split",
+    "children": [
+      {
+        "id": "194ae372a3d30077",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "aa66654e3c6c0374",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          },
+          {
+            "id": "dab26507ae5842a5",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "81fa6de0c9b17557",
+    "type": "split",
+    "children": [
+      {
+        "id": "4b1797a8ffaf0bd2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "22726c107090bab4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "ceebc7857184e904",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "3983dfdeb6767bda",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "3788002cf7f1d098",
+    "type": "split",
+    "children": [
+      {
+        "id": "fea36f822a50a085",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "46af56d96e26fd55",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "b10a4774c18c882e",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "075c2e5c99114864",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "1ad7a90c90fe48d9",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d1e8dcd42f919682",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "aa66654e3c6c0374",
+  "lastOpenFiles": [
+    "graph.canvas",
+    "_COMMUNITY_PWA App Icons.md",
+    "_COMMUNITY_Three-Faces Vision.md",
+    "_COMMUNITY_Slice Roadmap (Task Schema).md",
+    "_COMMUNITY_Vault & Telegram Bot.md",
+    "_COMMUNITY_ADRs & Domain Model.md",
+    "_COMMUNITY_PWA CI Testing.md",
+    "_COMMUNITY_Vite Config.md",
+    "_COMMUNITY_Node TS Config.md",
+    "_COMMUNITY_TypeScript Config.md",
+    "_COMMUNITY_Tailwind Config.md",
+    "_COMMUNITY_Test Setup.md",
+    "_COMMUNITY_PWA Build Test.md",
+    "_COMMUNITY_Task UI Components.md",
+    "_COMMUNITY_React App Shell & Data Layer.md",
+    "_COMMUNITY_Seed Tasks (detailed).md",
+    "_COMMUNITY_Seed Tasks (basic).md",
+    "_COMMUNITY_Lighthouse PWA Audit.md",
+    "_COMMUNITY_Icon Generation.md",
+    "_COMMUNITY_PostCSS Config.md",
+    "_COMMUNITY_Playwright Config.md",
+    "_COMMUNITY_NPM Scripts.md",
+    "_COMMUNITY_Build Dependencies.md",
+    "_COMMUNITY_Playwright PWA Spec.md",
+    "PWA Maskable App Icon 512px.md",
+    "PWA App Icon 512px.md"
+  ]
+}
