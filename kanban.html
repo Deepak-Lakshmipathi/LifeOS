@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LifeOS — Kanban</title>
+<!--
+  ============================================================================
+  AGENT + HUMAN README (read this first)
+  ============================================================================
+  This file is BOTH the data and the UI. One source of truth.
+
+  CANONICAL DATA  ->  the <script id="board-data" type="application/json"> block
+                      near the bottom of this file. Edit it directly with any
+                      text editor (humans) or grep/patch (agents). It is plain
+                      JSON. The board renders from it on load.
+
+  SCHEMA:
+    columns[]  : ordered list of board columns      { id, name }
+    cards[]    : every task card                    {
+                   id        : stable slug, unique     e.g. "s3b"
+                   title     : short card title
+                   column    : must match a columns[].id
+                   slice     : grouping label          e.g. "S3"
+                   issue     : GitHub issue number or null
+                   pr        : GitHub PR number or null
+                   blockedBy : array of card ids        []
+                   notes     : free text, markdown-ish
+                 }
+    meta       : { project, updated }
+
+  HUMAN EDITING (in browser):
+    - Drag cards between columns. Double-click a card to edit. "+ Card" adds one.
+    - Changes auto-save to this browser's localStorage.
+    - Click "Export JSON" to copy the updated data block back into this file
+      (replace the board-data script contents) so agents + git see it too.
+
+  AGENT EDITING (on disk):
+    - Parse / mutate the JSON in #board-data. Keep it valid JSON. Done.
+    - localStorage in a browser may shadow disk edits; "Reset to file" button
+      discards localStorage and re-reads this block.
+  ============================================================================
+-->
+<style>
+  :root{
+    --bg:#0b0d12; --panel:rgba(255,255,255,.06); --panel-brd:rgba(255,255,255,.12);
+    --ink:#e8eaf0; --ink-dim:#9aa0ad; --accent:#6ea8fe;
+    --done:#3ad19b; --prog:#f6c560; --ready:#6ea8fe; --backlog:#9aa0ad;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--ink); background:
+      radial-gradient(1200px 600px at 20% -10%, #1c2434 0%, transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, #221c2e 0%, transparent 55%),
+      var(--bg);
+    min-height:100vh;
+  }
+  header{
+    display:flex; align-items:center; gap:16px; padding:18px 24px;
+    position:sticky; top:0; z-index:10;
+    background:rgba(11,13,18,.6); backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--panel-brd);
+  }
+  header h1{font-size:18px; margin:0; font-weight:600; letter-spacing:.2px}
+  header .meta{color:var(--ink-dim); font-size:12px}
+  header .spacer{flex:1}
+  button{
+    font:inherit; color:var(--ink); cursor:pointer;
+    background:var(--panel); border:1px solid var(--panel-brd);
+    padding:7px 12px; border-radius:9px; transition:.15s;
+  }
+  button:hover{background:rgba(255,255,255,.12)}
+  button.primary{background:var(--accent); border-color:transparent; color:#06101f; font-weight:600}
+  .board{
+    display:flex; gap:16px; padding:24px; align-items:flex-start;
+    overflow-x:auto; min-height:calc(100vh - 64px);
+  }
+  .col{
+    flex:0 0 300px; background:var(--panel); border:1px solid var(--panel-brd);
+    border-radius:16px; padding:12px; backdrop-filter:blur(10px);
+    display:flex; flex-direction:column; max-height:calc(100vh - 112px);
+  }
+  .col h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:.8px; margin:4px 6px 12px;
+    color:var(--ink-dim); display:flex; align-items:center; gap:8px;
+  }
+  .col h2 .count{
+    margin-left:auto; background:rgba(255,255,255,.08); color:var(--ink-dim);
+    border-radius:20px; padding:1px 9px; font-size:11px; letter-spacing:0;
+  }
+  .col .dot{width:8px;height:8px;border-radius:50%}
+  .cards{display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:2px}
+  .card{
+    background:rgba(255,255,255,.05); border:1px solid var(--panel-brd);
+    border-radius:12px; padding:11px 12px; cursor:grab; transition:.12s;
+  }
+  .card:hover{border-color:rgba(255,255,255,.28); transform:translateY(-1px)}
+  .card.dragging{opacity:.4}
+  .card .slice{
+    display:inline-block; font-size:10px; font-weight:700; letter-spacing:.5px;
+    color:var(--accent); background:rgba(110,168,254,.12);
+    padding:1px 7px; border-radius:6px; margin-bottom:6px;
+  }
+  .card .title{font-weight:600; margin-bottom:6px}
+  .card .notes{color:var(--ink-dim); font-size:12.5px; white-space:pre-wrap}
+  .card .refs{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+  .card .ref{
+    font-size:11px; padding:1px 7px; border-radius:6px;
+    background:rgba(255,255,255,.07); color:var(--ink-dim);
+  }
+  .card .ref.pr{color:var(--done); background:rgba(58,209,155,.1)}
+  .card .ref.issue{color:var(--ready); background:rgba(110,168,254,.1)}
+  .card .ref.blocked{color:#f78fb3; background:rgba(247,143,179,.12)}
+  .col .add{
+    margin-top:10px; border-style:dashed; color:var(--ink-dim);
+    background:transparent; text-align:left;
+  }
+  .col.drop-target{outline:2px dashed var(--accent); outline-offset:-4px}
+  /* editor modal */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:50;
+  }
+  .modal-bg.open{display:flex}
+  .modal{
+    width:min(520px,92vw); background:#141821; border:1px solid var(--panel-brd);
+    border-radius:18px; padding:22px; box-shadow:0 30px 80px rgba(0,0,0,.5);
+  }
+  .modal h3{margin:0 0 16px}
+  .modal label{display:block; font-size:12px; color:var(--ink-dim); margin:12px 0 5px}
+  .modal input,.modal textarea,.modal select{
+    width:100%; background:rgba(255,255,255,.05); border:1px solid var(--panel-brd);
+    color:var(--ink); border-radius:9px; padding:9px 11px; font:inherit;
+  }
+  .modal textarea{min-height:84px; resize:vertical}
+  .modal .row{display:flex; gap:10px}
+  .modal .row>div{flex:1}
+  .modal .actions{display:flex; gap:10px; margin-top:20px}
+  .modal .actions .spacer{flex:1}
+  button.danger{color:#f78fb3; border-color:rgba(247,143,179,.3)}
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#141821; border:1px solid var(--panel-brd); color:var(--ink);
+    padding:10px 16px; border-radius:10px; opacity:0; transition:.25s; pointer-events:none;
+    z-index:60;
+  }
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>LifeOS</h1>
+  <span class="meta" id="meta"></span>
+  <span class="spacer"></span>
+  <button onclick="addCard()">+ Card</button>
+  <button onclick="exportJSON()">Export JSON</button>
+  <button onclick="resetToFile()" title="Discard browser edits, re-read file">Reset to file</button>
+</header>
+
+<div class="board" id="board"></div>
+
+<!-- editor -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Edit card</h3>
+    <label>Title</label>
+    <input id="f-title">
+    <div class="row">
+      <div><label>Slice</label><input id="f-slice" placeholder="S3"></div>
+      <div><label>Column</label><select id="f-column"></select></div>
+    </div>
+    <div class="row">
+      <div><label>Issue #</label><input id="f-issue" type="number"></div>
+      <div><label>PR #</label><input id="f-pr" type="number"></div>
+    </div>
+    <label>Blocked by (card ids, comma-sep)</label>
+    <input id="f-blocked" placeholder="s3a, s2b">
+    <label>Notes</label>
+    <textarea id="f-notes"></textarea>
+    <div class="actions">
+      <button class="danger" onclick="deleteCard()">Delete</button>
+      <span class="spacer"></span>
+      <button onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="saveCard()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===================== CANONICAL DATA — edit freely ===================== -->
+<script id="board-data" type="application/json">
+{
+  "meta": { "project": "LifeOS", "updated": "2026-06-23" },
+  "columns": [
+    { "id": "backlog", "name": "Backlog" },
+    { "id": "ready",   "name": "Ready" },
+    { "id": "progress","name": "In Progress" },
+    { "id": "done",    "name": "Done" }
+  ],
+  "cards": [
+    {
+      "id": "s1a", "title": "Local-first task loop", "column": "done", "slice": "S1",
+      "issue": 2, "pr": 4, "blockedBy": [],
+      "notes": "Dexie + SyncProvider seam, Apple-feel UI."
+    },
+    {
+      "id": "s1b", "title": "PWA shell: installable + offline", "column": "done", "slice": "S1",
+      "issue": 3, "pr": 6, "blockedBy": [],
+      "notes": "CI gates emulated PWA install/offline. See docs/testing/pwa-emulation-protocol.md."
+    },
+    {
+      "id": "s2a", "title": "done_when seam + Task model + hook", "column": "done", "slice": "S2",
+      "issue": 9, "pr": 11, "blockedBy": [],
+      "notes": "Seam went mutation-generic: add(input) + update(id, patch). ADR-0004."
+    },
+    {
+      "id": "s2b", "title": "done_when UI: create field, inline edit, render", "column": "done", "slice": "S2",
+      "issue": 10, "pr": 12, "blockedBy": ["s2a"],
+      "notes": "Always-visible 'Done when…' field, tap-title inline edit, secondary card render."
+    },
+    {
+      "id": "s3a", "title": "priority seam + Task model + Dexie v2 + hook", "column": "done", "slice": "S3",
+      "issue": 16, "pr": 18, "blockedBy": [],
+      "notes": "First Dexie index / schema-version bump. Merged to master 274f0b6."
+    },
+    {
+      "id": "s3b", "title": "priority UI: Low/Med/High control + weight badge", "column": "progress", "slice": "S3",
+      "issue": 17, "pr": 19, "blockedBy": ["s3a"],
+      "notes": "PR #19 OPEN — review then merge to close S3."
+    },
+    {
+      "id": "s3prd", "title": "PRD: Slice S3 — Task gains priority", "column": "done", "slice": "S3",
+      "issue": 15, "pr": null, "blockedBy": [],
+      "notes": "Parent spec for S3a/S3b."
+    }
+  ]
+}
+</script>
+<!-- ====================================================================== -->
+
+<script>
+const LS_KEY = "lifeos-kanban-v1";
+let data;
+
+function loadData(){
+  const fromFile = JSON.parse(document.getElementById("board-data").textContent);
+  const saved = localStorage.getItem(LS_KEY);
+  data = saved ? JSON.parse(saved) : fromFile;
+  // keep columns in sync with file (structure rarely edited in UI)
+  if(saved && (!data.columns || !data.columns.length)) data.columns = fromFile.columns;
+}
+function persist(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+
+function colDotColor(id){
+  return ({done:"var(--done)",progress:"var(--prog)",ready:"var(--ready)",backlog:"var(--backlog)"})[id] || "var(--backlog)";
+}
+
+function render(){
+  document.getElementById("meta").textContent =
+    `${data.meta.project} · updated ${data.meta.updated} · ${data.cards.length} cards`;
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  for(const col of data.columns){
+    const cards = data.cards.filter(c => c.column === col.id);
+    const el = document.createElement("div");
+    el.className = "col"; el.dataset.col = col.id;
+    el.innerHTML = `<h2><span class="dot" style="background:${colDotColor(col.id)}"></span>${col.name}<span class="count">${cards.length}</span></h2>`;
+    const list = document.createElement("div"); list.className = "cards";
+    for(const c of cards) list.appendChild(cardEl(c));
+    el.appendChild(list);
+    const add = document.createElement("button");
+    add.className = "add"; add.textContent = "+ Card";
+    add.onclick = () => addCard(col.id);
+    el.appendChild(add);
+    // drag targets
+    el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("drop-target"); });
+    el.addEventListener("dragleave", () => el.classList.remove("drop-target"));
+    el.addEventListener("drop", e => {
+      e.preventDefault(); el.classList.remove("drop-target");
+      const id = e.dataTransfer.getData("text/plain");
+      const card = data.cards.find(c => c.id === id);
+      if(card && card.column !== col.id){ card.column = col.id; touch(); }
+    });
+    board.appendChild(el);
+  }
+}
+
+function cardEl(c){
+  const el = document.createElement("div");
+  el.className = "card"; el.draggable = true;
+  const refs = [];
+  if(c.slice) {}
+  let html = "";
+  if(c.slice) html += `<span class="slice">${c.slice}</span>`;
+  html += `<div class="title">${esc(c.title)}</div>`;
+  if(c.notes) html += `<div class="notes">${esc(c.notes)}</div>`;
+  const r = [];
+  if(c.issue) r.push(`<span class="ref issue">#${c.issue}</span>`);
+  if(c.pr) r.push(`<span class="ref pr">PR #${c.pr}</span>`);
+  if(c.blockedBy && c.blockedBy.length) r.push(`<span class="ref blocked">⛔ ${c.blockedBy.join(", ")}</span>`);
+  if(r.length) html += `<div class="refs">${r.join("")}</div>`;
+  el.innerHTML = html;
+  el.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", c.id); el.classList.add("dragging"); });
+  el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  el.addEventListener("dblclick", () => openModal(c.id));
+  return el;
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[m])); }
+
+function touch(){ data.meta.updated = new Date().toISOString().slice(0,10); persist(); render(); }
+
+/* ---------- editor ---------- */
+let editingId = null;
+function fillColumnSelect(){
+  const sel = document.getElementById("f-column");
+  sel.innerHTML = data.columns.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+}
+function openModal(id){
+  editingId = id;
+  const c = data.cards.find(x => x.id === id) || {};
+  fillColumnSelect();
+  document.getElementById("modalTitle").textContent = id ? "Edit card" : "New card";
+  document.getElementById("f-title").value = c.title || "";
+  document.getElementById("f-slice").value = c.slice || "";
+  document.getElementById("f-column").value = c.column || data.columns[0].id;
+  document.getElementById("f-issue").value = c.issue || "";
+  document.getElementById("f-pr").value = c.pr || "";
+  document.getElementById("f-blocked").value = (c.blockedBy || []).join(", ");
+  document.getElementById("f-notes").value = c.notes || "";
+  document.getElementById("modalBg").classList.add("open");
+}
+function closeModal(){ document.getElementById("modalBg").classList.remove("open"); editingId = null; }
+function addCard(column){
+  openModal(null);
+  if(column) document.getElementById("f-column").value = column;
+}
+function slugify(t){
+  const base = (t || "card").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24) || "card";
+  let id = base, n = 2;
+  while(data.cards.some(c => c.id === id)){ id = base + "-" + n++; }
+  return id;
+}
+function saveCard(){
+  const v = id => document.getElementById(id).value.trim();
+  const blocked = v("f-blocked").split(",").map(s => s.trim()).filter(Boolean);
+  const payload = {
+    title: v("f-title") || "Untitled",
+    slice: v("f-slice") || "",
+    column: v("f-column"),
+    issue: v("f-issue") ? Number(v("f-issue")) : null,
+    pr: v("f-pr") ? Number(v("f-pr")) : null,
+    blockedBy: blocked,
+    notes: v("f-notes")
+  };
+  if(editingId){
+    Object.assign(data.cards.find(c => c.id === editingId), payload);
+  }else{
+    data.cards.push({ id: slugify(payload.title), ...payload });
+  }
+  closeModal(); touch();
+}
+function deleteCard(){
+  if(!editingId) return closeModal();
+  data.cards = data.cards.filter(c => c.id !== editingId);
+  closeModal(); touch();
+}
+
+/* ---------- export / reset ---------- */
+function exportJSON(){
+  const json = JSON.stringify({ meta: data.meta, columns: data.columns, cards: data.cards }, null, 2);
+  navigator.clipboard.writeText(json).then(
+    () => toast("JSON copied — paste into #board-data block in kanban.html"),
+    () => toast("Copy failed — see console"),
+  );
+  console.log("=== board-data ===\n" + json);
+}
+function resetToFile(){
+  localStorage.removeItem(LS_KEY);
+  loadData(); render();
+  toast("Reset to on-disk data");
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+document.getElementById("modalBg").addEventListener("click", e => { if(e.target.id === "modalBg") closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+loadData(); render();
+</script>
+</body>
+</html>
