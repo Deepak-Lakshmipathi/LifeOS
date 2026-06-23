@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Task } from '../types'
+import { PriorityControl, priorityLabel, type Priority } from './PriorityControl'
 
 interface TaskItemProps {
   task: Task
@@ -12,90 +13,11 @@ interface TaskItemProps {
   ) => Promise<void>
 }
 
-// ---- Priority helpers -------------------------------------------------------
-
-type PriorityOption = 'none' | 'low' | 'med' | 'high'
-
-const PRIORITY_LABELS: { value: PriorityOption; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'low', label: 'Low' },
-  { value: 'med', label: 'Med' },
-  { value: 'high', label: 'High' },
-]
-
-function numToPriorityOption(p: 1 | 2 | 3 | undefined): PriorityOption {
-  if (p === 1) return 'low'
-  if (p === 2) return 'med'
-  if (p === 3) return 'high'
-  return 'none'
-}
-
-function priorityOptionToNum(opt: PriorityOption): 1 | 2 | 3 | undefined {
-  if (opt === 'low') return 1
-  if (opt === 'med') return 2
-  if (opt === 'high') return 3
-  return undefined
-}
-
-const WEIGHT_BADGE: Record<1 | 2 | 3, string> = {
-  1: 'Low',
-  2: 'Med',
-  3: 'High',
-}
-
-// ---- PriorityControl (shared within this file) ------------------------------
-
-interface PriorityControlProps {
-  taskId: string
-  value: PriorityOption
-  onChange: (v: PriorityOption) => void
-}
-
-function PriorityControl({ taskId, value, onChange }: PriorityControlProps) {
-  const groupName = `edit-priority-${taskId}`
-  return (
-    <div
-      role="radiogroup"
-      aria-label="Priority"
-      className="flex gap-1 mt-1"
-    >
-      {PRIORITY_LABELS.map(({ value: opt, label }) => {
-        const checked = value === opt
-        return (
-          <label
-            key={opt}
-            className={`cursor-pointer text-xs px-2 py-0.5 rounded-full border transition-colors select-none ${
-              checked
-                ? 'bg-apple-blue text-white border-apple-blue'
-                : 'bg-transparent text-apple-gray-1 border-apple-gray-3 hover:border-apple-blue hover:text-apple-blue'
-            }`}
-          >
-            <input
-              type="radio"
-              name={groupName}
-              value={opt}
-              checked={checked}
-              onChange={() => onChange(opt)}
-              className="sr-only"
-              aria-checked={checked}
-            />
-            {label}
-          </label>
-        )
-      })}
-    </div>
-  )
-}
-
-// ---- TaskItem ----------------------------------------------------------------
-
 export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
   const [editing, setEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [doneWhenDraft, setDoneWhenDraft] = useState(task.done_when ?? '')
-  const [priorityDraft, setPriorityDraft] = useState<PriorityOption>(
-    numToPriorityOption(task.priority)
-  )
+  const [priorityDraft, setPriorityDraft] = useState<Priority>(task.priority)
   const titleInputRef = useRef<HTMLInputElement>(null)
   // Guards against double-commit (Enter then blur) and re-entrant commits.
   const committingRef = useRef(false)
@@ -103,7 +25,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
   const enterEdit = () => {
     setTitleDraft(task.title)
     setDoneWhenDraft(task.done_when ?? '')
-    setPriorityDraft(numToPriorityOption(task.priority))
+    setPriorityDraft(task.priority)
     setEditing(true)
   }
 
@@ -131,9 +53,8 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
     if (trimmedTitle !== task.title) patch.title = trimmedTitle
     // Emptying done_when clears it (seam unsets on empty/whitespace).
     if (trimmedDoneWhen !== (task.done_when ?? '')) patch.done_when = trimmedDoneWhen
-    // Priority: always include in patch so "none" clears it.
-    const newPriorityNum = priorityOptionToNum(priorityDraft)
-    if (newPriorityNum !== task.priority) patch.priority = newPriorityNum
+    // Priority: include in patch when changed (undefined clears it).
+    if (priorityDraft !== task.priority) patch.priority = priorityDraft
 
     committingRef.current = true
     try {
@@ -158,7 +79,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
       e.preventDefault()
       setTitleDraft(task.title)
       setDoneWhenDraft(task.done_when ?? '')
-      setPriorityDraft(numToPriorityOption(task.priority))
+      setPriorityDraft(task.priority)
       setEditing(false)
     }
   }
@@ -229,7 +150,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
               aria-label="Edit done when"
             />
             <PriorityControl
-              taskId={task.id}
+              name={`edit-priority-${task.id}`}
               value={priorityDraft}
               onChange={setPriorityDraft}
             />
@@ -269,10 +190,10 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
                 animate={{ opacity: task.done ? 0.38 : 1 }}
                 transition={{ duration: 0.2 }}
                 className="inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-full border border-apple-gray-3 text-apple-gray-1 select-none"
-                aria-label={`Priority ${WEIGHT_BADGE[task.priority]}`}
-                title={`Priority ${WEIGHT_BADGE[task.priority]}`}
+                aria-label={`Priority ${priorityLabel(task.priority)}`}
+                title={`Priority ${priorityLabel(task.priority)}`}
               >
-                {WEIGHT_BADGE[task.priority]}
+                {priorityLabel(task.priority)}
               </motion.span>
             )}
           </button>
