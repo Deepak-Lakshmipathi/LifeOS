@@ -23,11 +23,11 @@ LifeOS = a single-user, Apple-feel life tracker. **One source of truth (an Obsid
 - Growing the `Task` model = update `src/types/index.ts` **and** bump the Dexie schema version in `LifeOSDb.ts` when an indexed field changes.
 - Every slice must keep the PWA **installable + offline** (no regression). CI gates build/test + emulated PWA install/offline checks (`docs/testing/pwa-emulation-protocol.md`).
 
-## Current waterline — Slice S3 (shipped)
+## Current waterline — Slice S4 (shipped)
 
-`Task { id, title, done, created_at, done_when?, priority? }`. Seam mutation-generic (ADR-0004): `add(input: { title, done_when?, priority? }) / update(id, patch: Partial<Pick<Task,'title'|'done_when'|'priority'>>) / list() / toggleDone(id) / delete(id)`. `priority` is `1 | 2 | 3` — the first Dexie-indexed Task field, schema bumped to **v2** (legacy rows fall out of the index, still load). UI: a shared `PriorityControl` (`src/components/PriorityControl.tsx`) keyed directly on `1|2|3|undefined` — Low/Med/High segmented control on create + inline edit, read-only weight badge on the card. `LocalOnly` over IndexedDB. Installable offline PWA, Apple-feel UI.
+`Task { id, title, done, created_at, done_when?, priority?, project? }`. Seam mutation-generic (ADR-0004): `add(input: { title, done_when?, priority?, project? }) / update(id, patch: Partial<Pick<Task,'title'|'done_when'|'priority'|'project'>>) / list() / toggleDone(id) / delete(id)`. `priority` is `1 | 2 | 3`, the first Dexie-indexed field (schema **v2**). `project` is a denormalized free-text string — consumed only by in-memory grouping, so **no index, no schema bump** (still v2; ADR-0005). The list renders **grouped by project** via the pure helper `src/lib/groupByProject.ts` (Inbox-first for unparented); project-name suggestions come from `src/lib/distinctProjects.ts` feeding a native `<datalist>`. UI: shared `PriorityControl`, plus a native `<input list>` for project on create + inline edit. `LocalOnly` over IndexedDB. Installable offline PWA, Apple-feel UI.
 
-**Shipped slices:** S1 (PRs #4/#6) · S2 (PRD #8 → #11 seam + #12 UI) · S3 (PRD #15 → #18 seam + #21 UI). **Next:** S4 project — `project?: string` on the Task (Group A continues).
+**Shipped slices:** S1 (PRs #4/#6) · S2 (PRD #8 → #11 seam + #12 UI) · S3 (PRD #15 → #18 seam + #21 UI) · S4 (PRD #24 → single atomic slice #25 / PR #26; ADR-0005). **Next:** S5 domain + seed — `domain?: string` on the Task + seed import (Group A finale).
 
 > Repo hygiene: `src/types` is a single `index.ts` (the old `task.ts` was folded in); ids use native `crypto.randomUUID()` (no `uuid` dep); the dead `src/sync/index.ts` barrel was removed (ponytail audit, PR #20). Import `Task` from `'../types'`.
 
