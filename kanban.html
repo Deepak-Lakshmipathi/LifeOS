@@ -246,13 +246,18 @@
       "notes": "Atomic slice. project? on Task, native datalist suggestions, groupByProject -> Inbox-first sections. Seam widens only (ADR-0004), schema stays v2 (ADR-0005). Merged 4452220; docs PR #27."
     },
     {
-      "id": "s5", "title": "Domains + seed the vault shape", "column": "backlog", "slice": "S5",
-      "issue": null, "pr": null, "blockedBy": ["s4"],
-      "notes": "Group A finale. domain?: string (one of 7) + import seed_tasks_detailed.json. Plain string, no index (ADR-0005)."
+      "id": "s5prd", "title": "PRD: Slice S5 — Domain + seed the vault shape", "column": "done", "slice": "S5",
+      "issue": 29, "pr": null, "blockedBy": [],
+      "notes": "Parent spec. domain?: string (one of 7), denormalized string, no Dexie index (ADR-0005); seed-on-empty importer (ADR-0006)."
     },
     {
-      "id": "s6", "title": "NOW view (dumb brain)", "column": "backlog", "slice": "S6",
-      "issue": null, "pr": null, "blockedBy": ["s5"],
+      "id": "s5", "title": "Domain + seed (domain?: string + nested list + seed import)", "column": "done", "slice": "S5",
+      "issue": 30, "pr": 31, "blockedBy": [],
+      "notes": "Group A finale DONE (atomic slice, PRD #29; PR #31 squash eac5ed1). domain?: string (one of 7) + DOMAIN_COLORS palette + groupByDomain (Domain->Project->Task) + idempotent seedIfEmpty import of seed_tasks_detailed.json (107 tasks, ?noseed test hook). useTasks.refresh added (no liveQuery). Seam widens only (ADR-0004), schema stays v2 (ADR-0005/ADR-0006)."
+    },
+    {
+      "id": "s6", "title": "NOW view (dumb brain)", "column": "ready", "slice": "S6",
+      "issue": null, "pr": null, "blockedBy": [],
       "notes": "Group B. First command-center surface — flat priority-ranked NOW list (no balance logic yet)."
     },
     {
