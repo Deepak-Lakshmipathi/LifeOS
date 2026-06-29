@@ -58,9 +58,10 @@ describe('Seam isolation', () => {
     // here we verify the contracts at runtime.
 
     // Import every component module
+    // Note: TaskList.tsx was deleted in S10 (it was no longer imported after S9
+    // replaced the Domains tab with DomainsMap tiles).
     const AddTaskInput = await import('../components/AddTaskInput')
     const TaskItem = await import('../components/TaskItem')
-    const TaskList = await import('../components/TaskList')
     const App = await import('../App')
     const useTasks = await import('../hooks/useTasks')
 
@@ -68,7 +69,6 @@ describe('Seam isolation', () => {
     const exports = [
       ...Object.keys(AddTaskInput),
       ...Object.keys(TaskItem),
-      ...Object.keys(TaskList),
       ...Object.keys(App),
       ...Object.keys(useTasks),
     ]

@@ -4,6 +4,8 @@ import type { Task } from '../types'
 import { TaskItem } from './TaskItem'
 import { UndoToast } from './UndoToast'
 import { rankNow } from '../now/rankNow'
+import type { RankedTask } from '../now/rankNow'
+import { computeWarmth } from '../warmth/computeWarmth'
 
 interface NowViewProps {
   tasks: Task[]
@@ -20,7 +22,9 @@ const LIVE_COUNT = 3
 const UPNEXT_COUNT = 5
 
 export function NowView({ tasks, onToggle, onDelete, onUpdate, projects }: NowViewProps) {
-  const ranked = rankNow(tasks)
+  // Balance brain: inject warmth so rankNow stays pure (ADR-0008).
+  const warmth = computeWarmth(tasks, Date.now())
+  const ranked: RankedTask[] = rankNow(tasks, warmth)
 
   /** Tracks the most-recently completed task so we can show the Undo toast.
    *  Only set in NowView because completed tasks exit the ranked list — the
@@ -42,10 +46,11 @@ export function NowView({ tasks, onToggle, onDelete, onUpdate, projects }: NowVi
 
   const handleDismiss = useCallback(() => setPendingUndo(null), [])
 
-  const taskRow = (task: Task) => (
+  const taskRow = ({ task, rescue }: RankedTask) => (
     <TaskItem
       key={task.id}
       task={task}
+      rescue={rescue}
       onToggle={onToggle}
       onDelete={onDelete}
       onUpdate={onUpdate}
