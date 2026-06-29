@@ -9,7 +9,7 @@ A single thing the user intends to do. In Slice 1 it is the only entity: `{ id, 
 _Avoid_: todo, item, card
 
 **Domain**:
-A top-level area of life the user organizes around (e.g. Building Things, Career, Body & Mind).
+A top-level area of life the user organizes around. The set is fixed at **7**: Building Things, Career, Growth, Life Admin, Body & Mind, Finance, Relationship. A live optional field on the Task as of Slice S5 (`domain?: string`, constrained to the 7 — a typed `const`/union in `src/data/domains.ts`), with a static color palette (`DOMAIN_COLORS`) reserved for later glow/warmth. Like `project`, it is a denormalized string consumed only by in-memory grouping — **no Dexie index, no schema bump** (ADR-0005/ADR-0006).
 _Avoid_: folder (the seed JSON's key), category, area
 
 **Project**:
@@ -28,6 +28,10 @@ _Avoid_: definition of done, acceptance, note
 A Task's importance, `1 | 2 | 3` (3 = highest); absent = none. A live optional field as of Slice S3 — the first Dexie-indexed Task field (schema v2). Set via a Low/Med/High control on create + inline edit; shown as a weight badge.
 _Avoid_: weight, importance, urgency, rank
 
+**Seed**:
+The one-shot import of `seed_tasks_detailed.json` (folders → projects → tasks across the 7 domains) into the local store, run by `seedIfEmpty` on first launch only when the DB is empty (idempotent by empty-check; ADR-0006). Maps `folder`→domain, project `name`→project, carrying `priority`/`done_when`. Skipped under `?noseed` (test hook).
+_Avoid_: fixture, demo data, import (the verb is fine; the noun is "seed")
+
 **Slice**:
 A tracer-bullet vertical increment that pierces every architectural layer (UI → local data → PWA shell → sync seam), shippable on its own.
 _Avoid_: phase, milestone, sprint
@@ -40,7 +44,7 @@ _Avoid_: sync layer, backend (the backend does not exist yet)
 
 - A **Domain** contains one or more **Projects** (out of Slice 1 scope)
 - A **Project** contains one or more **Tasks** — as of S4 this relation is realized by the Task's denormalized `project` string (grouping), not a foreign key to a Project entity
-- A **Task** may carry a **done_when** (added in Slice S2), a **priority** (added in Slice S3), and a **project** name (added in Slice S4); project-less Tasks group under **Inbox**
+- A **Task** may carry a **done_when** (added in Slice S2), a **priority** (added in Slice S3), a **project** name (added in Slice S4), and a **domain** (added in Slice S5, one of the 7); project-less Tasks group under **Inbox**, and the list nests **Domain → Project → Task** (domain-less Tasks under an "Inbox" domain, first)
 - The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op; the seam mutates Tasks via `add(input)` + a generic `update(id, patch)` (ADR-0004)
 
 ## Flagged ambiguities
