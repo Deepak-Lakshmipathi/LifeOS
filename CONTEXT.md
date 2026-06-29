@@ -32,6 +32,14 @@ _Avoid_: weight, importance, urgency, rank
 The one-shot import of `seed_tasks_detailed.json` (folders → projects → tasks across the 7 domains) into the local store, run by `seedIfEmpty` on first launch only when the DB is empty (idempotent by empty-check; ADR-0006). Maps `folder`→domain, project `name`→project, carrying `priority`/`done_when`. Skipped under `?noseed` (test hook).
 _Avoid_: fixture, demo data, import (the verb is fine; the noun is "seed")
 
+**NOW**:
+The command-center home surface answering "what do I do now?" — a flat, cross-domain, priority-ranked queue of open Tasks. As of Slice S6 it is the **dumb brain**: pure priority order (`rankNow`), domain-blind. The **balance brain** (S10) later makes it smart (per-domain cap + coldest-domain injection + warmth).
+_Avoid_: home, dashboard, feed, today
+
+**rankNow**:
+The pure ranking function (`src/now/rankNow.ts`, S6) behind NOW: `rankNow(tasks) → Task[]`, excluding done Tasks, sorting priority descending (absent = lowest) then `created_at` ascending. The seam the balance brain (S10) extends; ranking never lives in the view.
+_Avoid_: sort, filter, order
+
 **Slice**:
 A tracer-bullet vertical increment that pierces every architectural layer (UI → local data → PWA shell → sync seam), shippable on its own.
 _Avoid_: phase, milestone, sprint
