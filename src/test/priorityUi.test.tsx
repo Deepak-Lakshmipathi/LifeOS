@@ -25,7 +25,7 @@ const noop = async () => {}
 describe('AddTaskInput — create with priority', () => {
   it('passes the chosen priority (High → 3) to onAdd', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), { target: { value: 'Ship S3b' } })
     fireEvent.click(screen.getByRole('radio', { name: 'High' }))
@@ -38,7 +38,7 @@ describe('AddTaskInput — create with priority', () => {
 
   it('defaults to untriaged — no choice passes priority: undefined', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), { target: { value: 'Quick capture' } })
     fireEvent.keyDown(screen.getByLabelText('New task title'), { key: 'Enter' })
@@ -51,7 +51,7 @@ describe('AddTaskInput — create with priority', () => {
   })
 
   it('"None" is the selected radio by default', () => {
-    render(<AddTaskInput onAdd={vi.fn()} />)
+    render(<AddTaskInput onAdd={vi.fn()} projects={[]} />)
     expect(screen.getByRole('radio', { name: 'None' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'High' })).not.toBeChecked()
   })
@@ -59,13 +59,13 @@ describe('AddTaskInput — create with priority', () => {
 
 describe('TaskItem — weight badge', () => {
   it('renders nothing for priority when it is absent', () => {
-    render(<TaskItem task={makeTask()} onToggle={noop} onDelete={noop} onUpdate={noop} />)
+    render(<TaskItem task={makeTask()} onToggle={noop} onDelete={noop} onUpdate={noop} projects={[]} />)
     expect(screen.queryByLabelText(/^Priority /)).not.toBeInTheDocument()
   })
 
   it('renders a labeled (non-color-alone) badge when priority is set', () => {
     render(
-      <TaskItem task={makeTask({ priority: 3 })} onToggle={noop} onDelete={noop} onUpdate={noop} />
+      <TaskItem task={makeTask({ priority: 3 })} onToggle={noop} onDelete={noop} onUpdate={noop} projects={[]} />
     )
     // Accessible name carries the meaning, not color alone.
     expect(screen.getByLabelText('Priority High')).toHaveTextContent('High')
@@ -76,7 +76,7 @@ describe('TaskItem — inline edit priority', () => {
   it('changing the priority commits the numeric value (Low → High = 3)', async () => {
     const onUpdate = vi.fn(async () => {})
     render(
-      <TaskItem task={makeTask({ priority: 1 })} onToggle={noop} onDelete={noop} onUpdate={onUpdate} />
+      <TaskItem task={makeTask({ priority: 1 })} onToggle={noop} onDelete={noop} onUpdate={onUpdate} projects={[]} />
     )
 
     fireEvent.click(screen.getByLabelText('Edit task'))
@@ -89,7 +89,7 @@ describe('TaskItem — inline edit priority', () => {
   it('selecting "None" clears the priority (priority: undefined)', async () => {
     const onUpdate = vi.fn(async () => {})
     render(
-      <TaskItem task={makeTask({ priority: 2 })} onToggle={noop} onDelete={noop} onUpdate={onUpdate} />
+      <TaskItem task={makeTask({ priority: 2 })} onToggle={noop} onDelete={noop} onUpdate={onUpdate} projects={[]} />
     )
 
     fireEvent.click(screen.getByLabelText('Edit task'))
