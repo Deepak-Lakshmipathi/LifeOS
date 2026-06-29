@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Task } from '../types'
 import { PriorityControl, priorityLabel, type Priority } from './PriorityControl'
+import { DOMAINS } from '../data/domains'
 
 interface TaskItemProps {
   task: Task
@@ -9,7 +10,7 @@ interface TaskItemProps {
   onDelete: (id: string) => Promise<void>
   onUpdate: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>
   ) => Promise<void>
   projects: string[]
 }
@@ -20,6 +21,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskI
   const [doneWhenDraft, setDoneWhenDraft] = useState(task.done_when ?? '')
   const [priorityDraft, setPriorityDraft] = useState<Priority>(task.priority)
   const [projectDraft, setProjectDraft] = useState(task.project ?? '')
+  const [domainDraft, setDomainDraft] = useState(task.domain ?? '')
   const titleInputRef = useRef<HTMLInputElement>(null)
   // Guards against double-commit (Enter then blur) and re-entrant commits.
   const committingRef = useRef(false)
@@ -29,6 +31,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskI
     setDoneWhenDraft(task.done_when ?? '')
     setPriorityDraft(task.priority)
     setProjectDraft(task.project ?? '')
+    setDomainDraft(task.domain ?? '')
     setEditing(true)
   }
 
@@ -53,8 +56,9 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskI
     }
 
     const trimmedProject = projectDraft.trim()
+    const trimmedDomain = domainDraft.trim()
 
-    const patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>> = {}
+    const patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>> = {}
     if (trimmedTitle !== task.title) patch.title = trimmedTitle
     // Emptying done_when clears it (seam unsets on empty/whitespace).
     if (trimmedDoneWhen !== (task.done_when ?? '')) patch.done_when = trimmedDoneWhen
@@ -62,6 +66,8 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskI
     if (priorityDraft !== task.priority) patch.priority = priorityDraft
     // Emptying project clears it (seam unsets on empty/whitespace).
     if (trimmedProject !== (task.project ?? '')) patch.project = trimmedProject
+    // Emptying domain clears it (seam unsets on empty/whitespace or invalid).
+    if (trimmedDomain !== (task.domain ?? '')) patch.domain = trimmedDomain
 
     committingRef.current = true
     try {
@@ -88,6 +94,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskI
       setDoneWhenDraft(task.done_when ?? '')
       setPriorityDraft(task.priority)
       setProjectDraft(task.project ?? '')
+      setDomainDraft(task.domain ?? '')
       setEditing(false)
     }
   }
@@ -173,6 +180,18 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskI
                 <option key={p} value={p} />
               ))}
             </datalist>
+            <select
+              value={domainDraft}
+              onChange={(e) => setDomainDraft(e.target.value)}
+              onBlur={commit}
+              className="bg-transparent text-sm text-apple-gray-1 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
+              aria-label="Edit domain"
+            >
+              <option value="">Domain…</option>
+              {DOMAINS.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
             <PriorityControl
               name={`edit-priority-${task.id}`}
               value={priorityDraft}

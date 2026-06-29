@@ -449,6 +449,75 @@ describe('project seam', () => {
   })
 })
 
+// ─── TEST 9: domain seam (Slice S5, ADR-0004 + ADR-0006) ─────────────────────
+describe('domain seam', () => {
+  let provider: SyncProvider
+
+  beforeEach(async () => {
+    await Dexie.delete('LifeOS')
+    provider = makeProvider()
+  })
+
+  it('add with valid domain — round-trips via list', async () => {
+    await provider.add({ title: 'Build something', domain: 'Building Things' })
+    const [stored] = await provider.list()
+    expect(stored.domain).toBe('Building Things')
+  })
+
+  it('add without domain — field ABSENT on stored task', async () => {
+    const t = await provider.add({ title: 'No domain' })
+    expect(t.domain).toBeUndefined()
+    expect('domain' in t).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.domain).toBeUndefined()
+    expect('domain' in stored).toBe(false)
+  })
+
+  it('add with invalid domain — treated as absent (never stored)', async () => {
+    const t = await provider.add({ title: 'Bad domain', domain: 'NotADomain' })
+    expect(t.domain).toBeUndefined()
+    expect('domain' in t).toBe(false)
+
+    const [stored] = await provider.list()
+    expect('domain' in stored).toBe(false)
+  })
+
+  it('update sets domain on an existing task', async () => {
+    const t = await provider.add({ title: 'Needs domain' })
+    const updated = await provider.update(t.id, { domain: 'Career' })
+    expect(updated.domain).toBe('Career')
+
+    const [stored] = await provider.list()
+    expect(stored.domain).toBe('Career')
+  })
+
+  it('update with empty domain UNSETS the field (absent, not "")', async () => {
+    const t = await provider.add({ title: 'Has domain', domain: 'Finance' })
+    expect(t.domain).toBe('Finance')
+
+    const updated = await provider.update(t.id, { domain: '' })
+    expect(updated.domain).toBeUndefined()
+    expect('domain' in updated).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.domain).toBeUndefined()
+    expect('domain' in stored).toBe(false)
+  })
+
+  it('update omitting domain leaves it untouched (partial merge)', async () => {
+    const t = await provider.add({ title: 'Keep domain', domain: 'Growth' })
+
+    // patch only title — domain must survive
+    const updated = await provider.update(t.id, { title: 'Renamed' })
+    expect(updated.title).toBe('Renamed')
+    expect(updated.domain).toBe('Growth')
+
+    const [stored] = await provider.list()
+    expect(stored.domain).toBe('Growth')
+  })
+})
+
 // ─── TEST 8: migration — v1 rows load correctly through v2 LocalOnly ──────────
 describe('priority migration — v1 rows survive Dexie v2 upgrade', () => {
   it('a record written via raw Dexie v1 loads without priority through LocalOnly (v2)', async () => {

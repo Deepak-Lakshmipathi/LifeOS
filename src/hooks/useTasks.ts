@@ -5,10 +5,11 @@ import type { SyncProvider } from '../sync/SyncProvider'
 export interface UseTasksResult {
   tasks: Task[]
   loading: boolean
-  addTask: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string }) => Promise<void>
+  refresh: () => Promise<void>
+  addTask: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string; domain?: string }) => Promise<void>
   updateTask: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>
   ) => Promise<void>
   toggleDone: (id: string) => Promise<void>
   deleteTask: (id: string) => Promise<void>
@@ -31,17 +32,17 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   }, [provider])
 
   const addTask = useCallback(
-    async (input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string }) => {
+    async (input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string; domain?: string }) => {
       const trimmed = input.title.trim()
       if (!trimmed) return
-      await provider.add({ title: trimmed, done_when: input.done_when, priority: input.priority, project: input.project })
+      await provider.add({ title: trimmed, done_when: input.done_when, priority: input.priority, project: input.project, domain: input.domain })
       await refresh()
     },
     [provider, refresh]
   )
 
   const updateTask = useCallback(
-    async (id: string, patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>) => {
+    async (id: string, patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>) => {
       await provider.update(id, patch)
       await refresh()
     },
@@ -68,5 +69,5 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
     [provider, refresh]
   )
 
-  return { tasks, loading, addTask, updateTask, toggleDone, deleteTask }
+  return { tasks, loading, refresh, addTask, updateTask, toggleDone, deleteTask }
 }
