@@ -118,23 +118,25 @@ test('tasks added online persist after going offline and reloading', async ({ pa
 })
 
 // ---------------------------------------------------------------------------
-// 5. Seeded Domain → Project grouping (Slice S5, nav via S7 tab bar)
+// 5. Domains tab shows warmth tiles (Slice S9, replaces grouped task list)
 // ---------------------------------------------------------------------------
-test('seed import runs on empty DB and renders Domain → Project grouping', async ({ page }) => {
+test('Domains tab renders one warmth tile per domain after seed import', async ({ page }) => {
   // Load WITHOUT ?noseed so seedIfEmpty fires on an empty DB
   await page.goto('/')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
-  // S7: the nested Domain → Project grouping lives under the Domains tab.
-  // Navigate there via the tab bar (replaces the S6 "All" toggle button).
+  // S7: navigate to the Domains tab via the tab bar.
   await page.getByRole('button', { name: 'Domains' }).click()
 
-  // Wait for the seeded tasks to render — domain headers use data-testid="domain-header".
-  // "Building Things" is the first domain in DOMAINS order and must appear as a visible header.
-  await expect(
-    page.locator('[data-testid="domain-header"]').filter({ hasText: 'Building Things' }),
-  ).toBeVisible({ timeout: 10000 })
+  // S9: the Domains tab now shows DomainsMap — 7 warmth tiles, one per domain.
+  // Wait for tiles to appear (seed data may still be loading).
+  await expect(page.locator('[data-testid="domain-tile"]').first()).toBeVisible({ timeout: 10000 })
 
-  // A seeded task title proves that the Startup project was imported correctly.
-  await expect(page.getByText('Finalize company structure (OPC vs Pvt Ltd)')).toBeVisible()
+  // Exactly 7 tiles — one per canonical domain.
+  await expect(page.locator('[data-testid="domain-tile"]')).toHaveCount(7)
+
+  // The "Building Things" tile must be present (first domain in DOMAINS order).
+  await expect(
+    page.locator('[data-testid="domain-tile"][data-domain="Building Things"]'),
+  ).toBeVisible()
 })

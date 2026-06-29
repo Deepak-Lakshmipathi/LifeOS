@@ -123,7 +123,13 @@ export class LocalOnly implements SyncProvider {
   async toggleDone(id: string): Promise<Task> {
     const task = await db.tasks.get(id)
     if (!task) throw new Error(`Task ${id} not found`)
-    const updated: Task = { ...task, done: !task.done }
+    const completing = !task.done
+    const updated: Task = { ...task, done: completing }
+    if (completing) {
+      updated.completed_at = Date.now()
+    } else {
+      delete updated.completed_at
+    }
     await db.tasks.put(updated)
     return updated
   }
