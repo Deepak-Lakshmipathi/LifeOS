@@ -19,6 +19,9 @@ import { DOMAINS, DOMAIN_COLORS } from '../data/domains'
 import type { Domain } from '../data/domains'
 import { computeWarmth } from '../warmth/computeWarmth'
 import type { WarmthState } from '../warmth/computeWarmth'
+// GlassPanel imported for visual consistency; no behavioral use.
+import { GlassPanel } from './GlassPanel'
+import type { GlassElevation } from './GlassPanel'
 
 interface DomainsMapProps {
   tasks: Task[]
@@ -29,7 +32,10 @@ interface DomainsMapProps {
 // ---------------------------------------------------------------------------
 
 interface WarmthVisual {
-  /** CSS box-shadow glow for the tile */
+  /**
+   * Extra box-shadow glow applied on top of the glass panel's base shadow.
+   * The domain color is injected at call-site via the `color` parameter.
+   */
   glow: (color: string) => string
   /** Opacity applied to the whole tile (frosted effect for cold) */
   opacity: number
@@ -39,43 +45,50 @@ interface WarmthVisual {
   badgeBg: string
   /** Badge text color */
   badgeText: string
+  /** Glass elevation level — hotter = more elevated */
+  elevation: GlassElevation
 }
 
 const WARMTH_VISUAL: Record<WarmthState, WarmthVisual> = {
   hot: {
-    glow: (c) => `0 0 20px 6px ${c}88, 0 2px 8px ${c}44`,
+    glow: (c) => `0 0 20px 6px ${c}88, 0 2px 8px ${c}44, inset 0 1px 0 rgba(255,255,255,0.70)`,
     opacity: 1,
     filter: 'none',
     badgeBg: 'rgba(255,55,95,0.15)',
     badgeText: '#FF375F',
+    elevation: 'elevated',
   },
   warm: {
-    glow: (c) => `0 0 14px 3px ${c}66`,
+    glow: (c) => `0 0 14px 3px ${c}66, inset 0 1px 0 rgba(255,255,255,0.65)`,
     opacity: 1,
     filter: 'none',
     badgeBg: 'rgba(255,159,10,0.15)',
     badgeText: '#FF9F0A',
+    elevation: 'raised',
   },
   ok: {
-    glow: (c) => `0 0 8px 1px ${c}44`,
+    glow: (c) => `0 0 8px 1px ${c}44, inset 0 1px 0 rgba(255,255,255,0.60)`,
     opacity: 0.95,
     filter: 'none',
     badgeBg: 'rgba(48,209,88,0.12)',
     badgeText: '#30D158',
+    elevation: 'base',
   },
   stale: {
-    glow: (_c) => '0 1px 4px rgba(0,0,0,0.08)',
+    glow: (_c) => '0 1px 4px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.50)',
     opacity: 0.75,
     filter: 'saturate(0.5)',
     badgeBg: 'rgba(142,142,147,0.12)',
     badgeText: '#8E8E93',
+    elevation: 'base',
   },
   cold: {
-    glow: (_c) => '0 1px 4px rgba(0,0,0,0.08)',
+    glow: (_c) => '0 1px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.40)',
     opacity: 0.45,
     filter: 'saturate(0.15) brightness(0.9)',
     badgeBg: 'rgba(142,142,147,0.10)',
     badgeText: '#8E8E93',
+    elevation: 'base',
   },
 }
 
@@ -113,37 +126,42 @@ export function DomainsMap({ tasks }: DomainsMapProps) {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: visual.opacity, scale: 1 }}
               transition={{ duration: 0.2 }}
-              className="relative rounded-2xl p-4 bg-white border"
-              style={{
-                borderColor: 'rgba(60,60,67,0.10)',
-                boxShadow: visual.glow(color),
-                filter: visual.filter,
-              }}
+              className="relative"
+              style={{ filter: visual.filter }}
             >
-              {/* Color accent bar */}
-              <div
-                className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
-                style={{ backgroundColor: color }}
-              />
-
-              {/* Domain name */}
-              <p
-                className="mt-2 text-sm font-semibold leading-tight"
-                style={{ color: '#1C1C1E' }}
-              >
-                {domain}
-              </p>
-
-              {/* Warmth state badge */}
-              <span
-                className="mt-2 inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+              <GlassPanel
+                elevation={visual.elevation}
+                className="relative rounded-2xl p-4 overflow-hidden"
                 style={{
-                  backgroundColor: visual.badgeBg,
-                  color: visual.badgeText,
+                  boxShadow: visual.glow(color),
+                  border: `1px solid var(--glass-border-outer)`,
                 }}
               >
-                {state}
-              </span>
+                {/* Color accent bar — integrated into the glass tile */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
+                  style={{ backgroundColor: color }}
+                />
+
+                {/* Domain name */}
+                <p
+                  className="mt-2 text-sm font-semibold leading-tight"
+                  style={{ color: '#1C1C1E' }}
+                >
+                  {domain}
+                </p>
+
+                {/* Warmth state badge */}
+                <span
+                  className="mt-2 inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                  style={{
+                    backgroundColor: visual.badgeBg,
+                    color: visual.badgeText,
+                  }}
+                >
+                  {state}
+                </span>
+              </GlassPanel>
             </motion.div>
           )
         })}

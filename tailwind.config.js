@@ -43,6 +43,11 @@ export default {
       boxShadow: {
         'ios': '0 2px 8px rgba(0,0,0,0.08)',
         'ios-md': '0 4px 16px rgba(0,0,0,0.12)',
+        // Glass/elevation system (S11)
+        'glass-sm':    '0 2px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.50)',
+        'glass-md':    '0 4px 24px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.60)',
+        'glass-lg':    '0 8px 40px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.70)',
+        'glass-float': '0 16px 60px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.80)',
       },
       transitionTimingFunction: {
         'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
