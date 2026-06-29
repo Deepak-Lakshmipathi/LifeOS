@@ -29,7 +29,7 @@ const noop = async () => {}
 describe('AddTaskInput — create with done_when', () => {
   it('passes a normalized done_when to onAdd', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} tasks={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), {
       target: { value: 'Ship S2b' },
@@ -46,7 +46,7 @@ describe('AddTaskInput — create with done_when', () => {
 
   it('normalizes empty/whitespace done_when to undefined', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} tasks={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), {
       target: { value: 'No criterion' },

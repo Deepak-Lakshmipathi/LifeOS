@@ -22,4 +22,11 @@ export interface Task {
    * on empty/whitespace, mirroring done_when semantics).
    */
   project?: string;
+  /**
+   * Domain the Task belongs to. Optional; constrained to the 7 canonical
+   * domains (see DOMAINS in src/data/domains.ts). Never queried via Dexie —
+   * grouping is pure in-memory (ADR-0005/ADR-0006). Stored only when a valid
+   * domain string; invalid/empty/whitespace is unset (seam normalizes).
+   */
+  domain?: string;
 }

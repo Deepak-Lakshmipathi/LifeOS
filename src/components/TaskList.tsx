@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../types'
 import { TaskItem } from './TaskItem'
-import { groupByProject } from '../lib/groupByProject'
+import { groupByDomain } from '../lib/groupByDomain'
 
 interface TaskListProps {
   tasks: Task[]
@@ -9,7 +9,7 @@ interface TaskListProps {
   onDelete: (id: string) => Promise<void>
   onUpdate: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>
   ) => Promise<void>
   projects: string[]
 }
@@ -52,26 +52,39 @@ export function TaskList({ tasks, onToggle, onDelete, onUpdate, projects }: Task
       className="divide-y"
       style={{ '--tw-divide-opacity': '1', borderColor: 'rgba(60,60,67,0.12)' } as React.CSSProperties}
     >
-      {groupByProject(tasks).map((group) => (
-        <div key={group.key ?? '__inbox__'}>
+      {groupByDomain(tasks).map((domainGroup) => (
+        <div key={domainGroup.key ?? '__inbox_domain__'}>
+          {/* Domain header */}
           <div
-            className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-apple-gray-1"
-            style={{ color: '#8E8E93' }}
+            data-testid="domain-header"
+            className="px-4 pt-5 pb-1 text-sm font-bold uppercase tracking-widest"
+            style={{ color: '#3C3C43' }}
           >
-            {group.label}
+            {domainGroup.label}
           </div>
-          <AnimatePresence initial={false} mode="popLayout">
-            {group.tasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onToggle={onToggle}
-                onDelete={onDelete}
-                onUpdate={onUpdate}
-                projects={projects}
-              />
-            ))}
-          </AnimatePresence>
+          {/* Project sub-groups within this domain */}
+          {domainGroup.projects.map((group) => (
+            <div key={group.key ?? '__inbox__'}>
+              <div
+                className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-apple-gray-1"
+                style={{ color: '#8E8E93' }}
+              >
+                {group.label}
+              </div>
+              <AnimatePresence initial={false} mode="popLayout">
+                {group.tasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                    onUpdate={onUpdate}
+                    projects={projects}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          ))}
         </div>
       ))}
     </motion.div>

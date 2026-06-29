@@ -12,8 +12,9 @@ export interface SyncProvider {
    * `done_when` is optional; empty/whitespace is treated as absent.
    * `priority` is optional; when present must be 1, 2, or 3 (3 = highest).
    * `project` is optional; empty/whitespace is treated as absent.
+   * `domain` is optional; empty/whitespace or a value not in DOMAINS is treated as absent.
    */
-  add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string }): Promise<Task>
+  add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string; domain?: string }): Promise<Task>
 
   /**
    * The ONE generic field setter (ADR-0004). Applies a partial patch to the
@@ -27,11 +28,12 @@ export interface SyncProvider {
    * - empty/whitespace `title` throws;
    * - out-of-range `priority` (not 1, 2, or 3) throws;
    * - empty/whitespace `project` UNSETS the field (never stores '');
+   * - empty/whitespace or invalid `domain` UNSETS the field (never stores '' or a non-domain);
    * - unknown id throws.
    */
   update(
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>,
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>,
   ): Promise<Task>
 
   /** Return all tasks, newest first. */

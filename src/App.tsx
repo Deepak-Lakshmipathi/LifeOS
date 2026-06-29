@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { LocalOnly } from './sync/LocalOnly'
 import type { SyncProvider } from './sync/SyncProvider'
@@ -5,14 +6,23 @@ import { useTasks } from './hooks/useTasks'
 import { AddTaskInput } from './components/AddTaskInput'
 import { TaskList } from './components/TaskList'
 import { distinctProjects } from './lib/distinctProjects'
+import { seedIfEmpty } from './data/seed'
 
 // The provider is instantiated once at module level.
 // Swap to a RemoteSync implementation here when sync lands (ADR-0002).
 const provider: SyncProvider = new LocalOnly()
 
 export default function App() {
-  const { tasks, loading, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
+  const { tasks, loading, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
   const projects = distinctProjects(tasks)
+
+  // One-shot seed import on mount: no-ops when DB is non-empty or ?noseed is set (ADR-0006).
+  // After seeding, refresh the task list so the UI reflects the new rows.
+  useEffect(() => {
+    seedIfEmpty(provider).then((count) => {
+      if (count > 0) refresh()
+    })
+  }, [refresh])
 
   return (
     <div
@@ -26,7 +36,7 @@ export default function App() {
 
       {/* Add task */}
       <div className="bg-white/95 backdrop-blur-md border-b" style={{ borderColor: 'rgba(60,60,67,0.12)' }}>
-        <AddTaskInput onAdd={addTask} projects={projects} />
+        <AddTaskInput onAdd={addTask} projects={projects} tasks={tasks} />
       </div>
 
       {/* Task list */}

@@ -25,7 +25,7 @@ const noop = async () => {}
 describe('AddTaskInput — create with priority', () => {
   it('passes the chosen priority (High → 3) to onAdd', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} tasks={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), { target: { value: 'Ship S3b' } })
     fireEvent.click(screen.getByRole('radio', { name: 'High' }))
@@ -38,7 +38,7 @@ describe('AddTaskInput — create with priority', () => {
 
   it('defaults to untriaged — no choice passes priority: undefined', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} tasks={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), { target: { value: 'Quick capture' } })
     fireEvent.keyDown(screen.getByLabelText('New task title'), { key: 'Enter' })
@@ -51,7 +51,7 @@ describe('AddTaskInput — create with priority', () => {
   })
 
   it('"None" is the selected radio by default', () => {
-    render(<AddTaskInput onAdd={vi.fn()} projects={[]} />)
+    render(<AddTaskInput onAdd={vi.fn()} projects={[]} tasks={[]} />)
     expect(screen.getByRole('radio', { name: 'None' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'High' })).not.toBeChecked()
   })
