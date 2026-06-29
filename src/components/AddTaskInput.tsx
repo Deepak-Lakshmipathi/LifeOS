@@ -2,13 +2,15 @@ import { useState, type KeyboardEvent } from 'react'
 import { PriorityControl, type Priority } from './PriorityControl'
 
 interface AddTaskInputProps {
-  onAdd: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }) => Promise<void>
+  onAdd: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string }) => Promise<void>
+  projects: string[]
 }
 
-export function AddTaskInput({ onAdd }: AddTaskInputProps) {
+export function AddTaskInput({ onAdd, projects }: AddTaskInputProps) {
   const [value, setValue] = useState('')
   const [doneWhen, setDoneWhen] = useState('')
   const [priority, setPriority] = useState<Priority>(undefined)
+  const [project, setProject] = useState('')
   const [shaking, setShaking] = useState(false)
 
   const commit = async () => {
@@ -21,14 +23,18 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
     }
     // Normalize empty/whitespace done_when to undefined before hitting the seam.
     const trimmedDoneWhen = doneWhen.trim()
+    // Normalize empty/whitespace project to undefined before hitting the seam.
+    const trimmedProject = project.trim()
     await onAdd({
       title: trimmed,
       done_when: trimmedDoneWhen || undefined,
       priority,
+      project: trimmedProject || undefined,
     })
     setValue('')
     setDoneWhen('')
     setPriority(undefined)
+    setProject('')
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -73,6 +79,21 @@ export function AddTaskInput({ onAdd }: AddTaskInputProps) {
             className="bg-transparent text-apple-gray-1 placeholder-apple-gray-2 text-sm outline-none"
             aria-label="Done when"
           />
+          <input
+            type="text"
+            list="project-suggestions"
+            value={project}
+            onChange={(e) => setProject(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Project…"
+            className="bg-transparent text-apple-gray-1 placeholder-apple-gray-2 text-sm outline-none"
+            aria-label="Project"
+          />
+          <datalist id="project-suggestions">
+            {projects.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
           <PriorityControl name="add-task-priority" value={priority} onChange={setPriority} />
         </div>
       </div>

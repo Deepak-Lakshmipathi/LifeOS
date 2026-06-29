@@ -380,6 +380,75 @@ describe('priority seam', () => {
   })
 })
 
+// ─── TEST 8b: project seam (Slice S4, ADR-0004 + ADR-0005) ──────────────────
+describe('project seam', () => {
+  let provider: SyncProvider
+
+  beforeEach(async () => {
+    await Dexie.delete('LifeOS')
+    provider = makeProvider()
+  })
+
+  it('add with project — round-trips via list', async () => {
+    await provider.add({ title: 'Task with project', project: 'Work' })
+    const [stored] = await provider.list()
+    expect(stored.project).toBe('Work')
+  })
+
+  it('add without project — field ABSENT on stored task', async () => {
+    const t = await provider.add({ title: 'No project' })
+    expect(t.project).toBeUndefined()
+    expect('project' in t).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.project).toBeUndefined()
+    expect('project' in stored).toBe(false)
+  })
+
+  it('add with whitespace project — treated as absent (never stored)', async () => {
+    const t = await provider.add({ title: 'Blank project', project: '   ' })
+    expect(t.project).toBeUndefined()
+    expect('project' in t).toBe(false)
+
+    const [stored] = await provider.list()
+    expect('project' in stored).toBe(false)
+  })
+
+  it('update sets project on an existing task', async () => {
+    const t = await provider.add({ title: 'Needs project' })
+    const updated = await provider.update(t.id, { project: 'Personal' })
+    expect(updated.project).toBe('Personal')
+
+    const [stored] = await provider.list()
+    expect(stored.project).toBe('Personal')
+  })
+
+  it('update with empty/whitespace project UNSETS the field (absent, not "")', async () => {
+    const t = await provider.add({ title: 'Has project', project: 'Work' })
+    expect(t.project).toBe('Work')
+
+    const updated = await provider.update(t.id, { project: '   ' })
+    expect(updated.project).toBeUndefined()
+    expect('project' in updated).toBe(false)
+
+    const [stored] = await provider.list()
+    expect(stored.project).toBeUndefined()
+    expect('project' in stored).toBe(false)
+  })
+
+  it('update omitting project leaves it untouched (partial merge)', async () => {
+    const t = await provider.add({ title: 'Keep project', project: 'Work' })
+
+    // patch only title — project must survive
+    const updated = await provider.update(t.id, { title: 'Renamed' })
+    expect(updated.title).toBe('Renamed')
+    expect(updated.project).toBe('Work')
+
+    const [stored] = await provider.list()
+    expect(stored.project).toBe('Work')
+  })
+})
+
 // ─── TEST 8: migration — v1 rows load correctly through v2 LocalOnly ──────────
 describe('priority migration — v1 rows survive Dexie v2 upgrade', () => {
   it('a record written via raw Dexie v1 loads without priority through LocalOnly (v2)', async () => {
