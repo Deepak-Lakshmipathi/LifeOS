@@ -256,9 +256,14 @@
       "notes": "Group A finale DONE (atomic slice, PRD #29; PR #31 squash eac5ed1). domain?: string (one of 7) + DOMAIN_COLORS palette + groupByDomain (Domain->Project->Task) + idempotent seedIfEmpty import of seed_tasks_detailed.json (107 tasks, ?noseed test hook). useTasks.refresh added (no liveQuery). Seam widens only (ADR-0004), schema stays v2 (ADR-0005/ADR-0006)."
     },
     {
-      "id": "s6", "title": "NOW view (dumb brain)", "column": "ready", "slice": "S6",
-      "issue": null, "pr": null, "blockedBy": [],
-      "notes": "Group B. First command-center surface — flat priority-ranked NOW list (no balance logic yet)."
+      "id": "s6prd", "title": "PRD: S6 NOW view (dumb brain)", "column": "progress", "slice": "S6",
+      "issue": 34, "pr": null, "blockedBy": [],
+      "notes": "Parent spec. Flat priority-ranked NOW surface; pure rankNow + Now/All toggle (ADR-0007). No model/seam change."
+    },
+    {
+      "id": "s6", "title": "NOW view (dumb brain)", "column": "progress", "slice": "S6",
+      "issue": 35, "pr": null, "blockedBy": [],
+      "notes": "Group B. First command-center surface — flat priority-ranked NOW list (no balance logic yet). rankNow(tasks) pure helper (priority desc, created_at asc, done excluded) + NowView (top 3 live, Up next/Later folded) + Now/All header toggle. ADR-0007. PRD #34. Dispatched via afk-pipeline auto."
     },
     {
       "id": "s7", "title": "Tab bar navigation", "column": "backlog", "slice": "S7",
