@@ -1,6 +1,6 @@
 # LifeOS — Handoff
 
-Last updated: 2026-06-29. Picks up after Slice S5 shipped via the `afk-pipeline auto` run (headless: grill → PRD #29 → slice #30 → PR #31 → dual-green auto-merge `eac5ed1`). **Group A is complete.**
+Last updated: 2026-06-29. Picks up after Slice S5 shipped via the `afk-pipeline auto` run (headless: grill → PRD #29 → slice #30 → PR #31 → dual-green auto-merge `eac5ed1`; docs landed via PR #32 `a8a43c9`). **Group A is complete.** App verified running locally (`npm run dev`) — first load seeds 107 tasks, renders nested Domain → Project → Task.
 
 ## What LifeOS is
 A personal, Apple-feel life tracker for a single user (the repo owner), built local-first as an installable PWA that runs offline on Windows and Android. Restarting after a full teardown; seed data in `seed_tasks_detailed.json` captures the long-term intent (folders → projects → tasks across 7 life domains). Read `CONTEXT.md` for the glossary, `docs/slices/README.md` for the slice backbone + product vision, and `memory/lifeos-vision-2026-06-22.md` for the full design rationale (Obsidian-vault backend, three faces: PWA dashboard, Telegram bot, Obsidian).
@@ -50,7 +50,7 @@ kanban.html                live board (data + UI in one file; edit the #board-da
 ```
 npm install
 npm run dev            # dev server
-npm test               # Vitest (68 tests)
+npm test               # Vitest (98 tests)
 npm run build && npm run preview   # prod build to install/offline-test
 npx playwright install chromium && npm run test:e2e   # PWA e2e
 npm run test:pwa-audit # installability audit
