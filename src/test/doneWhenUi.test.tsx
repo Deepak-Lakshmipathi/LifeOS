@@ -29,7 +29,7 @@ const noop = async () => {}
 describe('AddTaskInput — create with done_when', () => {
   it('passes a normalized done_when to onAdd', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), {
       target: { value: 'Ship S2b' },
@@ -46,7 +46,7 @@ describe('AddTaskInput — create with done_when', () => {
 
   it('normalizes empty/whitespace done_when to undefined', async () => {
     const onAdd = vi.fn(async () => {})
-    render(<AddTaskInput onAdd={onAdd} />)
+    render(<AddTaskInput onAdd={onAdd} projects={[]} />)
 
     fireEvent.change(screen.getByLabelText('New task title'), {
       target: { value: 'No criterion' },
@@ -65,7 +65,7 @@ describe('AddTaskInput — create with done_when', () => {
 describe('TaskItem — card render', () => {
   it('renders nothing for done_when when it is absent', () => {
     render(
-      <TaskItem task={makeTask()} onToggle={noop} onDelete={noop} onUpdate={noop} />
+      <TaskItem task={makeTask()} onToggle={noop} onDelete={noop} onUpdate={noop} projects={[]} />
     )
     expect(screen.getByText('Write the report')).toBeInTheDocument()
     // No secondary line: only the title text is present.
@@ -79,6 +79,7 @@ describe('TaskItem — card render', () => {
         onToggle={noop}
         onDelete={noop}
         onUpdate={noop}
+        projects={[]}
       />
     )
     expect(screen.getByText('Boss signs off')).toBeInTheDocument()
@@ -94,6 +95,7 @@ describe('TaskItem — inline edit', () => {
         onToggle={noop}
         onDelete={noop}
         onUpdate={onUpdate}
+        projects={[]}
       />
     )
 
@@ -110,7 +112,7 @@ describe('TaskItem — inline edit', () => {
   it('rejected empty title keeps the row in edit mode and preserves the prior title', async () => {
     const onUpdate = vi.fn(async () => {})
     render(
-      <TaskItem task={makeTask()} onToggle={noop} onDelete={noop} onUpdate={onUpdate} />
+      <TaskItem task={makeTask()} onToggle={noop} onDelete={noop} onUpdate={onUpdate} projects={[]} />
     )
 
     fireEvent.click(screen.getByLabelText('Edit task'))

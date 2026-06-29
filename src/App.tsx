@@ -4,6 +4,7 @@ import type { SyncProvider } from './sync/SyncProvider'
 import { useTasks } from './hooks/useTasks'
 import { AddTaskInput } from './components/AddTaskInput'
 import { TaskList } from './components/TaskList'
+import { distinctProjects } from './lib/distinctProjects'
 
 // The provider is instantiated once at module level.
 // Swap to a RemoteSync implementation here when sync lands (ADR-0002).
@@ -11,6 +12,7 @@ const provider: SyncProvider = new LocalOnly()
 
 export default function App() {
   const { tasks, loading, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
+  const projects = distinctProjects(tasks)
 
   return (
     <div
@@ -24,7 +26,7 @@ export default function App() {
 
       {/* Add task */}
       <div className="bg-white/95 backdrop-blur-md border-b" style={{ borderColor: 'rgba(60,60,67,0.12)' }}>
-        <AddTaskInput onAdd={addTask} />
+        <AddTaskInput onAdd={addTask} projects={projects} />
       </div>
 
       {/* Task list */}
@@ -35,7 +37,7 @@ export default function App() {
           </div>
         ) : (
           <AnimatePresence mode="wait">
-            <TaskList tasks={tasks} onToggle={toggleDone} onDelete={deleteTask} onUpdate={updateTask} />
+            <TaskList tasks={tasks} onToggle={toggleDone} onDelete={deleteTask} onUpdate={updateTask} projects={projects} />
           </AnimatePresence>
         )}
       </main>

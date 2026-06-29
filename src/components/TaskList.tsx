@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../types'
 import { TaskItem } from './TaskItem'
+import { groupByProject } from '../lib/groupByProject'
 
 interface TaskListProps {
   tasks: Task[]
@@ -8,11 +9,12 @@ interface TaskListProps {
   onDelete: (id: string) => Promise<void>
   onUpdate: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>
   ) => Promise<void>
+  projects: string[]
 }
 
-export function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskListProps) {
+export function TaskList({ tasks, onToggle, onDelete, onUpdate, projects }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <motion.div
@@ -50,17 +52,28 @@ export function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskListProps)
       className="divide-y"
       style={{ '--tw-divide-opacity': '1', borderColor: 'rgba(60,60,67,0.12)' } as React.CSSProperties}
     >
-      <AnimatePresence initial={false} mode="popLayout">
-        {tasks.map((task) => (
-          <TaskItem
-            key={task.id}
-            task={task}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onUpdate={onUpdate}
-          />
-        ))}
-      </AnimatePresence>
+      {groupByProject(tasks).map((group) => (
+        <div key={group.key ?? '__inbox__'}>
+          <div
+            className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-apple-gray-1"
+            style={{ color: '#8E8E93' }}
+          >
+            {group.label}
+          </div>
+          <AnimatePresence initial={false} mode="popLayout">
+            {group.tasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={onToggle}
+                onDelete={onDelete}
+                onUpdate={onUpdate}
+                projects={projects}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      ))}
     </motion.div>
   )
 }

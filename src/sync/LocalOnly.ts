@@ -12,7 +12,7 @@ import type { SyncProvider } from './SyncProvider'
 const isValidPriority = (p: number) => p === 1 || p === 2 || p === 3
 
 export class LocalOnly implements SyncProvider {
-  async add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3 }): Promise<Task> {
+  async add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string }): Promise<Task> {
     const trimmed = input.title.trim()
     if (!trimmed) {
       throw new Error('Task title must not be empty or whitespace.')
@@ -36,13 +36,18 @@ export class LocalOnly implements SyncProvider {
     if (input.priority !== undefined) {
       task.priority = input.priority
     }
+    // Only persist project when it carries a real value (never store '').
+    const project = input.project?.trim()
+    if (project) {
+      task.project = project
+    }
     await db.tasks.add(task)
     return task
   }
 
   async update(
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>,
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>,
   ): Promise<Task> {
     const task = await db.tasks.get(id)
     if (!task) throw new Error(`Task ${id} not found`)
@@ -78,6 +83,16 @@ export class LocalOnly implements SyncProvider {
       } else {
         // `priority: undefined` in patch explicitly clears the field.
         delete updated.priority
+      }
+    }
+
+    if ('project' in patch) {
+      const trimmed = patch.project?.trim()
+      if (trimmed) {
+        updated.project = trimmed
+      } else {
+        // Empty/whitespace unsets the field — never store ''.
+        delete updated.project
       }
     }
 

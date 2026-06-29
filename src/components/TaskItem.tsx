@@ -9,15 +9,17 @@ interface TaskItemProps {
   onDelete: (id: string) => Promise<void>
   onUpdate: (
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>>
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>
   ) => Promise<void>
+  projects: string[]
 }
 
-export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onUpdate, projects }: TaskItemProps) {
   const [editing, setEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [doneWhenDraft, setDoneWhenDraft] = useState(task.done_when ?? '')
   const [priorityDraft, setPriorityDraft] = useState<Priority>(task.priority)
+  const [projectDraft, setProjectDraft] = useState(task.project ?? '')
   const titleInputRef = useRef<HTMLInputElement>(null)
   // Guards against double-commit (Enter then blur) and re-entrant commits.
   const committingRef = useRef(false)
@@ -26,6 +28,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
     setTitleDraft(task.title)
     setDoneWhenDraft(task.done_when ?? '')
     setPriorityDraft(task.priority)
+    setProjectDraft(task.project ?? '')
     setEditing(true)
   }
 
@@ -49,12 +52,16 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
       return
     }
 
-    const patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority'>> = {}
+    const trimmedProject = projectDraft.trim()
+
+    const patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>> = {}
     if (trimmedTitle !== task.title) patch.title = trimmedTitle
     // Emptying done_when clears it (seam unsets on empty/whitespace).
     if (trimmedDoneWhen !== (task.done_when ?? '')) patch.done_when = trimmedDoneWhen
     // Priority: include in patch when changed (undefined clears it).
     if (priorityDraft !== task.priority) patch.priority = priorityDraft
+    // Emptying project clears it (seam unsets on empty/whitespace).
+    if (trimmedProject !== (task.project ?? '')) patch.project = trimmedProject
 
     committingRef.current = true
     try {
@@ -80,6 +87,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
       setTitleDraft(task.title)
       setDoneWhenDraft(task.done_when ?? '')
       setPriorityDraft(task.priority)
+      setProjectDraft(task.project ?? '')
       setEditing(false)
     }
   }
@@ -149,6 +157,22 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
               className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
               aria-label="Edit done when"
             />
+            <input
+              type="text"
+              list={`project-suggestions-${task.id}`}
+              value={projectDraft}
+              onChange={(e) => setProjectDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={commit}
+              placeholder="Project…"
+              className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
+              aria-label="Edit project"
+            />
+            <datalist id={`project-suggestions-${task.id}`}>
+              {projects.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
             <PriorityControl
               name={`edit-priority-${task.id}`}
               value={priorityDraft}
@@ -194,6 +218,16 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
                 title={`Priority ${priorityLabel(task.priority)}`}
               >
                 {priorityLabel(task.priority)}
+              </motion.span>
+            )}
+            {task.project && (
+              <motion.span
+                layout
+                className="block text-xs leading-snug select-none text-apple-gray-2 mt-0.5"
+                animate={{ opacity: task.done ? 0.38 : 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                {task.project}
               </motion.span>
             )}
           </button>

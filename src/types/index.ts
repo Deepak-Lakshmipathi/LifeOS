@@ -15,4 +15,11 @@ export interface Task {
    * Never store 0 — map "none" to field absent (undefined).
    */
   priority?: 1 | 2 | 3;
+  /**
+   * Project name the Task belongs to. Optional; absent means unparented
+   * (rendered under "Inbox"). Never queried via Dexie — grouping is pure
+   * in-memory (ADR-0005). Stored only when non-empty (the seam unsets it
+   * on empty/whitespace, mirroring done_when semantics).
+   */
+  project?: string;
 }
