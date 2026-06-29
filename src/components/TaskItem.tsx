@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { Task } from '../types'
 import { PriorityControl, priorityLabel, type Priority } from './PriorityControl'
-import { DOMAINS } from '../data/domains'
+import { DOMAINS, DOMAIN_COLORS } from '../data/domains'
+import type { Domain } from '../data/domains'
 
 interface TaskItemProps {
   task: Task
@@ -130,6 +131,13 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, rescue,
     }
   }
 
+  // ── Domain-color left-edge glow ─────────────────────────────────────────────
+  // Purely visual — does not affect behavior or test selectors.
+  const domainColor =
+    task.domain && DOMAIN_COLORS[task.domain as Domain]
+      ? DOMAIN_COLORS[task.domain as Domain]
+      : null
+
   // ── Card exit animation ──────────────────────────────────────────────────────
   const cardExit = prefersReducedMotion
     ? { opacity: 0, transition: { duration: 0.1 } }
@@ -144,6 +152,15 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, rescue,
         },
       }
 
+  // Compose the card's inline style: glass base shadow + optional domain glow
+  // on the left edge, plus the rescue tint if applicable.
+  const cardStyle: React.CSSProperties = {
+    ...(rescue ? { backgroundColor: 'rgba(0, 150, 220, 0.04)' } : {}),
+    boxShadow: domainColor
+      ? `inset 3px 0 0 ${domainColor}, 0 2px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.50)`
+      : '0 2px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.50)',
+  }
+
   return (
     <motion.div
       layout
@@ -151,8 +168,8 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, rescue,
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={cardExit}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="flex items-start gap-3 px-4 py-3 group"
-      style={rescue ? { backgroundColor: 'rgba(0, 150, 220, 0.04)' } : undefined}
+      className="glass-panel rounded-ios-lg flex items-start gap-3 px-4 py-3 group"
+      style={cardStyle}
     >
       {/* ── Status dot ───────────────────────────────────────────────────── */}
       <div className="relative flex-shrink-0 w-6 h-6 mt-0.5">

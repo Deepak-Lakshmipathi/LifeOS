@@ -98,10 +98,11 @@ export function TabBar({ active, onTabChange, onAdd }: TabBarProps) {
     <nav
       data-testid="tab-bar"
       aria-label="Main navigation"
-      className="fixed bottom-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-md border-t"
+      className="fixed bottom-0 left-0 right-0 z-20 glass-panel border-t"
       style={{
-        borderColor: 'rgba(60,60,67,0.12)',
+        borderColor: 'var(--glass-border-outer)',
         paddingBottom: 'env(safe-area-inset-bottom)',
+        boxShadow: '0 -4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.60)',
       }}
     >
       <div className="flex items-stretch justify-around max-w-xl mx-auto h-16">

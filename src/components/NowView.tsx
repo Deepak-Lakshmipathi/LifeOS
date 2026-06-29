@@ -91,8 +91,7 @@ export function NowView({ tasks, onToggle, onDelete, onUpdate, projects }: NowVi
       ) : (
         <motion.div
           layout
-          className="divide-y"
-          style={{ '--tw-divide-opacity': '1', borderColor: 'rgba(60,60,67,0.12)' } as React.CSSProperties}
+          className="flex flex-col gap-3 px-3 pt-4 pb-2"
         >
           {/* Live cards — the NOW queue */}
           <AnimatePresence initial={false} mode="popLayout">
@@ -142,16 +141,18 @@ function FoldSection({ label, count, children }: FoldSectionProps) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-center gap-2 px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-left focus:outline-none"
+        className="w-full flex items-center gap-2 px-1 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-left focus:outline-none"
         style={{ color: '#8E8E93' }}
       >
         <span>{`${label} (${count})`}</span>
         <span aria-hidden className="ml-auto text-apple-gray-2">{open ? '▾' : '▸'}</span>
       </button>
       {open && (
-        <AnimatePresence initial={false} mode="popLayout">
-          {children}
-        </AnimatePresence>
+        <div className="flex flex-col gap-2 mt-1">
+          <AnimatePresence initial={false} mode="popLayout">
+            {children}
+          </AnimatePresence>
+        </div>
       )}
     </div>
   )

@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Glass design-system tokens (S11) ─────────────────────────────────────── */
+:root {
+  --glass-blur:    12px;
+  --glass-surface: rgba(255, 255, 255, 0.72);
+  --glass-border:  rgba(255, 255, 255, 0.50);
+  --glass-border-outer: rgba(60, 60, 67, 0.10);
+}
+
+/* Solid fallback: no blur, fully opaque panels */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-blur:    0px;
+    --glass-surface: #ffffff;
+    --glass-border:  rgba(60, 60, 67, 0.12);
+    --glass-border-outer: rgba(60, 60, 67, 0.12);
+  }
+}
+
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
@@ -10,8 +28,20 @@
   body {
     @apply antialiased;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    background-color: #ffffff;
+    /* Background is set dynamically by App.tsx via time-of-day gradient.
+       This fallback solid keeps things readable if JS hasn't run yet. */
+    background-color: #EBF6FE;
     color: #000000;
+  }
+}
+
+/* ─── Glass panel utility ───────────────────────────────────────────────────── */
+@layer components {
+  .glass-panel {
+    background-color: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
   }
 }
 
