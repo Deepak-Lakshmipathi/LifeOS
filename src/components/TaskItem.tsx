@@ -1,10 +1,8 @@
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { Task } from '../types'
 import { PriorityControl, priorityLabel, type Priority } from './PriorityControl'
 import { DOMAINS } from '../data/domains'
-import { UndoToast } from './UndoToast'
 
 interface TaskItemProps {
   task: Task
@@ -16,15 +14,20 @@ interface TaskItemProps {
   ) => Promise<void>
   projects: string[]
   /**
+   * When true the card belongs to the rescue slot (injected from the coldest
+   * domain by rankNow). A ❄ cold-rescue badge is shown; the card has a subtle
+   * tint so it stands out from the main NOW set.
+   */
+  rescue?: boolean
+  /**
    * Optional callback fired when this task transitions from !done → done.
    * NowView provides this to own the UndoToast (so the toast survives the
-   * card's exit animation). When absent (Domains list), TaskItem renders
-   * its own portal-based toast.
+   * card's exit animation).
    */
   onCompleted?: (id: string, title: string) => void
 }
 
-export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, onCompleted }: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, rescue, onCompleted }: TaskItemProps) {
   const prefersReducedMotion = useReducedMotion() ?? false
 
   const [editing, setEditing] = useState(false)
@@ -39,20 +42,6 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, onCompl
   /** True for ~600 ms after a completing tap — drives the ring-pulse animation. */
   const [justTapped, setJustTapped] = useState(false)
 
-  /**
-   * Domains-view undo: set when this TaskItem owns the toast (onCompleted absent).
-   * The task stays mounted in the Domains list after being toggled done, so the
-   * portal lives as long as we need it.
-   */
-  const [showDomainUndo, setShowDomainUndo] = useState(false)
-
-  const handleDismissDomainUndo = useCallback(() => setShowDomainUndo(false), [])
-
-  const handleDomainUndo = useCallback(async () => {
-    await onToggle(task.id)
-    // onDismiss is called by UndoToast's handleUndo after this
-  }, [onToggle, task.id])
-
   const handleDotTap = async () => {
     if (!task.done) {
       // Completing the task ──────────────────────────────────────────
@@ -66,18 +55,14 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, onCompl
       if (onCompleted) {
         // NowView owns the UndoToast (card will exit NOW list)
         onCompleted(task.id, task.title)
-      } else {
-        // Domains view — task stays mounted, render own toast
-        setShowDomainUndo(true)
       }
     } else {
-      // Un-completing via dot (tap on already-done dot, e.g. in Domains view)
+      // Un-completing via dot
       await onToggle(task.id)
-      setShowDomainUndo(false)
     }
   }
 
-  // ── Edit-mode helpers (unchanged from S7) ───────────────────────────────────
+  // ── Edit-mode helpers ───────────────────────────────────────────────────────
 
   const enterEdit = () => {
     setTitleDraft(task.title)
@@ -160,219 +145,207 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, onCompl
       }
 
   return (
-    <>
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: -8, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={cardExit}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="flex items-start gap-3 px-4 py-3 group"
-      >
-        {/* ── Status dot ───────────────────────────────────────────────────── */}
-        <div className="relative flex-shrink-0 w-6 h-6 mt-0.5">
-          {/* Ring pulse — fires once on completing tap, respects reduced motion */}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={cardExit}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      className="flex items-start gap-3 px-4 py-3 group"
+      style={rescue ? { backgroundColor: 'rgba(0, 150, 220, 0.04)' } : undefined}
+    >
+      {/* ── Status dot ───────────────────────────────────────────────────── */}
+      <div className="relative flex-shrink-0 w-6 h-6 mt-0.5">
+        {/* Ring pulse — fires once on completing tap, respects reduced motion */}
+        <AnimatePresence>
+          {justTapped && !prefersReducedMotion && (
+            <motion.span
+              key="ring-pulse"
+              aria-hidden
+              className="absolute inset-0 rounded-full pointer-events-none"
+              initial={{ scale: 1, opacity: 0.7 }}
+              animate={{ scale: 2.4, opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              style={{ border: '2px solid #34C759', borderRadius: '50%' }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* The dot button */}
+        <motion.button
+          onClick={handleDotTap}
+          aria-label={task.done ? 'Mark incomplete' : 'Mark complete'}
+          className="absolute inset-0 rounded-full border-2 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue"
+          animate={{
+            borderColor: task.done ? '#34C759' : '#C7C7CC',
+            backgroundColor: task.done ? '#34C759' : 'rgba(0,0,0,0)',
+          }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.82 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+        >
           <AnimatePresence>
-            {justTapped && !prefersReducedMotion && (
-              <motion.span
-                key="ring-pulse"
-                aria-hidden
-                className="absolute inset-0 rounded-full pointer-events-none"
-                initial={{ scale: 1, opacity: 0.7 }}
-                animate={{ scale: 2.4, opacity: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                style={{ border: '2px solid #34C759', borderRadius: '50%' }}
-              />
+            {task.done && (
+              <motion.svg
+                key="check"
+                initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+                className="w-3.5 h-3.5 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </motion.svg>
             )}
           </AnimatePresence>
+        </motion.button>
+      </div>
 
-          {/* The dot button */}
-          <motion.button
-            onClick={handleDotTap}
-            aria-label={task.done ? 'Mark incomplete' : 'Mark complete'}
-            className="absolute inset-0 rounded-full border-2 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue"
-            animate={{
-              borderColor: task.done ? '#34C759' : '#C7C7CC',
-              backgroundColor: task.done ? '#34C759' : 'rgba(0,0,0,0)',
-            }}
-            whileTap={prefersReducedMotion ? undefined : { scale: 0.82 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-          >
-            <AnimatePresence>
-              {task.done && (
-                <motion.svg
-                  key="check"
-                  initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={prefersReducedMotion ? { opacity: 0 } : { scale: 0, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-                  className="w-3.5 h-3.5 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </motion.svg>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
-
-        {/* ── Title + done_when + priority ─────────────────────────────────── */}
-        <div className="flex-1 min-w-0">
-          {editing ? (
-            <div className="flex flex-col gap-1">
-              <input
-                ref={titleInputRef}
-                type="text"
-                value={titleDraft}
-                onChange={(e) => setTitleDraft(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={commit}
-                className="bg-transparent text-base leading-snug text-apple-label outline-none border-b border-apple-gray-3 focus:border-apple-blue"
-                aria-label="Edit task title"
-              />
-              <input
-                type="text"
-                value={doneWhenDraft}
-                onChange={(e) => setDoneWhenDraft(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={commit}
-                placeholder="Done when…"
-                className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
-                aria-label="Edit done when"
-              />
-              <input
-                type="text"
-                list={`project-suggestions-${task.id}`}
-                value={projectDraft}
-                onChange={(e) => setProjectDraft(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={commit}
-                placeholder="Project…"
-                className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
-                aria-label="Edit project"
-              />
-              <datalist id={`project-suggestions-${task.id}`}>
-                {projects.map((p) => (
-                  <option key={p} value={p} />
-                ))}
-              </datalist>
-              <select
-                value={domainDraft}
-                onChange={(e) => setDomainDraft(e.target.value)}
-                onBlur={commit}
-                className="bg-transparent text-sm text-apple-gray-1 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
-                aria-label="Edit domain"
-              >
-                <option value="">Domain…</option>
-                {DOMAINS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              <PriorityControl
-                name={`edit-priority-${task.id}`}
-                value={priorityDraft}
-                onChange={setPriorityDraft}
-              />
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={enterEdit}
-              className="block w-full text-left focus:outline-none"
-              aria-label="Edit task"
+      {/* ── Title + done_when + priority ─────────────────────────────────── */}
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <div className="flex flex-col gap-1">
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={commit}
+              className="bg-transparent text-base leading-snug text-apple-label outline-none border-b border-apple-gray-3 focus:border-apple-blue"
+              aria-label="Edit task title"
+            />
+            <input
+              type="text"
+              value={doneWhenDraft}
+              onChange={(e) => setDoneWhenDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={commit}
+              placeholder="Done when…"
+              className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
+              aria-label="Edit done when"
+            />
+            <input
+              type="text"
+              list={`project-suggestions-${task.id}`}
+              value={projectDraft}
+              onChange={(e) => setProjectDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={commit}
+              placeholder="Project…"
+              className="bg-transparent text-sm text-apple-gray-1 placeholder-apple-gray-2 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
+              aria-label="Edit project"
+            />
+            <datalist id={`project-suggestions-${task.id}`}>
+              {projects.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
+            <select
+              value={domainDraft}
+              onChange={(e) => setDomainDraft(e.target.value)}
+              onBlur={commit}
+              className="bg-transparent text-sm text-apple-gray-1 outline-none border-b border-apple-gray-3 focus:border-apple-blue"
+              aria-label="Edit domain"
             >
+              <option value="">Domain…</option>
+              {DOMAINS.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            <PriorityControl
+              name={`edit-priority-${task.id}`}
+              value={priorityDraft}
+              onChange={setPriorityDraft}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={enterEdit}
+            className="block w-full text-left focus:outline-none"
+            aria-label="Edit task"
+          >
+            <motion.span
+              layout
+              className="block text-base leading-snug select-none"
+              animate={{
+                opacity: task.done ? 0.38 : 1,
+                textDecoration: task.done ? 'line-through' : 'none',
+              }}
+              transition={{ duration: 0.2 }}
+              style={{ color: task.done ? '#8E8E93' : '#000000' }}
+            >
+              {task.title}
+            </motion.span>
+            {task.done_when && (
               <motion.span
                 layout
-                className="block text-base leading-snug select-none"
-                animate={{
-                  opacity: task.done ? 0.38 : 1,
-                  textDecoration: task.done ? 'line-through' : 'none',
-                }}
+                className="block text-sm leading-snug select-none text-apple-gray-1"
+                animate={{ opacity: task.done ? 0.38 : 1 }}
                 transition={{ duration: 0.2 }}
-                style={{ color: task.done ? '#8E8E93' : '#000000' }}
               >
-                {task.title}
+                {task.done_when}
               </motion.span>
-              {task.done_when && (
-                <motion.span
-                  layout
-                  className="block text-sm leading-snug select-none text-apple-gray-1"
-                  animate={{ opacity: task.done ? 0.38 : 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {task.done_when}
-                </motion.span>
-              )}
-              {task.priority != null && (
-                <motion.span
-                  layout
-                  animate={{ opacity: task.done ? 0.38 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-full border border-apple-gray-3 text-apple-gray-1 select-none"
-                  aria-label={`Priority ${priorityLabel(task.priority)}`}
-                  title={`Priority ${priorityLabel(task.priority)}`}
-                >
-                  {priorityLabel(task.priority)}
-                </motion.span>
-              )}
-              {task.project && (
-                <motion.span
-                  layout
-                  className="block text-xs leading-snug select-none text-apple-gray-2 mt-0.5"
-                  animate={{ opacity: task.done ? 0.38 : 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {task.project}
-                </motion.span>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* ── Delete button — visible on hover/focus ───────────────────────── */}
-        <motion.button
-          onClick={() => onDelete(task.id)}
-          aria-label="Delete task"
-          className="flex-shrink-0 w-6 h-6 mt-0.5 rounded-full flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-apple-red opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
-          style={{ color: '#FF3B30' }}
-          whileTap={{ scale: 0.85 }}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2.5}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </motion.button>
-      </motion.div>
-
-      {/* ── Domains-view undo toast ─────────────────────────────────────────── */}
-      {/* Rendered via a portal so it's not clipped by the task list container.
-          Only active when onCompleted is absent (i.e. we're in the Domains tab
-          where tasks stay mounted after completion). */}
-      {showDomainUndo && !onCompleted && typeof document !== 'undefined' &&
-        createPortal(
-          <AnimatePresence>
-            {showDomainUndo && (
-              <UndoToast
-                key={`undo-domains-${task.id}`}
-                taskTitle={task.title}
-                onUndo={handleDomainUndo}
-                onDismiss={handleDismissDomainUndo}
-                reducedMotion={prefersReducedMotion}
-              />
             )}
-          </AnimatePresence>,
-          document.body
-        )
-      }
-    </>
+            {task.priority != null && (
+              <motion.span
+                layout
+                animate={{ opacity: task.done ? 0.38 : 1 }}
+                transition={{ duration: 0.2 }}
+                className="inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-full border border-apple-gray-3 text-apple-gray-1 select-none"
+                aria-label={`Priority ${priorityLabel(task.priority)}`}
+                title={`Priority ${priorityLabel(task.priority)}`}
+              >
+                {priorityLabel(task.priority)}
+              </motion.span>
+            )}
+            {task.project && (
+              <motion.span
+                layout
+                className="block text-xs leading-snug select-none text-apple-gray-2 mt-0.5"
+                animate={{ opacity: task.done ? 0.38 : 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                {task.project}
+              </motion.span>
+            )}
+            {/* ❄ rescue badge — shown only for the cold-domain rescue card */}
+            {rescue && (
+              <span
+                className="inline-flex items-center gap-0.5 mt-1 text-xs px-1.5 py-0.5 rounded-full select-none"
+                style={{ backgroundColor: 'rgba(0,150,220,0.10)', color: '#0096DC' }}
+                aria-label="Cold domain rescue task"
+              >
+                ❄ cold rescue
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* ── Delete button — visible on hover/focus ───────────────────────── */}
+      <motion.button
+        onClick={() => onDelete(task.id)}
+        aria-label="Delete task"
+        className="flex-shrink-0 w-6 h-6 mt-0.5 rounded-full flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-apple-red opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+        style={{ color: '#FF3B30' }}
+        whileTap={{ scale: 0.85 }}
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </motion.button>
+    </motion.div>
   )
 }
