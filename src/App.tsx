@@ -4,8 +4,8 @@ import { LocalOnly } from './sync/LocalOnly'
 import type { SyncProvider } from './sync/SyncProvider'
 import { useTasks } from './hooks/useTasks'
 import { AddTaskInput } from './components/AddTaskInput'
-import { TaskList } from './components/TaskList'
 import { NowView } from './components/NowView'
+import { DomainsMap } from './components/DomainsMap'
 import { TabBar, type ViewTab } from './components/TabBar'
 import { distinctProjects } from './lib/distinctProjects'
 import { seedIfEmpty } from './data/seed'
@@ -98,13 +98,9 @@ export default function App() {
               />
             )}
             {tab === 'domains' && (
-              <TaskList
+              <DomainsMap
                 key="domains"
                 tasks={tasks}
-                onToggle={toggleDone}
-                onDelete={deleteTask}
-                onUpdate={updateTask}
-                projects={projects}
               />
             )}
             {tab === 'pulse' && <PulsePlaceholder key="pulse" />}

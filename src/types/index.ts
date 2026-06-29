@@ -29,4 +29,11 @@ export interface Task {
    * domain string; invalid/empty/whitespace is unset (seam normalizes).
    */
   domain?: string;
+  /**
+   * Unix timestamp (ms) when the task was last completed (done flipped true).
+   * Cleared when the task is un-done. Never queried via Dexie — warmth is
+   * pure in-memory over the loaded task list (ADR-0005 extension, S9).
+   * No Dexie index; schema stays at v2; no migration required.
+   */
+  completed_at?: number;
 }
