@@ -7,6 +7,9 @@ import { test, expect } from '@playwright/test'
  * http://localhost:4173. The webServer in playwright.config.ts builds + starts
  * the server before the suite runs.
  *
+ * Legacy tests (1–4) pass ?noseed so they always start with an empty DB and
+ * do not depend on seed data being present or absent (ADR-0006 test hook).
+ *
  * Selectors are derived from the actual markup:
  *   - Add-task input: aria-label "New task title" (AddTaskInput.tsx)
  *   - Task title text: rendered as <span> containing task.title (TaskItem.tsx)
@@ -17,7 +20,7 @@ import { test, expect } from '@playwright/test'
 // 1. Service worker controls the page
 // ---------------------------------------------------------------------------
 test('service worker controls the page after reload', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?noseed')
 
   // Wait for SW to be registered and active
   await page.evaluate(() => navigator.serviceWorker.ready)
@@ -33,7 +36,7 @@ test('service worker controls the page after reload', async ({ page }) => {
 // 2. Manifest linked + valid
 // ---------------------------------------------------------------------------
 test('manifest is linked and contains required PWA fields', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?noseed')
 
   // Assert the <link rel="manifest"> exists and has an href
   const manifestHref = await page.evaluate(() => {
@@ -64,7 +67,7 @@ test('manifest is linked and contains required PWA fields', async ({ page }) => 
 // ---------------------------------------------------------------------------
 test('app shell renders offline after SW caches it', async ({ page, context }) => {
   // Load the page online so the SW can cache the shell
-  await page.goto('/')
+  await page.goto('/?noseed')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
   // Confirm the UI loaded correctly first
@@ -83,7 +86,7 @@ test('app shell renders offline after SW caches it', async ({ page, context }) =
 // ---------------------------------------------------------------------------
 test('tasks added online persist after going offline and reloading', async ({ page, context }) => {
   // --- Online: add a task ---
-  await page.goto('/')
+  await page.goto('/?noseed')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
   const input = page.getByLabel('New task title')
@@ -102,4 +105,22 @@ test('tasks added online persist after going offline and reloading', async ({ pa
 
   // Task data from IndexedDB must still be listed
   await expect(page.getByText('emu-test')).toBeVisible()
+})
+
+// ---------------------------------------------------------------------------
+// 5. Seeded Domain → Project grouping (Slice S5)
+// ---------------------------------------------------------------------------
+test('seed import runs on empty DB and renders Domain → Project grouping', async ({ page }) => {
+  // Load WITHOUT ?noseed so seedIfEmpty fires on an empty DB
+  await page.goto('/')
+  await page.evaluate(() => navigator.serviceWorker.ready)
+
+  // Wait for the seeded tasks to render — domain headers use data-testid="domain-header".
+  // "Building Things" is the first domain in DOMAINS order and must appear as a visible header.
+  await expect(
+    page.locator('[data-testid="domain-header"]').filter({ hasText: 'Building Things' }),
+  ).toBeVisible({ timeout: 10000 })
+
+  // A seeded task title proves that the Startup project was imported correctly.
+  await expect(page.getByText('Finalize company structure (OPC vs Pvt Ltd)')).toBeVisible()
 })

@@ -7,12 +7,13 @@
 import { db } from '../db/LifeOSDb'
 import type { Task } from '../types'
 import type { SyncProvider } from './SyncProvider'
+import { isDomain } from '../data/domains'
 
 /** Allowed priority values; anything outside this set is rejected. */
 const isValidPriority = (p: number) => p === 1 || p === 2 || p === 3
 
 export class LocalOnly implements SyncProvider {
-  async add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string }): Promise<Task> {
+  async add(input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string; domain?: string }): Promise<Task> {
     const trimmed = input.title.trim()
     if (!trimmed) {
       throw new Error('Task title must not be empty or whitespace.')
@@ -41,13 +42,18 @@ export class LocalOnly implements SyncProvider {
     if (project) {
       task.project = project
     }
+    // Only persist domain when it is a valid canonical domain (never store '' or invalid).
+    const domain = input.domain?.trim()
+    if (domain && isDomain(domain)) {
+      task.domain = domain
+    }
     await db.tasks.add(task)
     return task
   }
 
   async update(
     id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project'>>,
+    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>,
   ): Promise<Task> {
     const task = await db.tasks.get(id)
     if (!task) throw new Error(`Task ${id} not found`)
@@ -93,6 +99,16 @@ export class LocalOnly implements SyncProvider {
       } else {
         // Empty/whitespace unsets the field — never store ''.
         delete updated.project
+      }
+    }
+
+    if ('domain' in patch) {
+      const trimmed = patch.domain?.trim()
+      if (trimmed && isDomain(trimmed)) {
+        updated.domain = trimmed
+      } else {
+        // Empty/whitespace or invalid domain unsets the field — never store '' or an invalid value.
+        delete updated.domain
       }
     }
 
