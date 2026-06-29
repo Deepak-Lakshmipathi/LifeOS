@@ -236,14 +236,89 @@
       "notes": "Parent spec for S3a/S3b."
     },
     {
-      "id": "s4prd", "title": "PRD: Slice S4 — Task belongs to a Project", "column": "ready", "slice": "S4",
+      "id": "s4prd", "title": "PRD: Slice S4 — Task belongs to a Project", "column": "done", "slice": "S4",
       "issue": 24, "pr": null, "blockedBy": [],
       "notes": "Parent spec. Project = denormalized string on Task (ADR-0005); no Dexie index."
     },
     {
-      "id": "s4", "title": "Task belongs to a Project (project?: string + grouped list)", "column": "ready", "slice": "S4",
-      "issue": 25, "pr": null, "blockedBy": [],
-      "notes": "Atomic slice. project? on Task, native datalist suggestions, groupByProject -> Inbox-first sections. Seam widens only (ADR-0004), schema stays v2 (ADR-0005)."
+      "id": "s4", "title": "Task belongs to a Project (project?: string + grouped list)", "column": "done", "slice": "S4",
+      "issue": 25, "pr": 26, "blockedBy": [],
+      "notes": "Atomic slice. project? on Task, native datalist suggestions, groupByProject -> Inbox-first sections. Seam widens only (ADR-0004), schema stays v2 (ADR-0005). Merged 4452220; docs PR #27."
+    },
+    {
+      "id": "s5", "title": "Domains + seed the vault shape", "column": "backlog", "slice": "S5",
+      "issue": null, "pr": null, "blockedBy": ["s4"],
+      "notes": "Group A finale. domain?: string (one of 7) + import seed_tasks_detailed.json. Plain string, no index (ADR-0005)."
+    },
+    {
+      "id": "s6", "title": "NOW view (dumb brain)", "column": "backlog", "slice": "S6",
+      "issue": null, "pr": null, "blockedBy": ["s5"],
+      "notes": "Group B. First command-center surface — flat priority-ranked NOW list (no balance logic yet)."
+    },
+    {
+      "id": "s7", "title": "Tab bar navigation", "column": "backlog", "slice": "S7",
+      "issue": null, "pr": null, "blockedBy": ["s6"],
+      "notes": "Group B. Bottom tab-bar nav shell."
+    },
+    {
+      "id": "s8", "title": "Tap-the-dot complete + undo", "column": "backlog", "slice": "S8",
+      "issue": null, "pr": null, "blockedBy": ["s7"],
+      "notes": "Group B. Tap-dot to complete with undo affordance."
+    },
+    {
+      "id": "s9", "title": "Domain warmth (derived) + Domains map", "column": "backlog", "slice": "S9",
+      "issue": null, "pr": null, "blockedBy": ["s8"],
+      "notes": "Group B. completed_at on Task; warmth derived (complete heats, silence cools) — never logged. Domains map view."
+    },
+    {
+      "id": "s10", "title": "Balance brain v1", "column": "backlog", "slice": "S10",
+      "issue": null, "pr": null, "blockedBy": ["s9"],
+      "notes": "Group B. NOW ranked by priority, capped ~2/domain, injects 1 from coldest domain."
+    },
+    {
+      "id": "s11", "title": "Glass / depth visual pass", "column": "backlog", "slice": "S11",
+      "issue": null, "pr": null, "blockedBy": ["s10"],
+      "notes": "Group C (skin). Frosted panels, time-of-day gradient, domain-color glow."
+    },
+    {
+      "id": "s12", "title": "Smart capture on the + tab", "column": "backlog", "slice": "S12",
+      "issue": null, "pr": null, "blockedBy": ["s11"],
+      "notes": "Group C. Smarter manual capture on the + tab."
+    },
+    {
+      "id": "s13", "title": "Pulse tab (light)", "column": "backlog", "slice": "S13",
+      "issue": null, "pr": null, "blockedBy": ["s12"],
+      "notes": "Group C. Closes the MVP — complete local dashboard, ship & live on it."
+    },
+    {
+      "id": "s14", "title": "Obsidian vault read (VaultSync)", "column": "backlog", "slice": "S14",
+      "issue": null, "pr": null, "blockedBy": ["s13"],
+      "notes": "Group D. Forces the deferred transport decision. New VaultSync provider body swapped at the seam."
+    },
+    {
+      "id": "s15", "title": "Obsidian vault write", "column": "backlog", "slice": "S15",
+      "issue": null, "pr": null, "blockedBy": ["s14"],
+      "notes": "Group D. VaultSync write methods; vault becomes the real source of truth."
+    },
+    {
+      "id": "s16", "title": "Telegram bot: text -> create", "column": "backlog", "slice": "S16",
+      "issue": null, "pr": null, "blockedBy": ["s15"],
+      "notes": "Group E. Bot capture pipeline begins: text -> intent -> vault."
+    },
+    {
+      "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "backlog", "slice": "S17",
+      "issue": null, "pr": null, "blockedBy": ["s16"],
+      "notes": "Group E. Per-chat pending-confirmation state; confirm-destructive trust model."
+    },
+    {
+      "id": "s18", "title": "Telegram bot: voice notes", "column": "backlog", "slice": "S18",
+      "issue": null, "pr": null, "blockedBy": ["s17"],
+      "notes": "Group E. Voice -> transcript -> intent."
+    },
+    {
+      "id": "s19", "title": "Telegram bot: photos (vision)", "column": "backlog", "slice": "S19",
+      "issue": null, "pr": null, "blockedBy": ["s18"],
+      "notes": "Group E. Completes the vision — Claude vision photo -> batch-confirm tasks."
     }
   ]
 }
