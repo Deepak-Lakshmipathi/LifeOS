@@ -192,7 +192,7 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-06-23" },
+  "meta": { "project": "LifeOS", "updated": "2026-06-29" },
   "columns": [
     { "id": "backlog", "name": "Backlog" },
     { "id": "ready",   "name": "Ready" },
@@ -234,6 +234,16 @@
       "id": "s3prd", "title": "PRD: Slice S3 — Task gains priority", "column": "done", "slice": "S3",
       "issue": 15, "pr": null, "blockedBy": [],
       "notes": "Parent spec for S3a/S3b."
+    },
+    {
+      "id": "s4prd", "title": "PRD: Slice S4 — Task belongs to a Project", "column": "ready", "slice": "S4",
+      "issue": 24, "pr": null, "blockedBy": [],
+      "notes": "Parent spec. Project = denormalized string on Task (ADR-0005); no Dexie index."
+    },
+    {
+      "id": "s4", "title": "Task belongs to a Project (project?: string + grouped list)", "column": "ready", "slice": "S4",
+      "issue": 25, "pr": null, "blockedBy": [],
+      "notes": "Atomic slice. project? on Task, native datalist suggestions, groupByProject -> Inbox-first sections. Seam widens only (ADR-0004), schema stays v2 (ADR-0005)."
     }
   ]
 }

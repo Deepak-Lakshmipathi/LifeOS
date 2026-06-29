@@ -13,8 +13,12 @@ A top-level area of life the user organizes around (e.g. Building Things, Career
 _Avoid_: folder (the seed JSON's key), category, area
 
 **Project**:
-A named effort inside a Domain, holding related Tasks.
+A named effort inside a Domain, holding related Tasks. As of S4, Project is a denormalized free-text string on the Task (`project?`), **not** its own stored entity — Projects are _derived by grouping_ the task list. Promotion to a real entity (color, domain link) is deferred to a later slice.
 _Avoid_: list, board
+
+**Inbox**:
+The derived group of project-less Tasks — a UI/grouping label, not a stored Project. Sorts first, above the named project groups.
+_Avoid_: unfiled, none, uncategorized
 
 **done_when**:
 A Task's written acceptance criterion — how the user knows it is truly finished. A live optional field on the Task as of Slice S2; a single short line, not a notes field.
@@ -35,8 +39,8 @@ _Avoid_: sync layer, backend (the backend does not exist yet)
 ## Relationships
 
 - A **Domain** contains one or more **Projects** (out of Slice 1 scope)
-- A **Project** contains one or more **Tasks** (out of Slice 1 scope; Slice 1 Tasks are unparented)
-- A **Task** may carry a **done_when** (added in Slice S2) and a **priority** (added in Slice S3)
+- A **Project** contains one or more **Tasks** — as of S4 this relation is realized by the Task's denormalized `project` string (grouping), not a foreign key to a Project entity
+- A **Task** may carry a **done_when** (added in Slice S2), a **priority** (added in Slice S3), and a **project** name (added in Slice S4); project-less Tasks group under **Inbox**
 - The app reads/writes **Tasks** through the **Sync seam**, even when it is a no-op; the seam mutates Tasks via `add(input)` + a generic `update(id, patch)` (ADR-0004)
 
 ## Flagged ambiguities

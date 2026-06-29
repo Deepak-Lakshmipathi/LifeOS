@@ -2,7 +2,7 @@
 
 > Read `docs/slices/README.md` + `CONTEXT.md` first.
 
-**Group:** A · **Depends on:** S3 · **Status:** planned
+**Group:** A · **Depends on:** S3 · **Status:** ✅ shipped (PRD #24 → slice #25 / PR #26, 2026-06-29; ADR-0005)
 
 ## Why
 A Project is a named effort that holds related Tasks (`CONTEXT.md`). Grouping tasks under their project is the first structural shape of the vault (Project = note). Until now tasks are a flat list.
@@ -17,7 +17,7 @@ A Project is a named effort that holds related Tasks (`CONTEXT.md`). Grouping ta
 
 ## Data / model change
 - `src/types/index.ts`: add `project?: string`.
-- Reuse `update`/`add`. Optionally index `project` in Dexie (cheap; helps grouping) → schema version(3) if added.
+- Reuse `update`/`add`. **Decided (ADR-0005): NOT indexed** — grouping is in-memory over `list()`, no project-scoped query exists, so no Dexie index and schema stays **v2** (`LifeOSDb.ts` untouched).
 
 ## Vertical
 - UI: project field in add/edit; `TaskList` renders grouped sections by project.
