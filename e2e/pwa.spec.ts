@@ -11,7 +11,8 @@ import { test, expect } from '@playwright/test'
  * do not depend on seed data being present or absent (ADR-0006 test hook).
  *
  * Selectors are derived from the actual markup:
- *   - Add-task input: aria-label "New task title" (AddTaskInput.tsx)
+ *   - Add-task input: aria-label "New task title" (AddTaskInput.tsx) — inside the + sheet
+ *   - Tab bar: aria-label "Main navigation" (TabBar.tsx); tab buttons have aria-label per tab
  *   - Task title text: rendered as <span> containing task.title (TaskItem.tsx)
  *   - App heading: <h1> "Tasks" (App.tsx)
  */
@@ -73,27 +74,36 @@ test('app shell renders offline after SW caches it', async ({ page, context }) =
   // Confirm the UI loaded correctly first
   await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
 
+  // Confirm the tab bar is rendered
+  await expect(page.getByTestId('tab-bar')).toBeVisible()
+
   // Go offline and reload — SW should serve the cached shell
   await context.setOffline(true)
   await page.reload()
 
   // The <h1>Tasks</h1> heading must still be visible, not a browser error page
   await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
+
+  // Tab bar must also survive offline
+  await expect(page.getByTestId('tab-bar')).toBeVisible()
 })
 
 // ---------------------------------------------------------------------------
 // 4. Offline persistence (IndexedDB survives offline cold reload)
 // ---------------------------------------------------------------------------
 test('tasks added online persist after going offline and reloading', async ({ page, context }) => {
-  // --- Online: add a task ---
+  // --- Online: add a task via the + tab ---
   await page.goto('/?noseed')
   await page.evaluate(() => navigator.serviceWorker.ready)
+
+  // S7: tasks are added via the + tab which opens a bottom sheet
+  await page.getByRole('button', { name: 'Add task' }).click()
 
   const input = page.getByLabel('New task title')
   await input.fill('emu-test')
   await input.press('Enter')
 
-  // Confirm the task is visible in the list
+  // Sheet closes and task is visible in the Now view (default tab)
   await expect(page.getByText('emu-test')).toBeVisible()
 
   // --- Go offline and cold-reload ---
@@ -108,16 +118,16 @@ test('tasks added online persist after going offline and reloading', async ({ pa
 })
 
 // ---------------------------------------------------------------------------
-// 5. Seeded Domain → Project grouping (Slice S5)
+// 5. Seeded Domain → Project grouping (Slice S5, nav via S7 tab bar)
 // ---------------------------------------------------------------------------
 test('seed import runs on empty DB and renders Domain → Project grouping', async ({ page }) => {
   // Load WITHOUT ?noseed so seedIfEmpty fires on an empty DB
   await page.goto('/')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
-  // S6: the default view is the flat NOW list; the nested Domain → Project
-  // grouping lives under the "All" view. Switch to it before asserting.
-  await page.getByRole('button', { name: 'All' }).click()
+  // S7: the nested Domain → Project grouping lives under the Domains tab.
+  // Navigate there via the tab bar (replaces the S6 "All" toggle button).
+  await page.getByRole('button', { name: 'Domains' }).click()
 
   // Wait for the seeded tasks to render — domain headers use data-testid="domain-header".
   // "Building Things" is the first domain in DOMAINS order and must appear as a visible header.
