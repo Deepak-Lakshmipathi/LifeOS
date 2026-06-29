@@ -192,7 +192,7 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-06-29" },
+  "meta": { "project": "LifeOS", "updated": "2026-06-29", "note": "blockedBy reflects TRUE deps + wave labels for parallel afk-pipeline dispatch (not a strict linear chain)" },
   "columns": [
     { "id": "backlog", "name": "Backlog" },
     { "id": "ready",   "name": "Ready" },
@@ -266,69 +266,69 @@
       "notes": "Group B. First command-center surface — flat priority-ranked NOW list (no balance logic yet). rankNow(tasks) pure helper (priority desc, created_at asc, done excluded) + NowView (top 3 live, Up next/Later folded) + Now/All header toggle. ADR-0007. PRD #34. Dispatched via afk-pipeline auto."
     },
     {
-      "id": "s7", "title": "Tab bar navigation", "column": "backlog", "slice": "S7",
-      "issue": null, "pr": null, "blockedBy": ["s6"],
-      "notes": "Group B. Bottom tab-bar nav shell."
+      "id": "s7", "title": "Tab bar navigation", "column": "done", "slice": "S7",
+      "issue": 39, "pr": 40, "blockedBy": ["s6"],
+      "notes": "Group B · Wave 1 DONE (dual-green merge, PR #40). Bottom tab-bar nav shell (Now/Domains/Pulse/+); deleted the throwaway Now/All toggle; add flow moved to + sheet. Unblocks Wave 2 (S8 ∥ S9)."
     },
     {
-      "id": "s8", "title": "Tap-the-dot complete + undo", "column": "backlog", "slice": "S8",
-      "issue": null, "pr": null, "blockedBy": ["s7"],
-      "notes": "Group B. Tap-dot to complete with undo affordance."
+      "id": "s8", "title": "Tap-the-dot complete + undo", "column": "done", "slice": "S8",
+      "issue": 41, "pr": 43, "blockedBy": ["s7"],
+      "notes": "Group B · Wave 2 DONE (dual-green merge, PR #43). Tap-dot → fill/✓/ring-pulse/fade-fold + 3s Undo toast; reduced-motion honored. No model/seam change. DEBT: TaskItem's createPortal Domains-undo path + TaskList go unused once S9 swaps Domains tab → tiles — remove in a cleanup chore."
     },
     {
-      "id": "s9", "title": "Domain warmth (derived) + Domains map", "column": "backlog", "slice": "S9",
-      "issue": null, "pr": null, "blockedBy": ["s8"],
-      "notes": "Group B. completed_at on Task; warmth derived (complete heats, silence cools) — never logged. Domains map view."
+      "id": "s9", "title": "Domain warmth (derived) + Domains map", "column": "done", "slice": "S9",
+      "issue": 42, "pr": 44, "blockedBy": ["s7"],
+      "notes": "Group B · Wave 2 DONE (dual-green merge, PR #44). completed_at on Task (non-indexed, schema stays v2 — ADR-0005 extension); pure computeWarmth (5 buckets, 21 tests); DomainsMap warmth tiles replace the grouped list on the Domains tab. Cleanup of orphaned TaskList + S8 dead-path folded into S10."
     },
     {
-      "id": "s10", "title": "Balance brain v1", "column": "backlog", "slice": "S10",
-      "issue": null, "pr": null, "blockedBy": ["s9"],
-      "notes": "Group B. NOW ranked by priority, capped ~2/domain, injects 1 from coldest domain."
+      "id": "s10", "title": "Balance brain v1", "column": "done", "slice": "S10",
+      "issue": 45, "pr": 46, "blockedBy": ["s9"],
+      "notes": "Group B · Wave 3 DONE (dual-green merge, PR #46). rankNow(tasks,warmth,opts) — priority order, ~2/domain cap, 1 rescue from coldest (cold/stale) domain; pure, 25 tests; ADR-0008. Cleanup folded in: deleted orphaned TaskList.tsx + S8 dead Domains-undo portal. Closes Group B logic."
     },
     {
-      "id": "s11", "title": "Glass / depth visual pass", "column": "backlog", "slice": "S11",
-      "issue": null, "pr": null, "blockedBy": ["s10"],
-      "notes": "Group C (skin). Frosted panels, time-of-day gradient, domain-color glow."
+      "id": "s11", "title": "Glass / depth visual pass", "column": "done", "slice": "S11",
+      "issue": 47, "pr": 48, "blockedBy": ["s10"],
+      "notes": "Group C (skin) · Wave 4 DONE (dual-green merge, PR #48). GlassPanel primitive + glass tokens (tailwind/CSS vars), time-of-day gradient (pure timeOfDay helper, 16 tests), domain-color edge glow, frosted tab bar/header; reduced-transparency + reduced-motion fallbacks; PWA audit green. Glass system S12/S13 inherit."
     },
     {
       "id": "s12", "title": "Smart capture on the + tab", "column": "backlog", "slice": "S12",
       "issue": null, "pr": null, "blockedBy": ["s11"],
-      "notes": "Group C. Smarter manual capture on the + tab."
+      "notes": "Group C · Wave 5 (∥ S13). Smarter manual capture on the + tab — pure parseCapture helper + CaptureSheet. Independent of S13 (different files)."
     },
     {
       "id": "s13", "title": "Pulse tab (light)", "column": "backlog", "slice": "S13",
-      "issue": null, "pr": null, "blockedBy": ["s12"],
-      "notes": "Group C. Closes the MVP — complete local dashboard, ship & live on it."
+      "issue": null, "pr": null, "blockedBy": ["s11", "s9"],
+      "notes": "Group C · Wave 5 (∥ S12). Closes the MVP — complete local dashboard, ship & live on it. Real deps: S11 (glass) + S9 (warmth/computeWarmth). Independent of S12, not chained behind it."
     },
     {
       "id": "s14", "title": "Obsidian vault read (VaultSync)", "column": "backlog", "slice": "S14",
       "issue": null, "pr": null, "blockedBy": ["s13"],
-      "notes": "Group D. Forces the deferred transport decision. New VaultSync provider body swapped at the seam."
+      "notes": "Group D · Wave 6 (SOLO · ⚠ HUMAN GATE). Forces the deferred transport decision (bridge service / FS Access API / git-as-transport) — needs a human grill + new ADR before auto-dispatch. New VaultSync provider body swapped at the seam, behind a flag."
     },
     {
       "id": "s15", "title": "Obsidian vault write", "column": "backlog", "slice": "S15",
       "issue": null, "pr": null, "blockedBy": ["s14"],
-      "notes": "Group D. VaultSync write methods; vault becomes the real source of truth."
+      "notes": "Group D · Wave 7 (SOLO). VaultSync write methods; vault becomes the real source of truth. Hard dep S14 (extends same provider/transport). Exports the shared serializer/transport that S16 reuses."
     },
     {
       "id": "s16", "title": "Telegram bot: text -> create", "column": "backlog", "slice": "S16",
       "issue": null, "pr": null, "blockedBy": ["s15"],
-      "notes": "Group E. Bot capture pipeline begins: text -> intent -> vault."
+      "notes": "Group E · Wave 8 (SOLO). Bot capture pipeline begins: text -> Claude intent/extract -> vault. New services/bot/. Dep S15 (reuses vault write serializer/transport). Foundation for the 3 parallel modality slices."
     },
     {
       "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "backlog", "slice": "S17",
       "issue": null, "pr": null, "blockedBy": ["s16"],
-      "notes": "Group E. Per-chat pending-confirmation state; confirm-destructive trust model."
+      "notes": "Group E · Wave 9 (∥ S18, S19). Per-chat pending-confirmation state; confirm-destructive trust model. Sibling of S18/S19 — all extend the S16 pipeline; same services/bot/ dir so coordinate the intent router merge."
     },
     {
       "id": "s18", "title": "Telegram bot: voice notes", "column": "backlog", "slice": "S18",
-      "issue": null, "pr": null, "blockedBy": ["s17"],
-      "notes": "Group E. Voice -> transcript -> intent."
+      "issue": null, "pr": null, "blockedBy": ["s16"],
+      "notes": "Group E · Wave 9 (∥ S17, S19). Voice -> transcript -> intent. Adds a modality to the S16 pipeline — dep S16, NOT S17."
     },
     {
       "id": "s19", "title": "Telegram bot: photos (vision)", "column": "backlog", "slice": "S19",
-      "issue": null, "pr": null, "blockedBy": ["s18"],
-      "notes": "Group E. Completes the vision — Claude vision photo -> batch-confirm tasks."
+      "issue": null, "pr": null, "blockedBy": ["s16"],
+      "notes": "Group E · Wave 9 (∥ S17, S18). Completes the vision — Claude vision photo -> batch-confirm tasks. Adds a modality to the S16 pipeline — dep S16, NOT S18."
     }
   ]
 }
