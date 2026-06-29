@@ -115,6 +115,10 @@ test('seed import runs on empty DB and renders Domain → Project grouping', asy
   await page.goto('/')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
+  // S6: the default view is the flat NOW list; the nested Domain → Project
+  // grouping lives under the "All" view. Switch to it before asserting.
+  await page.getByRole('button', { name: 'All' }).click()
+
   // Wait for the seeded tasks to render — domain headers use data-testid="domain-header".
   // "Building Things" is the first domain in DOMAINS order and must appear as a visible header.
   await expect(
