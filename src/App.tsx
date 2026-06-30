@@ -6,6 +6,7 @@ import { useTasks } from './hooks/useTasks'
 import { CaptureSheet } from './components/CaptureSheet'
 import { NowView } from './components/NowView'
 import { DomainsMap } from './components/DomainsMap'
+import { PulseView } from './components/PulseView'
 import { TabBar, type ViewTab } from './components/TabBar'
 import { distinctProjects } from './lib/distinctProjects'
 import { seedIfEmpty } from './data/seed'
@@ -15,35 +16,6 @@ import { getTimeOfDay, TIME_GRADIENTS, TIME_SOLID_BG } from './lib/timeOfDay'
 // Swap to a RemoteSync implementation here when sync lands (ADR-0002).
 const provider: SyncProvider = new LocalOnly()
 
-/** Pulse is a labeled placeholder — content arrives in S13. */
-function PulsePlaceholder() {
-  return (
-    <motion.div
-      key="pulse-placeholder"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      className="flex flex-col items-center justify-center py-20 px-8 text-center"
-    >
-      <div className="w-16 h-16 rounded-full bg-apple-gray-6 flex items-center justify-center mb-4">
-        <svg
-          className="w-8 h-8 text-apple-gray-2"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-      </div>
-      <p className="text-lg font-medium text-apple-label">Pulse</p>
-      <p className="text-sm text-apple-gray-1 mt-1">coming soon</p>
-    </motion.div>
-  )
-}
 
 /**
  * Returns the CSS background value appropriate for the current time of day.
@@ -138,7 +110,7 @@ export default function App() {
                 tasks={tasks}
               />
             )}
-            {tab === 'pulse' && <PulsePlaceholder key="pulse" />}
+            {tab === 'pulse' && <PulseView key="pulse" tasks={tasks} />}
           </AnimatePresence>
         )}
       </main>

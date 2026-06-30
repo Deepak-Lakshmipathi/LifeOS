@@ -192,7 +192,7 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-06-29", "note": "blockedBy reflects TRUE deps + wave labels for parallel afk-pipeline dispatch (not a strict linear chain)" },
+  "meta": { "project": "LifeOS", "updated": "2026-06-30", "note": "Groups A–C (MVP) COMPLETE — S13 merged. blockedBy reflects TRUE deps + wave labels for parallel afk-pipeline dispatch (not a strict linear chain)" },
   "columns": [
     { "id": "backlog", "name": "Backlog" },
     { "id": "ready",   "name": "Ready" },
@@ -291,14 +291,14 @@
       "notes": "Group C (skin) · Wave 4 DONE (dual-green merge, PR #48). GlassPanel primitive + glass tokens (tailwind/CSS vars), time-of-day gradient (pure timeOfDay helper, 16 tests), domain-color edge glow, frosted tab bar/header; reduced-transparency + reduced-motion fallbacks; PWA audit green. Glass system S12/S13 inherit."
     },
     {
-      "id": "s12", "title": "Smart capture on the + tab", "column": "backlog", "slice": "S12",
-      "issue": null, "pr": null, "blockedBy": ["s11"],
-      "notes": "Group C · Wave 5 (∥ S13). Smarter manual capture on the + tab — pure parseCapture helper + CaptureSheet. Independent of S13 (different files)."
+      "id": "s12", "title": "Smart capture on the + tab", "column": "done", "slice": "S12",
+      "issue": null, "pr": 49, "blockedBy": ["s11"],
+      "notes": "Group C · Wave 5 (∥ S13) DONE (dual-green merge, PR #49, commit 884de66). Pure parseCapture helper + CaptureSheet smart capture on the + tab."
     },
     {
-      "id": "s13", "title": "Pulse tab (light)", "column": "backlog", "slice": "S13",
+      "id": "s13", "title": "Pulse tab (light)", "column": "done", "slice": "S13",
       "issue": null, "pr": null, "blockedBy": ["s11", "s9"],
-      "notes": "Group C · Wave 5 (∥ S12). Closes the MVP — complete local dashboard, ship & live on it. Real deps: S11 (glass) + S9 (warmth/computeWarmth). Independent of S12, not chained behind it."
+      "notes": "Group C · Wave 5 (∥ S12) DONE — CLOSES MVP (Groups A–C). doneThisWeek + completionsByDay pure metrics (injected clock, unit-tested); PulseView with count + warmth standings + 7-day sparkline; glass-styled; replaces S7 placeholder. No Dexie schema change."
     },
     {
       "id": "s14", "title": "Obsidian vault read (VaultSync)", "column": "backlog", "slice": "S14",
