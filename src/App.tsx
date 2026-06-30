@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { LocalOnly } from './sync/LocalOnly'
 import type { SyncProvider } from './sync/SyncProvider'
 import { useTasks } from './hooks/useTasks'
-import { AddTaskInput } from './components/AddTaskInput'
+import { CaptureSheet } from './components/CaptureSheet'
 import { NowView } from './components/NowView'
 import { DomainsMap } from './components/DomainsMap'
 import { TabBar, type ViewTab } from './components/TabBar'
@@ -184,7 +184,7 @@ export default function App() {
                   Cancel
                 </button>
               </div>
-              <AddTaskInput onAdd={handleAddTask} projects={projects} tasks={tasks} />
+              <CaptureSheet onAdd={handleAddTask} />
             </motion.div>
           </motion.div>
         )}

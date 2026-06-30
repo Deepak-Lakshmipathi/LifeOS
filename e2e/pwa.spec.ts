@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test'
  * do not depend on seed data being present or absent (ADR-0006 test hook).
  *
  * Selectors are derived from the actual markup:
- *   - Add-task input: aria-label "New task title" (AddTaskInput.tsx) — inside the + sheet
+ *   - Add-task input: aria-label "Capture task" (CaptureSheet.tsx) — inside the + sheet
  *   - Tab bar: aria-label "Main navigation" (TabBar.tsx); tab buttons have aria-label per tab
  *   - Task title text: rendered as <span> containing task.title (TaskItem.tsx)
  *   - App heading: <h1> "Tasks" (App.tsx)
@@ -99,7 +99,7 @@ test('tasks added online persist after going offline and reloading', async ({ pa
   // S7: tasks are added via the + tab which opens a bottom sheet
   await page.getByRole('button', { name: 'Add task' }).click()
 
-  const input = page.getByLabel('New task title')
+  const input = page.getByLabel('Capture task')
   await input.fill('emu-test')
   await input.press('Enter')
 
