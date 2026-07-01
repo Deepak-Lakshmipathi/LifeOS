@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S7-tab-bar.md"
 type: "document"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # Slice S7 — Tab bar navigation
@@ -14,4 +14,4 @@ tags:
 - [[Slice S6 — NOW view (dumb brain)]] - `references` [EXTRACTED]
 - [[Slice S8 — Tap-the-dot complete + undo]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/document #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

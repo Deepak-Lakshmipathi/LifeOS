@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S16-bot-text-create.md"
 type: "rationale"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # Owner chat-id guard
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[Telegram bot service (servicesbot)]] - `implements` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/rationale #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

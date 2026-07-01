@@ -1,11 +1,11 @@
 ---
 source_file: "e2e/pwa.spec.ts"
 type: "code"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/code
   - graphify/INFERRED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # PWA Playwright e2e suite
@@ -14,4 +14,4 @@ tags:
 - [[App component]] - `references` [EXTRACTED]
 - [[Throwaway NowAll toggle]] - `references` [INFERRED]
 
-#graphify/code #graphify/INFERRED #community/Architecture_Decisions__App_Shell
+#graphify/code #graphify/INFERRED #community/Architecture_ADRs__NOW_View

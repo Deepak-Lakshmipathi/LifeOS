@@ -1,17 +1,22 @@
 ---
 source_file: "src/data/domains.ts"
 type: "code"
-community: "Task Input & Priority UI"
+community: "Domains/Pulse/Glass UI"
 location: "L17"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/Task_Input__Priority_UI
+  - community/Domains/Pulse/Glass_UI
 ---
 
 # Domain
 
 ## Connections
+- [[DomainsMap.tsx]] - `imports` [EXTRACTED]
+- [[TaskItem.tsx]] - `imports` [EXTRACTED]
+- [[computeWarmth.test.ts]] - `imports` [EXTRACTED]
+- [[computeWarmth.ts]] - `imports` [EXTRACTED]
 - [[domains.ts]] - `contains` [EXTRACTED]
+- [[rankNow.ts]] - `imports` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/Task_Input__Priority_UI
+#graphify/code #graphify/EXTRACTED #community/Domains/Pulse/Glass_UI

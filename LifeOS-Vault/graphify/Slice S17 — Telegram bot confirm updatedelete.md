@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S17-bot-confirm-edits.md"
 type: "document"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # Slice S17 — Telegram bot: confirm update/delete
@@ -16,4 +16,4 @@ tags:
 - [[Slice S18 — Telegram bot voice notes]] - `references` [EXTRACTED]
 - [[VaultSync write methods (toggleDoneaddupdatedelete)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/document #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

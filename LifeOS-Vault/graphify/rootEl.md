@@ -1,12 +1,12 @@
 ---
 source_file: "src/main.tsx"
 type: "code"
-community: "Seed Import & Task Hook"
+community: "Tab Bar, Seed & DB"
 location: "L6"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/Seed_Import__Task_Hook
+  - community/Tab_Bar_Seed__DB
 ---
 
 # rootEl
@@ -14,4 +14,4 @@ tags:
 ## Connections
 - [[main.tsx]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/Seed_Import__Task_Hook
+#graphify/code #graphify/EXTRACTED #community/Tab_Bar_Seed__DB

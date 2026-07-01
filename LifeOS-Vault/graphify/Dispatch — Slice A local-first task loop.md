@@ -1,11 +1,11 @@
 ---
 source_file: "afk-pipeline-out/slice-a-dispatch.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Dispatch — Slice A local-first task loop
@@ -18,4 +18,4 @@ tags:
 - [[Sync seam (SyncProvider)]] - `references` [EXTRACTED]
 - [[Task (entity)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

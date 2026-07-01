@@ -1,11 +1,11 @@
 ---
 source_file: "afk-pipeline-out/slice-b-dispatch.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Dispatch — Slice B PWA shell
@@ -15,4 +15,4 @@ tags:
 - [[Dispatch — Slice A local-first task loop]] - `references` [EXTRACTED]
 - [[LifeOS Slice 1 Deploy Tables]] - `references` [INFERRED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

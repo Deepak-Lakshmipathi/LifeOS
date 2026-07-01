@@ -1,12 +1,12 @@
 ---
 source_file: "src/lib/distinctProjects.ts"
 type: "code"
-community: "Seed Import & Task Hook"
+community: "Tab Bar, Seed & DB"
 location: "L10"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/Seed_Import__Task_Hook
+  - community/Tab_Bar_Seed__DB
 ---
 
 # distinctProjects()
@@ -19,4 +19,4 @@ tags:
 - [[distinctProjects.ts]] - `references` [EXTRACTED]
 - [[groupByProject()]] - `semantically_similar_to` [INFERRED]
 
-#graphify/code #graphify/EXTRACTED #community/Seed_Import__Task_Hook
+#graphify/code #graphify/EXTRACTED #community/Tab_Bar_Seed__DB

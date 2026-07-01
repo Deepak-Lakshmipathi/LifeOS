@@ -1,11 +1,11 @@
 ---
 source_file: "kanban.html"
 type: "concept"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # board-data canonical JSON block
@@ -15,4 +15,4 @@ tags:
 - [[PWA Emulation Testing Protocol]] - `references` [EXTRACTED]
 - [[kanban.html (single-file board UI + data)]] - `references` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/concept #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

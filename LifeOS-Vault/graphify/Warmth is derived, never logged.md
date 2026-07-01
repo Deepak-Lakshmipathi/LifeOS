@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S9-warmth.md"
 type: "rationale"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # Warmth is derived, never logged
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[computeWarmth(tasks, now) + completed_at]] - `rationale_for` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/rationale #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

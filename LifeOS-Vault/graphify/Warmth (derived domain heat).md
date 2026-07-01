@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/README.md"
 type: "concept"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Warmth (derived domain heat)
@@ -15,4 +15,4 @@ tags:
 - [[Slice Backbone README]] - `references` [EXTRACTED]
 - [[rankNow balance algorithm]] - `shares_data_with` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/concept #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

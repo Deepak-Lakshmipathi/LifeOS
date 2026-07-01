@@ -1,11 +1,11 @@
 ---
 source_file: "docs/testing/pwa-emulation-protocol.md"
 type: "concept"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # Layered emulation tiers (Vitest/Playwright/Lighthouse/AVD)
@@ -14,4 +14,4 @@ tags:
 - [[PWA Emulation Testing Protocol]] - `references` [EXTRACTED]
 - [[index.html (PWA entry  manifest link)]] - `references` [INFERRED]
 
-#graphify/concept #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/concept #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

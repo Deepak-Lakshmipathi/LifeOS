@@ -1,11 +1,11 @@
 ---
 source_file: ".github/workflows/ci.yml"
 type: "concept"
-community: "CI & PWA Testing Gates"
+community: "CI PWA Testing"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/CI__PWA_Testing_Gates
+  - community/CI_PWA_Testing
 ---
 
 # Tier 2 Lighthouse PWA installability audit
@@ -14,4 +14,4 @@ tags:
 - [[ADR-0003 CI-gated emulation PWA testing]] - `references` [EXTRACTED]
 - [[CI pwa-e2e job]] - `references` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/CI__PWA_Testing_Gates
+#graphify/concept #graphify/EXTRACTED #community/CI_PWA_Testing

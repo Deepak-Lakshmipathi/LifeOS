@@ -1,11 +1,11 @@
 ---
 source_file: "afk-pipeline-out/s2-done-when-deploy.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Deploy — Slice S2 done_when
@@ -16,4 +16,4 @@ tags:
 - [[Sync seam (SyncProvider)]] - `references` [EXTRACTED]
 - [[done_when field]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

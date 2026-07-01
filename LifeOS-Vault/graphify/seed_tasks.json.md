@@ -1,12 +1,12 @@
 ---
 source_file: "seed_tasks.json"
 type: "code"
-community: "Seed Data (basic)"
+community: "Seed Tasks Data"
 location: "L1"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/Seed_Data_basic
+  - community/Seed_Tasks_Data
 ---
 
 # seed_tasks.json
@@ -17,4 +17,4 @@ tags:
 - [[projects]] - `contains` [EXTRACTED]
 - [[version_1]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/Seed_Data_basic
+#graphify/code #graphify/EXTRACTED #community/Seed_Tasks_Data

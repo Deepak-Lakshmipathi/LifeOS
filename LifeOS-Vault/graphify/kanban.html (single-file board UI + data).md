@@ -1,11 +1,11 @@
 ---
 source_file: "kanban.html"
 type: "document"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # kanban.html (single-file board UI + data)
@@ -14,4 +14,4 @@ tags:
 - [[Slice S19 — Telegram bot photos (vision)]] - `references` [EXTRACTED]
 - [[board-data canonical JSON block]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/document #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

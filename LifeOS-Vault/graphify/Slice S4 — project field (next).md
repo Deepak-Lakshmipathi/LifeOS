@@ -1,11 +1,11 @@
 ---
 source_file: "HANDOFF.md"
 type: "concept"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Slice S4 — project field (next)
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[LifeOS Handoff]] - `references` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/concept #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

@@ -1,12 +1,12 @@
 ---
 source_file: "scripts/gen-icons.mjs"
 type: "code"
-community: "PWA Icon Generation"
+community: "Icon Generation"
 location: "L1"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/PWA_Icon_Generation
+  - community/Icon_Generation
 ---
 
 # gen-icons.mjs
@@ -16,4 +16,4 @@ tags:
 - [[png192]] - `contains` [EXTRACTED]
 - [[png512]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/PWA_Icon_Generation
+#graphify/code #graphify/EXTRACTED #community/Icon_Generation

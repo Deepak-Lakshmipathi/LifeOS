@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S12-smart-capture.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Slice S12 — Smart capture
@@ -16,4 +16,4 @@ tags:
 - [[Sync seam (SyncProvider)]] - `references` [EXTRACTED]
 - [[parseCapture shorthand parser]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

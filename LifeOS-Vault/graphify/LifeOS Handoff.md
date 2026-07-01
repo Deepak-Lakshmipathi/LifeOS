@@ -1,11 +1,11 @@
 ---
 source_file: "HANDOFF.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # LifeOS Handoff
@@ -25,4 +25,4 @@ tags:
 - [[Tab bar navigation (S7)]] - `references` [EXTRACTED]
 - [[afk-pipeline ship workflow]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

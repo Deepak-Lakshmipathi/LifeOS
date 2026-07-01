@@ -1,11 +1,11 @@
 ---
 source_file: "docs/adr/0002-local-first-sync-deferred.md"
 type: "rationale"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # ADR-0002 local-first, sync deferred
@@ -20,4 +20,4 @@ tags:
 - [[Sync seam (SyncProvider)]] - `references` [EXTRACTED]
 - [[Vault transport decision (bridgeFSAgit)]] - `references` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/rationale #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

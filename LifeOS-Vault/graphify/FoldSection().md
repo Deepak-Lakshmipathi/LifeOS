@@ -1,12 +1,12 @@
 ---
 source_file: "src/components/NowView.tsx"
 type: "code"
-community: "NOW View (dumb brain)"
+community: "Architecture ADRs & NOW View"
 location: "L102"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/NOW_View_dumb_brain
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # FoldSection()
@@ -16,4 +16,4 @@ tags:
 - [[NowView()]] - `calls` [EXTRACTED]
 - [[NowView.tsx]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/NOW_View_dumb_brain
+#graphify/code #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

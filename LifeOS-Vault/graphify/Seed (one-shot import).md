@@ -1,11 +1,11 @@
 ---
 source_file: "CONTEXT.md"
 type: "concept"
-community: "Seed Import & Task Hook"
+community: "Tab Bar, Seed & DB"
 tags:
   - graphify/concept
   - graphify/INFERRED
-  - community/Seed_Import__Task_Hook
+  - community/Tab_Bar_Seed__DB
 ---
 
 # Seed (one-shot import)
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[seedIfEmpty()]] - `references` [INFERRED]
 
-#graphify/concept #graphify/INFERRED #community/Seed_Import__Task_Hook
+#graphify/concept #graphify/INFERRED #community/Tab_Bar_Seed__DB

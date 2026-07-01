@@ -1,13 +1,13 @@
 ---
 type: community
-cohesion: 0.11
-members: 43
+cohesion: 0.09
+members: 51
 ---
 
 # Task Input & Priority UI
 
-**Cohesion:** 0.11 - loosely connected
-**Members:** 43 nodes
+**Cohesion:** 0.09 - loosely connected
+**Members:** 51 nodes
 
 ## Members
 - [[.add()]] - code - src/sync/LocalOnly.ts
@@ -18,16 +18,20 @@ members: 43
 - [[AddTaskInputProps]] - code - src/components/AddTaskInput.tsx
 - [[DOMAINS]] - code - src/data/domains.ts
 - [[DOMAIN_COLORS]] - code - src/data/domains.ts
-- [[Domain]] - code - src/data/domains.ts
 - [[DomainGroup]] - code - src/lib/groupByDomain.ts
+- [[FoldSectionProps]] - code - src/components/NowView.tsx
 - [[Inbox (derived group)]] - concept - CONTEXT.md
 - [[LifeOSDatabase]] - code - src/db/LifeOSDb.ts
 - [[LifeOSDb.ts]] - code - src/db/LifeOSDb.ts
+- [[NowView.tsx]] - code - src/components/NowView.tsx
+- [[NowViewProps]] - code - src/components/NowView.tsx
+- [[PRIORITY_LABEL]] - code - src/components/CaptureSheet.tsx
 - [[Priority]] - code - src/components/PriorityControl.tsx
 - [[PriorityControl()]] - code - src/components/PriorityControl.tsx
 - [[PriorityControl.tsx]] - code - src/components/PriorityControl.tsx
 - [[PriorityControlProps]] - code - src/components/PriorityControl.tsx
 - [[ProjectGroup]] - code - src/lib/groupByProject.ts
+- [[RankedTask]] - code - src/now/rankNow.ts
 - [[Task]] - code - src/types/index.ts
 - [[TaskItem()]] - code - src/components/TaskItem.tsx
 - [[TaskItem.tsx]] - code - src/components/TaskItem.tsx
@@ -35,6 +39,9 @@ members: 43
 - [[TaskList()]] - code - src/components/TaskList.tsx
 - [[TaskList.tsx]] - code - src/components/TaskList.tsx
 - [[TaskListProps]] - code - src/components/TaskList.tsx
+- [[UndoToast()]] - code - src/components/UndoToast.tsx
+- [[UndoToast.tsx]] - code - src/components/UndoToast.tsx
+- [[UndoToastProps]] - code - src/components/UndoToast.tsx
 - [[domainForProject()]] - code - src/lib/groupByDomain.ts
 - [[domains.ts]] - code - src/data/domains.ts
 - [[doneWhenUi.test.tsx]] - code - src/test/doneWhenUi.test.tsx
@@ -49,10 +56,11 @@ members: 43
 - [[makeTask()_3]] - code - src/test/groupByDomain.test.ts
 - [[makeTask()_4]] - code - src/test/groupByProject.test.ts
 - [[makeTask()_1]] - code - src/test/priorityUi.test.tsx
+- [[makeTask()_5]] - code - src/test/tapDotComplete.test.tsx
 - [[noop()]] - code - src/test/doneWhenUi.test.tsx
 - [[noop()_1]] - code - src/test/priorityUi.test.tsx
-- [[priorityLabel()]] - code - src/components/PriorityControl.tsx
 - [[priorityUi.test.tsx]] - code - src/test/priorityUi.test.tsx
+- [[tapDotComplete.test.tsx]] - code - src/test/tapDotComplete.test.tsx
 
 ## Live Query (requires Dataview plugin)
 
@@ -62,13 +70,16 @@ SORT file.name ASC
 ```
 
 ## Connections to other communities
-- 25 edges to [[_COMMUNITY_Seed Import & Task Hook]]
-- 4 edges to [[_COMMUNITY_NOW View (dumb brain)]]
-- 1 edge to [[_COMMUNITY_DomainProject Model & Seed Decisions]]
+- 30 edges to [[_COMMUNITY_DomainsPulseGlass UI]]
+- 26 edges to [[_COMMUNITY_Tab Bar, Seed & DB]]
+- 16 edges to [[_COMMUNITY_VaultSync Implementation & Tests]]
+- 4 edges to [[_COMMUNITY_Architecture ADRs & NOW View]]
+- 3 edges to [[_COMMUNITY_Smart Capture]]
+- 1 edge to [[_COMMUNITY_Domain Model & Seed ADRs]]
 
 ## Top bridge nodes
-- [[Task]] - degree 28, connects to 2 communities
-- [[DOMAINS]] - degree 9, connects to 2 communities
-- [[AddTaskInput.tsx]] - degree 14, connects to 1 community
-- [[index.ts]] - degree 13, connects to 1 community
-- [[TaskList.tsx]] - degree 9, connects to 1 community
+- [[DOMAINS]] - degree 16, connects to 5 communities
+- [[Task]] - degree 48, connects to 4 communities
+- [[index.ts]] - degree 26, connects to 3 communities
+- [[NowView.tsx]] - degree 16, connects to 3 communities
+- [[isDomain()]] - degree 11, connects to 3 communities

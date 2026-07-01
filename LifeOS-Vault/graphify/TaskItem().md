@@ -14,11 +14,12 @@ tags:
 ## Connections
 - [[DOMAINS]] - `references` [EXTRACTED]
 - [[NowView.tsx]] - `imports` [EXTRACTED]
+- [[PRIORITY_LABEL]] - `calls` [EXTRACTED]
 - [[TaskItem.tsx]] - `contains` [EXTRACTED]
 - [[TaskList()]] - `calls` [EXTRACTED]
 - [[TaskList.tsx]] - `imports` [EXTRACTED]
 - [[doneWhenUi.test.tsx]] - `imports` [EXTRACTED]
-- [[priorityLabel()]] - `calls` [EXTRACTED]
 - [[priorityUi.test.tsx]] - `imports` [EXTRACTED]
+- [[tapDotComplete.test.tsx]] - `imports` [EXTRACTED]
 
 #graphify/code #graphify/EXTRACTED #community/Task_Input__Priority_UI

@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S17-bot-confirm-edits.md"
 type: "concept"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # Fuzzy task-search / disambiguation helper
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[Slice S17 — Telegram bot confirm updatedelete]] - `references` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/concept #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

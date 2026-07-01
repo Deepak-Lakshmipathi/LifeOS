@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S5-domain-and-seed.md"
 type: "document"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # Slice S5 — Domains + seed the vault shape
@@ -17,4 +17,4 @@ tags:
 - [[Slice S6 — NOW view (dumb brain)]] - `references` [EXTRACTED]
 - [[domain field (7 domains) + Domain→Project→Task shape]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/document #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

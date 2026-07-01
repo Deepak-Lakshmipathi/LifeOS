@@ -1,11 +1,11 @@
 ---
 source_file: "architecture-report.html"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/INFERRED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # LifeOS Architecture Report
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[Sync seam (SyncProvider)]] - `references` [INFERRED]
 
-#graphify/document #graphify/INFERRED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/INFERRED #community/Architecture_ADRs__NOW_View

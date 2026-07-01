@@ -1,11 +1,11 @@
 ---
 source_file: "CONTEXT.md"
 type: "concept"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Sync seam (SyncProvider)
@@ -23,4 +23,4 @@ tags:
 - [[Task (entity)]] - `shares_data_with` [EXTRACTED]
 - [[VaultSync provider]] - `implements` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/concept #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View
