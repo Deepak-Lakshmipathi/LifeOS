@@ -306,14 +306,14 @@
       "notes": "Group D · Wave 6 (SOLO) DONE — merged dual-green (PR #54). git-as-transport (ADR-0009): isomorphic-git in-browser clone behind VaultTransport iface; pure parseVault/parseTaskLine (52/52 tests); VaultSync read-only (mutations throw until S15); VITE_VAULT flag, LocalOnly stays default. NO schema change. PRD #52. Unblocks S15 write."
     },
     {
-      "id": "s15a", "title": "Vault write core (serializer + VaultSync mutations)", "column": "ready", "slice": "S15a",
-      "issue": 57, "pr": null, "blockedBy": [],
-      "notes": "Group D · PRD #56 · AFK. Pure serializeTaskLine + VaultSync real mutations (single-line splice, in-memory source-map identity, promise-chain write-queue) driven by a FAKE transport → fully CI-testable. Adds writeFile to VaultTransport iface + throwing GitTransport stub. NO Task-shape change (schema v2), NO id:: in markdown, NO migration (ADR-0010). Unblocks S15b."
+      "id": "s15a", "title": "Vault write core (serializer + VaultSync mutations)", "column": "done", "slice": "S15a",
+      "issue": 57, "pr": 59, "blockedBy": [],
+      "notes": "Group D · PRD #56 · AFK DONE — merged dual-green (PR #59, 343/343 tests, ponytail-review green-lit). Pure serializeTaskLine + VaultSync real mutations (single-line splice, in-memory source-map identity, promise-chain write-queue) via a FAKE transport. writeFile added to VaultTransport iface + throwing GitTransport stub. NO Task-shape change (schema v2), NO id:: in markdown, NO migration (ADR-0010). Unblocks S15b."
     },
     {
-      "id": "s15b", "title": "Git write transport + wipe-fix + Inbox (HITL)", "column": "backlog", "slice": "S15b",
-      "issue": 58, "pr": null, "blockedBy": ["s15a"],
-      "notes": "Group D · PRD #56 · HITL — needs write-PAT + live-vault hand-verify (not CI-verifiable). Real GitTransport.writeFile (add/commit/best-effort push) + fix wipe-reclone data-loss hazard (transport.ts L100-116 destroys unpushed offline commits) + Inbox/ folder scan + parseVault Inbox-filename rule. Blocked by S15a. ADR-0010."
+      "id": "s15b", "title": "Git write transport + wipe-fix + Inbox (HITL)", "column": "ready", "slice": "S15b",
+      "issue": 58, "pr": null, "blockedBy": [],
+      "notes": "Group D · PRD #56 · HITL, UNBLOCKED (S15a merged) — NOT auto-dispatched. Needs write-PAT + live-vault hand-verify (not CI-verifiable). Real GitTransport.writeFile (add/commit/best-effort push) + fix wipe-reclone data-loss hazard (transport.ts L100-116 destroys unpushed offline commits) + Inbox/ folder scan + parseVault Inbox-filename rule. Owner runs this. ADR-0010."
     },
     {
       "id": "s16", "title": "Telegram bot: text -> create", "column": "backlog", "slice": "S16",
