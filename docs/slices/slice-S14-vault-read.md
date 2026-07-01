@@ -12,7 +12,7 @@ The vault is files; the PWA is sandboxed. Pick the transport (was deferred in de
 - **Bridge service** (a small Node service co-located with the vault, exposes a read API; vault synced across devices via Syncthing/Obsidian Sync), **or**
 - **File System Access API** (PWA opens a vault folder on desktop; no mobile), **or**
 - **Git-as-transport** (PWA pulls a vault repo).
-Recommended for a clean first cut: **bridge service read API**. Capture the choice in a new ADR (supersedes/extends ADR-0002).
+**DECIDED (ADR-0009): git-as-transport** — in-browser clone of the vault repo into IndexedDB (isomorphic-git + CORS proxy). Chosen over the bridge because offline-on-Android-away-from-home is a hard requirement the bridge fails on mobile. FS Access API rejected (desktop-only). See `docs/adr/0009-vault-read-transport.md`.
 
 ## Scope — this slice only
 - Markdown parser: read Domain folders → Project notes → `- [ ]`/`- [x]` task lines with inline `done_when::` and `priority::` fields → `Task[]`.

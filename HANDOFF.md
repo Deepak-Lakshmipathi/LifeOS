@@ -81,7 +81,7 @@ npm run test:pwa-audit  # installability audit
 
 ## Next vertical — Wave 6: S14 vault read is a HUMAN GATE ⛔
 MVP (Groups A–C) is shipped. The next slice opens **Group D (sync)** and is **NOT for `auto` dispatch.**
-- **S14 — vault read** forces the long-deferred transport decision: **bridge service vs File System Access API vs git-as-transport** (see ADR-0002 "sync deferred"). It also adds `updated_at`/`deleted_at` to `Task` *with* a Dexie migration (the first real schema bump since v2). This needs a **grill + a new ADR** locking the transport before any implementer runs — do NOT headless it.
+- **S14 — vault read** — transport **DECIDED (ADR-0009): git-as-transport** (in-browser clone of the vault repo into IndexedDB; isomorphic-git + CORS proxy). Chosen over bridge/FSA because offline-on-Android-away-from-home is a hard requirement. **Read-only slice: NO `Task` shape change, NO `updated_at`/`deleted_at`, NO tombstones, NO Dexie migration — schema stays v2.** (Earlier drafts over-scoped this; the sync fields + migration + LWW land in S15 write, per ADR-0002/0005.) Grill done, ADR written — gate cleared.
 - After S14: **S15 vault write** (Obsidian vault becomes the real truth via a `VaultSync` provider body swapped at the seam — ADR-0002).
 - Then **Group E — Telegram bot:** S16 text → S17 confirm-edits ∥ S18 voice ∥ S19 photo (the three modality slices parallelize off S16). S16 is where the *concept* of S12's capture is reused — but via Claude NLU, not the regex parser.
 
