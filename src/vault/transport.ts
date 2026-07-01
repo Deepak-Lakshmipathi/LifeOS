@@ -35,6 +35,14 @@ import { DOMAINS } from '../data/domains'
  */
 export interface VaultTransport {
   readFiles(): Promise<{ path: string; content: string }[]>
+  /**
+   * Write (create or overwrite) a vault file and commit the change (S15a).
+   *
+   * @param path    - Relative vault path, e.g. `Growth/Reading.md`.
+   * @param content - Full file content to write (UTF-8 string).
+   * @param message - Commit message for the git commit (S15b wires this up).
+   */
+  writeFile(path: string, content: string, message: string): Promise<void>
 }
 
 // ─── Git implementation ────────────────────────────────────────────────────────
@@ -141,5 +149,17 @@ export class GitTransport implements VaultTransport {
     }
 
     return result
+  }
+
+  /**
+   * Write a file back to the vault repo (S15b).
+   *
+   * Real git commit + push is deferred to S15b; this stub keeps the
+   * VaultTransport interface satisfied so VaultSync can be unit-tested
+   * against a fake transport without ever reaching GitTransport at runtime
+   * (VITE_VAULT is off by default — GitTransport is never constructed in MVP).
+   */
+  async writeFile(_path: string, _content: string, _message: string): Promise<void> {
+    throw new Error('not implemented until S15b')
   }
 }
