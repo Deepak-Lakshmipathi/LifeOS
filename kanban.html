@@ -192,7 +192,7 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-06-30", "note": "Groups A–C (MVP) COMPLETE — S13 merged. blockedBy reflects TRUE deps + wave labels for parallel afk-pipeline dispatch (not a strict linear chain)" },
+  "meta": { "project": "LifeOS", "updated": "2026-07-01", "note": "Groups A–C (MVP) COMPLETE — S13 merged. S14 vault read merged. S15 split into S15a (AFK, ready) + S15b (HITL). blockedBy reflects TRUE deps for parallel afk-pipeline dispatch (not a strict linear chain)" },
   "columns": [
     { "id": "backlog", "name": "Backlog" },
     { "id": "ready",   "name": "Ready" },
@@ -306,9 +306,14 @@
       "notes": "Group D · Wave 6 (SOLO) DONE — merged dual-green (PR #54). git-as-transport (ADR-0009): isomorphic-git in-browser clone behind VaultTransport iface; pure parseVault/parseTaskLine (52/52 tests); VaultSync read-only (mutations throw until S15); VITE_VAULT flag, LocalOnly stays default. NO schema change. PRD #52. Unblocks S15 write."
     },
     {
-      "id": "s15", "title": "Obsidian vault write", "column": "backlog", "slice": "S15",
-      "issue": null, "pr": null, "blockedBy": ["s14"],
-      "notes": "Group D · Wave 7 (SOLO). VaultSync write methods; vault becomes the real source of truth. Hard dep S14 (extends same provider/transport). Exports the shared serializer/transport that S16 reuses."
+      "id": "s15a", "title": "Vault write core (serializer + VaultSync mutations)", "column": "done", "slice": "S15a",
+      "issue": 57, "pr": 59, "blockedBy": [],
+      "notes": "Group D · PRD #56 · AFK DONE — merged dual-green (PR #59, 343/343 tests, ponytail-review green-lit). Pure serializeTaskLine + VaultSync real mutations (single-line splice, in-memory source-map identity, promise-chain write-queue) via a FAKE transport. writeFile added to VaultTransport iface + throwing GitTransport stub. NO Task-shape change (schema v2), NO id:: in markdown, NO migration (ADR-0010). Unblocks S15b."
+    },
+    {
+      "id": "s15b", "title": "Git write transport + wipe-fix + Inbox (HITL)", "column": "ready", "slice": "S15b",
+      "issue": 58, "pr": null, "blockedBy": [],
+      "notes": "Group D · PRD #56 · HITL, UNBLOCKED (S15a merged) — NOT auto-dispatched. Needs write-PAT + live-vault hand-verify (not CI-verifiable). Real GitTransport.writeFile (add/commit/best-effort push) + fix wipe-reclone data-loss hazard (transport.ts L100-116 destroys unpushed offline commits) + Inbox/ folder scan + parseVault Inbox-filename rule. Owner runs this. ADR-0010."
     },
     {
       "id": "s16", "title": "Telegram bot: text -> create", "column": "backlog", "slice": "S16",
