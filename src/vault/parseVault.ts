@@ -14,6 +14,12 @@
  *   done_when:: <text>   — inline acceptance criterion; stripped from title
  *   priority:: <1|2|3>  — importance; invalid values silently skipped
  *   Fields may appear in ANY order after the title.
+ *
+ * Inbox convention (S15b, ADR-0010 §5):
+ *   A filename of `Inbox` (case-insensitive) maps to `project = undefined`
+ *   — "Inbox" is the reserved domain-less/project-less home, never a real
+ *   project name. The top-level `Inbox/` folder is likewise not a
+ *   canonical domain (not in `isDomain`), so `domain` stays undefined too.
  */
 
 import type { Task } from '../types'
@@ -138,7 +144,12 @@ export function parseVault(files: { path: string; content: string }[]): Task[] {
     const domain = isDomain(folderName) ? folderName : undefined
 
     // Project = filename without .md extension
-    const project = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName
+    const rawProject = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName
+
+    // "Inbox" (case-insensitive) is the reserved domain-less/project-less
+    // home (ADR-0010 §5) — never a real project name (CONTEXT.md forbids
+    // inventing a project called "Inbox"), so map it to undefined here.
+    const project = rawProject.toLowerCase() === 'inbox' ? undefined : rawProject
 
     const ctx = {
       domain,

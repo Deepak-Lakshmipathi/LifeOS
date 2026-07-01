@@ -293,6 +293,31 @@ describe('parseVault — path parsing', () => {
   })
 })
 
+// ─── parseVault — Inbox convention (S15b, ADR-0010 §5) ────────────────────────
+
+describe('parseVault — Inbox filename/folder convention', () => {
+  it('Inbox/Inbox.md → project-less and domain-less', () => {
+    const files = [{ path: 'Inbox/Inbox.md', content: '- [ ] Domain-less task\n' }]
+    const tasks = parseVault(files)
+    expect(tasks).toHaveLength(1)
+    expect(hasKey(tasks[0]!, 'domain')).toBe(false)
+    expect(hasKey(tasks[0]!, 'project')).toBe(false)
+  })
+
+  it('filename Inbox is case-insensitive', () => {
+    const files = [{ path: 'Inbox/inbox.md', content: '- [ ] Another task\n' }]
+    const tasks = parseVault(files)
+    expect(hasKey(tasks[0]!, 'project')).toBe(false)
+  })
+
+  it('a domain folder with an Inbox.md file → domain kept, project absent', () => {
+    const files = [{ path: 'Growth/Inbox.md', content: '- [ ] Task\n' }]
+    const tasks = parseVault(files)
+    expect(tasks[0]!.domain).toBe('Growth')
+    expect(hasKey(tasks[0]!, 'project')).toBe(false)
+  })
+})
+
 // ─── parseVault — empty file ──────────────────────────────────────────────────
 
 describe('parseVault — empty file', () => {
