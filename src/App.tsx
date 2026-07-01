@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { LocalOnly } from './sync/LocalOnly'
+import { VaultSync } from './sync/VaultSync'
 import type { SyncProvider } from './sync/SyncProvider'
 import { useTasks } from './hooks/useTasks'
 import { CaptureSheet } from './components/CaptureSheet'
@@ -14,7 +15,7 @@ import { getTimeOfDay, TIME_GRADIENTS, TIME_SOLID_BG } from './lib/timeOfDay'
 
 // The provider is instantiated once at module level.
 // Swap to a RemoteSync implementation here when sync lands (ADR-0002).
-const provider: SyncProvider = new LocalOnly()
+const provider: SyncProvider = import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
 
 
 /**
