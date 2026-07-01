@@ -192,7 +192,7 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-07-01", "note": "Groups A–C (MVP) COMPLETE — S13 merged. S14 vault read merged. S15 split into S15a (AFK, ready) + S15b (HITL). blockedBy reflects TRUE deps for parallel afk-pipeline dispatch (not a strict linear chain)" },
+  "meta": { "project": "LifeOS", "updated": "2026-07-01", "note": "Groups A–D COMPLETE — MVP (S13) + vault sync (S14 read + S15a/S15b write) all merged. Obsidian vault is now the real source of truth via VaultSync (VITE_VAULT=1). Next: Group E — Telegram bot (S16, human gate). blockedBy reflects TRUE deps for parallel afk-pipeline dispatch (not a strict linear chain)" },
   "columns": [
     { "id": "backlog", "name": "Backlog" },
     { "id": "ready",   "name": "Ready" },
@@ -311,14 +311,14 @@
       "notes": "Group D · PRD #56 · AFK DONE — merged dual-green (PR #59, 343/343 tests, ponytail-review green-lit). Pure serializeTaskLine + VaultSync real mutations (single-line splice, in-memory source-map identity, promise-chain write-queue) via a FAKE transport. writeFile added to VaultTransport iface + throwing GitTransport stub. NO Task-shape change (schema v2), NO id:: in markdown, NO migration (ADR-0010). Unblocks S15b."
     },
     {
-      "id": "s15b", "title": "Git write transport + wipe-fix + Inbox (HITL)", "column": "ready", "slice": "S15b",
-      "issue": 58, "pr": null, "blockedBy": [],
-      "notes": "Group D · PRD #56 · HITL, UNBLOCKED (S15a merged) — NOT auto-dispatched. Needs write-PAT + live-vault hand-verify (not CI-verifiable). Real GitTransport.writeFile (add/commit/best-effort push) + fix wipe-reclone data-loss hazard (transport.ts L100-116 destroys unpushed offline commits) + Inbox/ folder scan + parseVault Inbox-filename rule. Owner runs this. ADR-0010."
+      "id": "s15b", "title": "Git write transport + wipe-fix + Inbox (HITL)", "column": "done", "slice": "S15b",
+      "issue": 58, "pr": 61, "blockedBy": [],
+      "notes": "Group D · PRD #56 · HITL DONE — CLOSES Group D (vault sync). Merged PR #61 (build-test + pwa-e2e green; owner hand-verified live-vault). Real GitTransport.writeFile (mkdir-recursive → add → local-authoritative commit → best-effort push) + wipe-reclone data-loss fix (only wipes when nothing ahead of origin) + top-level Inbox/ scan + parseVault Inbox-filename→project undefined. Git path behind VaultTransport iface, not CI-verifiable (no remote) — owner hand-verified add/toggle/update/delete-lands-as-commit, offline-commit-survives, Inbox round-trip with a write-scoped PAT. Vault now the real source of truth (VITE_VAULT=1). ADR-0010."
     },
     {
-      "id": "s16", "title": "Telegram bot: text -> create", "column": "backlog", "slice": "S16",
-      "issue": null, "pr": null, "blockedBy": ["s15"],
-      "notes": "Group E · Wave 8 (SOLO). Bot capture pipeline begins: text -> Claude intent/extract -> vault. New services/bot/. Dep S15 (reuses vault write serializer/transport). Foundation for the 3 parallel modality slices."
+      "id": "s16", "title": "Telegram bot: text -> create", "column": "ready", "slice": "S16",
+      "issue": null, "pr": null, "blockedBy": ["s15b"],
+      "notes": "Group E · Wave 8 (SOLO) — NEXT, unblocked (S15b merged). Bot capture pipeline begins: text -> Claude intent/extract -> vault. New services/bot/. Dep S15 (reuses vault write serializer/transport). Foundation for the 3 parallel modality slices. New-transport slice — likely a HUMAN GATE (grill + PRD + ADR first, like S14). Also the slice that pays for durable id:: identity (ADR-0010 §2 upgrade path — bot is the first second live mutator)."
     },
     {
       "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "backlog", "slice": "S17",

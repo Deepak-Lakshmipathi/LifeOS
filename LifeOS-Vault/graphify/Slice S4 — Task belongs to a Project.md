@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S4-project.md"
 type: "document"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # Slice S4 — Task belongs to a Project
@@ -18,4 +18,4 @@ tags:
 - [[Slice S5 — Domains + seed the vault shape]] - `references` [EXTRACTED]
 - [[project field (denormalized string) + groupByProject]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/document #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

@@ -1,11 +1,11 @@
 ---
 source_file: "afk-pipeline-out/s6-now-view-deploy.md"
 type: "document"
-community: "NOW View (dumb brain)"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/NOW_View_dumb_brain
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # S6 NOW view deploy tables
@@ -15,4 +15,4 @@ tags:
 - [[NowView()]] - `references` [EXTRACTED]
 - [[rankNow()]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/NOW_View_dumb_brain
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

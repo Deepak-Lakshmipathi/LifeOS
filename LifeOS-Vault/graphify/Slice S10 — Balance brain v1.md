@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S10-balance-brain.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Slice S10 — Balance brain v1
@@ -17,4 +17,4 @@ tags:
 - [[Slice S11 — Glass  depth visual pass]] - `references` [EXTRACTED]
 - [[rankNow balance algorithm]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

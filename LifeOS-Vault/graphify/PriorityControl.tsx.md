@@ -13,10 +13,10 @@ tags:
 
 ## Connections
 - [[AddTaskInput.tsx]] - `imports_from` [EXTRACTED]
+- [[PRIORITY_LABEL]] - `contains` [EXTRACTED]
 - [[Priority]] - `contains` [EXTRACTED]
 - [[PriorityControl()]] - `contains` [EXTRACTED]
 - [[PriorityControlProps]] - `contains` [EXTRACTED]
 - [[TaskItem.tsx]] - `imports_from` [EXTRACTED]
-- [[priorityLabel()]] - `contains` [EXTRACTED]
 
 #graphify/code #graphify/EXTRACTED #community/Task_Input__Priority_UI

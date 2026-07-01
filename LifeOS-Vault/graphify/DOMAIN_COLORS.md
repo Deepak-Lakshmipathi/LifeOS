@@ -12,6 +12,10 @@ tags:
 # DOMAIN_COLORS
 
 ## Connections
+- [[CaptureSheet.tsx]] - `imports` [EXTRACTED]
+- [[DomainsMap.tsx]] - `imports` [EXTRACTED]
+- [[PulseView.tsx]] - `imports` [EXTRACTED]
+- [[TaskItem.tsx]] - `imports` [EXTRACTED]
 - [[domains.ts]] - `contains` [EXTRACTED]
 
 #graphify/code #graphify/EXTRACTED #community/Task_Input__Priority_UI

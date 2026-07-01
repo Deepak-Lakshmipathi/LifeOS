@@ -1,12 +1,12 @@
 ---
 source_file: "src/now/rankNow.ts"
 type: "code"
-community: "NOW View (dumb brain)"
+community: "Architecture ADRs & NOW View"
 location: "L5"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/NOW_View_dumb_brain
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # rankNow()
@@ -23,4 +23,4 @@ tags:
 - [[rankNow unit tests]] - `references` [EXTRACTED]
 - [[rankNow.ts]] - `imports` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/NOW_View_dumb_brain
+#graphify/code #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

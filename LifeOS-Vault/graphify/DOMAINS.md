@@ -15,11 +15,18 @@ tags:
 - [[AddTaskInput()]] - `references` [EXTRACTED]
 - [[AddTaskInput.tsx]] - `imports` [EXTRACTED]
 - [[Domain (entity)]] - `references` [INFERRED]
+- [[DomainsMap.tsx]] - `imports` [EXTRACTED]
+- [[PulseView.tsx]] - `imports` [EXTRACTED]
 - [[TaskItem()]] - `references` [EXTRACTED]
 - [[TaskItem.tsx]] - `imports` [EXTRACTED]
+- [[computeWarmth.test.ts]] - `imports` [EXTRACTED]
+- [[computeWarmth.ts]] - `imports` [EXTRACTED]
 - [[domains.ts]] - `contains` [EXTRACTED]
 - [[groupByDomain.ts]] - `imports` [EXTRACTED]
 - [[isDomain()]] - `references` [EXTRACTED]
+- [[parseCapture.ts]] - `imports` [EXTRACTED]
+- [[rankNow.ts]] - `imports` [EXTRACTED]
 - [[seedIfEmpty()]] - `shares_data_with` [INFERRED]
+- [[transport.ts]] - `imports` [EXTRACTED]
 
 #graphify/code #graphify/EXTRACTED #community/Task_Input__Priority_UI

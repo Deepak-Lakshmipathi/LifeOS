@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S16-bot-text-create.md"
 type: "concept"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # Claude intent classification + structured extraction
@@ -14,4 +14,4 @@ tags:
 - [[Telegram bot service (servicesbot)]] - `calls` [EXTRACTED]
 - [[Transcription adapter (swappable STT)]] - `shares_data_with` [INFERRED]
 
-#graphify/concept #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/concept #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

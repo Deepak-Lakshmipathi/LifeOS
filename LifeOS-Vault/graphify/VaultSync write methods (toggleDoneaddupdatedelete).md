@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S15-vault-write.md"
 type: "concept"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # VaultSync write methods (toggleDone/add/update/delete)
@@ -16,4 +16,4 @@ tags:
 - [[Slice S19 — Telegram bot photos (vision)]] - `references` [EXTRACTED]
 - [[Vault as live source of truth (dashboard ⇄ Obsidian)]] - `rationale_for` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/concept #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

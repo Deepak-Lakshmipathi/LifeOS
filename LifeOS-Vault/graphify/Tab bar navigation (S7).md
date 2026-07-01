@@ -1,11 +1,11 @@
 ---
 source_file: "HANDOFF.md"
 type: "concept"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
-  - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - graphify/INFERRED
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Tab bar navigation (S7)
@@ -14,4 +14,4 @@ tags:
 - [[LifeOS Handoff]] - `references` [EXTRACTED]
 - [[Throwaway NowAll toggle]] - `conceptually_related_to` [INFERRED]
 
-#graphify/concept #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/concept #graphify/INFERRED #community/Architecture_ADRs__NOW_View

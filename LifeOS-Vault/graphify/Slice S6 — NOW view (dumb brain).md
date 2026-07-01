@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S6-now-view.md"
 type: "document"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # Slice S6 — NOW view (dumb brain)
@@ -15,4 +15,4 @@ tags:
 - [[Slice S7 — Tab bar navigation]] - `references` [EXTRACTED]
 - [[rankNow(tasks) pure ranking helper]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/document #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

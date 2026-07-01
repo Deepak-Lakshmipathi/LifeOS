@@ -1,11 +1,11 @@
 ---
 source_file: "docs/adr/0003-emulation-pwa-testing.md"
 type: "rationale"
-community: "CI & PWA Testing Gates"
+community: "CI PWA Testing"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/CI__PWA_Testing_Gates
+  - community/CI_PWA_Testing
 ---
 
 # ADR-0003 CI-gated emulation PWA testing
@@ -16,4 +16,4 @@ tags:
 - [[Tier 1 Playwright PWA tests]] - `references` [EXTRACTED]
 - [[Tier 2 Lighthouse PWA installability audit]] - `references` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/CI__PWA_Testing_Gates
+#graphify/rationale #graphify/EXTRACTED #community/CI_PWA_Testing

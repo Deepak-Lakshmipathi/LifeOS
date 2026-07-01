@@ -1,11 +1,11 @@
 ---
 source_file: "kanban.html"
 type: "rationale"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/rationale
   - graphify/INFERRED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # File is both data and UI (one source of truth)
@@ -14,4 +14,4 @@ tags:
 - [[Vault as live source of truth (dashboard ⇄ Obsidian)]] - `semantically_similar_to` [INFERRED]
 - [[board-data canonical JSON block]] - `rationale_for` [EXTRACTED]
 
-#graphify/rationale #graphify/INFERRED #community/Kanban_Board__Vault_Sync
+#graphify/rationale #graphify/INFERRED #community/Vault_Sync_Slices__Kanban

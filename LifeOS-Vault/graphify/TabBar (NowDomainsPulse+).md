@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S7-tab-bar.md"
 type: "concept"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # TabBar (Now/Domains/Pulse/+)
@@ -13,4 +13,4 @@ tags:
 ## Connections
 - [[NowView component]] - `references` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/concept #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

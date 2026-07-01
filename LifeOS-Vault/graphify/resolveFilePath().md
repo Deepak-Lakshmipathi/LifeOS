@@ -1,0 +1,17 @@
+---
+source_file: "src/sync/VaultSync.ts"
+type: "code"
+community: "VaultSync Implementation & Tests"
+location: "L51"
+tags:
+  - graphify/code
+  - graphify/EXTRACTED
+  - community/VaultSync_Implementation__Tests
+---
+
+# resolveFilePath()
+
+## Connections
+- [[VaultSync.ts]] - `contains` [EXTRACTED]
+
+#graphify/code #graphify/EXTRACTED #community/VaultSync_Implementation__Tests

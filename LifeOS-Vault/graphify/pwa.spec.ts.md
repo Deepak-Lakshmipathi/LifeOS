@@ -1,12 +1,12 @@
 ---
 source_file: "e2e/pwa.spec.ts"
 type: "code"
-community: "Seed Import & Task Hook"
+community: "Tab Bar, Seed & DB"
 location: "L1"
 tags:
   - graphify/code
   - graphify/INFERRED
-  - community/Seed_Import__Task_Hook
+  - community/Tab_Bar_Seed__DB
 ---
 
 # pwa.spec.ts
@@ -14,4 +14,4 @@ tags:
 ## Connections
 - [[seedIfEmpty()]] - `references` [INFERRED]
 
-#graphify/code #graphify/INFERRED #community/Seed_Import__Task_Hook
+#graphify/code #graphify/INFERRED #community/Tab_Bar_Seed__DB

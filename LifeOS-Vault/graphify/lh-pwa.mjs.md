@@ -1,12 +1,12 @@
 ---
 source_file: "scripts/lh-pwa.mjs"
 type: "code"
-community: "PWA Installability Audit"
+community: "PWA Lighthouse Audit"
 location: "L1"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/PWA_Installability_Audit
+  - community/PWA_Lighthouse_Audit
 ---
 
 # lh-pwa.mjs
@@ -19,4 +19,4 @@ tags:
 - [[results]] - `contains` [EXTRACTED]
 - [[server]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/PWA_Installability_Audit
+#graphify/code #graphify/EXTRACTED #community/PWA_Lighthouse_Audit

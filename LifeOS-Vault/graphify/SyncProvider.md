@@ -1,12 +1,12 @@
 ---
 source_file: "src/sync/SyncProvider.ts"
 type: "code"
-community: "Seed Import & Task Hook"
+community: "Tab Bar, Seed & DB"
 location: "L9"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/Seed_Import__Task_Hook
+  - community/Tab_Bar_Seed__DB
 ---
 
 # SyncProvider
@@ -17,10 +17,11 @@ tags:
 - [[LocalOnly.ts]] - `imports` [EXTRACTED]
 - [[Sync seam (SyncProvider)]] - `references` [INFERRED]
 - [[SyncProvider.ts]] - `imports` [EXTRACTED]
+- [[VaultSync.ts]] - `imports` [EXTRACTED]
 - [[seed.test.ts]] - `imports` [EXTRACTED]
 - [[seed.ts]] - `imports` [EXTRACTED]
 - [[seedIfEmpty()]] - `calls` [EXTRACTED]
 - [[useTasks()]] - `calls` [EXTRACTED]
 - [[useTasks.ts]] - `imports` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/Seed_Import__Task_Hook
+#graphify/code #graphify/EXTRACTED #community/Tab_Bar_Seed__DB

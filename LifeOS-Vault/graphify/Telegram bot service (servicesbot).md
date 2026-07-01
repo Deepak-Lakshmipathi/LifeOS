@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S16-bot-text-create.md"
 type: "concept"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # Telegram bot service (services/bot)
@@ -16,4 +16,4 @@ tags:
 - [[Slice S16 — Telegram bot text → create]] - `references` [EXTRACTED]
 - [[serializeTaskLine + round-trip parse]] - `references` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/concept #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban

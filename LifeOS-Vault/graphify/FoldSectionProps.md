@@ -1,12 +1,12 @@
 ---
 source_file: "src/components/NowView.tsx"
 type: "code"
-community: "NOW View (dumb brain)"
+community: "Task Input & Priority UI"
 location: "L96"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/NOW_View_dumb_brain
+  - community/Task_Input__Priority_UI
 ---
 
 # FoldSectionProps
@@ -14,4 +14,4 @@ tags:
 ## Connections
 - [[NowView.tsx]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/NOW_View_dumb_brain
+#graphify/code #graphify/EXTRACTED #community/Task_Input__Priority_UI

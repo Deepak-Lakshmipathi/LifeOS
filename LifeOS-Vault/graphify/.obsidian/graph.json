@@ -1,157 +1,192 @@
 {
   "colorGroups": [
     {
-      "query": "tag:#community/Task_Input_&_Priority_UI",
+      "query": "tag:#community/Architecture_ADRs_&_NOW_View",
       "color": {
         "a": 1,
         "rgb": 5142951
       }
     },
     {
-      "query": "tag:#community/Architecture_Decisions_&_App_Shell",
+      "query": "tag:#community/Task_Input_&_Priority_UI",
       "color": {
         "a": 1,
         "rgb": 15896107
       }
     },
     {
-      "query": "tag:#community/Dependencies_&_Build_Config",
+      "query": "tag:#community/Tab_Bar,_Seed_&_DB",
       "color": {
         "a": 1,
         "rgb": 14767961
       }
     },
     {
-      "query": "tag:#community/Domain/Project_Model_&_Seed_Decisions",
+      "query": "tag:#community/Dependencies_&_Package_Config",
       "color": {
         "a": 1,
         "rgb": 7780274
       }
     },
     {
-      "query": "tag:#community/Seed_Import_&_Task_Hook",
+      "query": "tag:#community/VaultSync_Implementation_&_Tests",
       "color": {
         "a": 1,
         "rgb": 5873999
       }
     },
     {
-      "query": "tag:#community/Kanban_Board_&_Vault_Sync",
+      "query": "tag:#community/Domains/Pulse/Glass_UI",
       "color": {
         "a": 1,
         "rgb": 15583560
       }
     },
     {
-      "query": "tag:#community/NOW_View_(dumb_brain)",
+      "query": "tag:#community/Domain_Model_&_Seed_ADRs",
       "color": {
         "a": 1,
         "rgb": 11565729
+      }
+    },
+    {
+      "query": "tag:#community/Vault_Sync_Slices_&_Kanban",
+      "color": {
+        "a": 1,
+        "rgb": 16752039
       }
     },
     {
       "query": "tag:#community/TypeScript_Config",
       "color": {
         "a": 1,
-        "rgb": 16752039
+        "rgb": 10253663
+      }
+    },
+    {
+      "query": "tag:#community/Vault_Write_Mechanics",
+      "color": {
+        "a": 1,
+        "rgb": 12234924
+      }
+    },
+    {
+      "query": "tag:#community/Smart_Capture",
+      "color": {
+        "a": 1,
+        "rgb": 5142951
       }
     },
     {
       "query": "tag:#community/Node_TS_Config",
       "color": {
         "a": 1,
-        "rgb": 10253663
-      }
-    },
-    {
-      "query": "tag:#community/PWA_Installability_Audit",
-      "color": {
-        "a": 1,
-        "rgb": 12234924
-      }
-    },
-    {
-      "query": "tag:#community/CI_&_PWA_Testing_Gates",
-      "color": {
-        "a": 1,
-        "rgb": 5142951
-      }
-    },
-    {
-      "query": "tag:#community/Seed_Data_(basic)",
-      "color": {
-        "a": 1,
         "rgb": 15896107
       }
     },
     {
-      "query": "tag:#community/PWA_Icon_Generation",
+      "query": "tag:#community/PWA_Lighthouse_Audit",
       "color": {
         "a": 1,
         "rgb": 14767961
       }
     },
     {
-      "query": "tag:#community/PWA_App_Icons",
+      "query": "tag:#community/CI_PWA_Testing",
       "color": {
         "a": 1,
         "rgb": 7780274
       }
     },
     {
-      "query": "tag:#community/Detailed_Seed_Data",
+      "query": "tag:#community/Seed_Tasks_Data",
       "color": {
         "a": 1,
         "rgb": 5873999
       }
     },
     {
-      "query": "tag:#community/PWA_Build_Test",
+      "query": "tag:#community/Icon_Generation",
       "color": {
         "a": 1,
         "rgb": 15583560
       }
     },
     {
-      "query": "tag:#community/Playwright_Config",
+      "query": "tag:#community/PWA_App_Icons",
       "color": {
         "a": 1,
         "rgb": 11565729
       }
     },
     {
-      "query": "tag:#community/PostCSS_Config",
+      "query": "tag:#community/Detailed_Seed_Data",
       "color": {
         "a": 1,
         "rgb": 16752039
       }
     },
     {
-      "query": "tag:#community/Three-Faces_Vision",
+      "query": "tag:#community/Vite_Env_Types",
       "color": {
         "a": 1,
         "rgb": 10253663
       }
     },
     {
-      "query": "tag:#community/Tailwind_Config",
+      "query": "tag:#community/Balance_Brain",
       "color": {
         "a": 1,
         "rgb": 12234924
       }
     },
     {
-      "query": "tag:#community/Test_Setup",
+      "query": "tag:#community/PWA_Build_Test",
       "color": {
         "a": 1,
         "rgb": 5142951
       }
     },
     {
-      "query": "tag:#community/Vite_Config",
+      "query": "tag:#community/Playwright_Config",
       "color": {
         "a": 1,
         "rgb": 15896107
+      }
+    },
+    {
+      "query": "tag:#community/PostCSS_Config",
+      "color": {
+        "a": 1,
+        "rgb": 14767961
+      }
+    },
+    {
+      "query": "tag:#community/Three_Faces_Vision",
+      "color": {
+        "a": 1,
+        "rgb": 7780274
+      }
+    },
+    {
+      "query": "tag:#community/Tailwind_Config",
+      "color": {
+        "a": 1,
+        "rgb": 5873999
+      }
+    },
+    {
+      "query": "tag:#community/Test_Setup",
+      "color": {
+        "a": 1,
+        "rgb": 15583560
+      }
+    },
+    {
+      "query": "tag:#community/Vite_Config",
+      "color": {
+        "a": 1,
+        "rgb": 11565729
       }
     }
   ]

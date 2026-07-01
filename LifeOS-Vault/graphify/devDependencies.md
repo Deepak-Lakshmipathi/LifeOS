@@ -1,12 +1,12 @@
 ---
 source_file: "package.json"
 type: "code"
-community: "Dependencies & Build Config"
+community: "Dependencies & Package Config"
 location: "L21"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/Dependencies__Build_Config
+  - community/Dependencies__Package_Config
 ---
 
 # devDependencies
@@ -31,4 +31,4 @@ tags:
 - [[vite-plugin-pwa]] - `contains` [EXTRACTED]
 - [[vitest]] - `contains` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/Dependencies__Build_Config
+#graphify/code #graphify/EXTRACTED #community/Dependencies__Package_Config

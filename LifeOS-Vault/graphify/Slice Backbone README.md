@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/README.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Slice Backbone README
@@ -22,4 +22,4 @@ tags:
 - [[Sync seam (SyncProvider)]] - `references` [EXTRACTED]
 - [[Warmth (derived domain heat)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

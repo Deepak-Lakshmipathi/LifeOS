@@ -1,11 +1,11 @@
 ---
 source_file: "docs/adr/0001-pwa-over-native.md"
 type: "rationale"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # ADR-0001 PWA over native
@@ -17,4 +17,4 @@ tags:
 - [[LifeOS Slice 1 Deploy Tables]] - `cites` [EXTRACTED]
 - [[Slice (tracer-bullet increment)]] - `references` [INFERRED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/rationale #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

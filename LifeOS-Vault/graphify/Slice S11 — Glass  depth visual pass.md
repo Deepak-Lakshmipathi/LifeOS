@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S11-glass-pass.md"
 type: "document"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Slice S11 — Glass / depth visual pass
@@ -15,4 +15,4 @@ tags:
 - [[Slice S10 — Balance brain v1]] - `references` [EXTRACTED]
 - [[Slice S12 — Smart capture]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/document #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

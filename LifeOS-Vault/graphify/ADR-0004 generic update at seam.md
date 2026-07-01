@@ -1,11 +1,11 @@
 ---
 source_file: "docs/adr/0004-task-mutation-via-generic-update.md"
 type: "rationale"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # ADR-0004 generic update at seam
@@ -19,4 +19,4 @@ tags:
 - [[done_when field]] - `references` [EXTRACTED]
 - [[priority field]] - `references` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/rationale #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

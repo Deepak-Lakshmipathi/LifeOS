@@ -1,12 +1,12 @@
 ---
 source_file: "src/components/NowView.tsx"
 type: "code"
-community: "NOW View (dumb brain)"
+community: "Architecture ADRs & NOW View"
 location: "L21"
 tags:
   - graphify/code
   - graphify/EXTRACTED
-  - community/NOW_View_dumb_brain
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # NowView()
@@ -21,6 +21,7 @@ tags:
 - [[NowView.tsx]] - `contains` [EXTRACTED]
 - [[S6 NOW view deploy tables]] - `references` [EXTRACTED]
 - [[Task (entity)]] - `shares_data_with` [INFERRED]
+- [[computeWarmth()]] - `calls` [EXTRACTED]
 - [[rankNow()]] - `calls` [EXTRACTED]
 
-#graphify/code #graphify/EXTRACTED #community/NOW_View_dumb_brain
+#graphify/code #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/README.md"
 type: "concept"
-community: "Architecture Decisions & App Shell"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Architecture_Decisions__App_Shell
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Balance brain (NOW ranking concept)
@@ -14,4 +14,4 @@ tags:
 - [[Slice Backbone README]] - `references` [EXTRACTED]
 - [[Slice S10 — Balance brain v1]] - `implements` [INFERRED]
 
-#graphify/concept #graphify/EXTRACTED #community/Architecture_Decisions__App_Shell
+#graphify/concept #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

@@ -1,11 +1,11 @@
 ---
 source_file: "CONTEXT.md"
 type: "concept"
-community: "NOW View (dumb brain)"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/NOW_View_dumb_brain
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # Task (entity)
@@ -22,4 +22,4 @@ tags:
 - [[priority field]] - `conceptually_related_to` [EXTRACTED]
 - [[rankNow()]] - `shares_data_with` [INFERRED]
 
-#graphify/concept #graphify/EXTRACTED #community/NOW_View_dumb_brain
+#graphify/concept #graphify/EXTRACTED #community/Architecture_ADRs__NOW_View

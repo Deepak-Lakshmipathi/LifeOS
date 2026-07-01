@@ -1,11 +1,11 @@
 ---
 source_file: "CONTEXT.md"
 type: "concept"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/concept
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # Project (entity)
@@ -16,4 +16,4 @@ tags:
 - [[Slice S4 — Task belongs to a Project]] - `references` [EXTRACTED]
 - [[Task (entity)]] - `conceptually_related_to` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/concept #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

@@ -1,11 +1,11 @@
 ---
 source_file: "docs/adr/0006-seed-import-on-empty-db.md"
 type: "rationale"
-community: "Domain/Project Model & Seed Decisions"
+community: "Domain Model & Seed ADRs"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Domain/Project_Model__Seed_Decisions
+  - community/Domain_Model__Seed_ADRs
 ---
 
 # ADR-0006: Seed import on empty DB
@@ -17,4 +17,4 @@ tags:
 - [[S5 Deploy (Domain + seed)]] - `cites` [EXTRACTED]
 - [[seedIfEmpty()]] - `rationale_for` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Domain/Project_Model__Seed_Decisions
+#graphify/rationale #graphify/EXTRACTED #community/Domain_Model__Seed_ADRs

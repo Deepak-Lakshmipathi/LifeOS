@@ -1,11 +1,11 @@
 ---
 source_file: "CONTEXT.md"
 type: "concept"
-community: "NOW View (dumb brain)"
+community: "Architecture ADRs & NOW View"
 tags:
   - graphify/concept
   - graphify/INFERRED
-  - community/NOW_View_dumb_brain
+  - community/Architecture_ADRs__NOW_View
 ---
 
 # NOW (command-center surface)
@@ -16,4 +16,4 @@ tags:
 - [[NowView()]] - `implements` [INFERRED]
 - [[Task (entity)]] - `shares_data_with` [INFERRED]
 
-#graphify/concept #graphify/INFERRED #community/NOW_View_dumb_brain
+#graphify/concept #graphify/INFERRED #community/Architecture_ADRs__NOW_View

@@ -1,11 +1,11 @@
 ---
 source_file: "docs/slices/slice-S15-vault-write.md"
 type: "rationale"
-community: "Kanban Board & Vault Sync"
+community: "Vault Sync Slices & Kanban"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED
-  - community/Kanban_Board__Vault_Sync
+  - community/Vault_Sync_Slices__Kanban
 ---
 
 # serializeTaskLine + round-trip parse
@@ -14,4 +14,4 @@ tags:
 - [[Slice S15 — Obsidian vault write]] - `references` [EXTRACTED]
 - [[Telegram bot service (servicesbot)]] - `references` [EXTRACTED]
 
-#graphify/rationale #graphify/EXTRACTED #community/Kanban_Board__Vault_Sync
+#graphify/rationale #graphify/EXTRACTED #community/Vault_Sync_Slices__Kanban
