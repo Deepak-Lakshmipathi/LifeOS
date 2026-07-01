@@ -301,9 +301,9 @@
       "notes": "Group C · Wave 5 (∥ S12) DONE — CLOSES MVP (Groups A–C). doneThisWeek + completionsByDay pure metrics (injected clock, unit-tested); PulseView with count + warmth standings + 7-day sparkline; glass-styled; replaces S7 placeholder. No Dexie schema change."
     },
     {
-      "id": "s14", "title": "Obsidian vault read (VaultSync)", "column": "ready", "slice": "S14",
-      "issue": 53, "pr": null, "blockedBy": [],
-      "notes": "Group D · Wave 6 (SOLO). GATE CLEARED — grill done, transport DECIDED (ADR-0009: git-as-transport, in-browser clone). Read-only: NO schema change/migration (that's S15). New VaultSync provider body swapped at the seam behind VITE_VAULT flag; LocalOnly stays default. PRD #52."
+      "id": "s14", "title": "Obsidian vault read (VaultSync)", "column": "done", "slice": "S14",
+      "issue": 53, "pr": 54, "blockedBy": [],
+      "notes": "Group D · Wave 6 (SOLO) DONE — merged dual-green (PR #54). git-as-transport (ADR-0009): isomorphic-git in-browser clone behind VaultTransport iface; pure parseVault/parseTaskLine (52/52 tests); VaultSync read-only (mutations throw until S15); VITE_VAULT flag, LocalOnly stays default. NO schema change. PRD #52. Unblocks S15 write."
     },
     {
       "id": "s15", "title": "Obsidian vault write", "column": "backlog", "slice": "S15",
