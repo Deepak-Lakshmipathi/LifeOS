@@ -7,10 +7,13 @@
  *
  * Vault markdown shape:
  *   <domain>/<project>.md
- *     - [ ] Title text [done_when:: criterion] [priority:: 1|2|3]
+ *     - [ ] Title text [id:: <uuid>] [done_when:: criterion] [priority:: 1|2|3]
  *     - [x] Title text [priority:: 1] [done_when:: already done]
  *
  * Field syntax:
+ *   id:: <uuid>          — durable task identity (S16a, ADR-0011 §3); when
+ *                           absent, an id is synthesised fresh (legacy lines,
+ *                           unchanged from S14/S15 behavior)
  *   done_when:: <text>   — inline acceptance criterion; stripped from title
  *   priority:: <1|2|3>  — importance; invalid values silently skipped
  *   Fields may appear in ANY order after the title.
@@ -48,7 +51,7 @@ export function parseTaskLine(
   // ── Locate inline field markers ──────────────────────────────────────────
   // Pattern: optional-whitespace <fieldname>:: whitespace
   // Fields may appear in any order; we find all occurrences first.
-  const FIELD_RE = /\s+(done_when|priority)::\s+/g
+  const FIELD_RE = /\s+(id|done_when|priority)::\s+/g
   const markers: Array<{ index: number; key: string; valueStart: number }> = []
 
   let m: RegExpExecArray | null
@@ -62,6 +65,7 @@ export function parseTaskLine(
 
   // ── Extract title and field values ───────────────────────────────────────
   let title: string
+  let id: string | undefined
   let done_when: string | undefined
   let priority: 1 | 2 | 3 | undefined
 
@@ -78,7 +82,9 @@ export function parseTaskLine(
       const valueEnd = i + 1 < markers.length ? markers[i + 1]!.index : rest.length
       const value = rest.slice(valueStart, valueEnd).trim()
 
-      if (key === 'done_when') {
+      if (key === 'id') {
+        if (value) id = value
+      } else if (key === 'done_when') {
         if (value) done_when = value
       } else if (key === 'priority') {
         const p = Number(value)
@@ -92,9 +98,11 @@ export function parseTaskLine(
   if (!title) return null
 
   // ── Build Task ────────────────────────────────────────────────────────────
+  // Durable id:: wins when present (S16a, ADR-0011 §3); legacy id-less lines
+  // still synthesise a fresh ephemeral id, exactly as S14/S15 always did.
   const now = Date.now()
   const task: Task = {
-    id: crypto.randomUUID(),
+    id: id ?? crypto.randomUUID(),
     title,
     done,
     created_at: now,
