@@ -32,6 +32,10 @@ node_modules/
 dist/
 .vite/
 
+# services/bot — Node git transport's local vault working copy (S16c).
+# Never commit: contains a real clone of the vault repo + git history.
+.vault-clone/
+
 # Playwright / Lighthouse artifacts
 test-results/
 playwright-report/
