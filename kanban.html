@@ -341,8 +341,8 @@
       "notes": "Group E · Wave 9 · PRD #77 · ADR-0014 · status:ready (dep S16 only, NOT S17). Voice note -> Groq Whisper (whisper-large-v3-turbo, OpenAI-compat /v1/audio/transcriptions via fetch/FormData, GROQ_API_KEY, no new SDK) -> confident transcript flows through UNMODIFIED S16 classifyAndExtract/dispatchIntent. OGG/Opus passthrough (no transcode). Confidence gate: non-empty text AND mean no_speech_prob<=0.5, else retype reply (no NLU/write). Pure AFK (read-only network; write reuses S16c's verified path). HOTSPOT: adds a voice branch to services/bot/router.ts — do NOT batch with S17 (#75) or S19b (#72)."
     },
     {
-      "id": "s19a", "title": "Bot photo ingest: Telegram download + Claude vision extract", "column": "ready", "slice": "S19a",
-      "issue": 71, "pr": null, "blockedBy": [],
+      "id": "s19a", "title": "Bot photo ingest: Telegram download + Claude vision extract", "column": "done", "slice": "S19a",
+      "issue": 71, "pr": 81, "blockedBy": [],
       "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · status:ready (S16 merged). Purely additive, router-FREE, independently unit-testable: telegramClient.ts photo detection + downloadPhoto (getFile -> HTTPS, image/jpeg per Telegram guarantee) + new visionExtract.ts (claude-sonnet-5 vision, {tasks:[...]} structured output capped 20, fields mirror nlu.ts minus intent). SAFE STANDALONE — dodges the router.ts hotspot; dispatch this one first. Unblocks S19b."
     },
     {
