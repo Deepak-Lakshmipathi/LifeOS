@@ -45,6 +45,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
+    // services/** is excluded: services/bot (S16b) is its own standalone
+    // Node/TS project with its own vitest config, deps, and test runner —
+    // not part of the Vite/React PWA this config builds.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', 'services/**'],
   },
 })
