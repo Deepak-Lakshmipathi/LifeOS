@@ -17,6 +17,7 @@ function fakeTelegramClient(): TelegramClient & { sendMessage: ReturnType<typeof
   return {
     pollUpdates: vi.fn(),
     sendMessage: vi.fn().mockResolvedValue(undefined),
+    downloadPhoto: vi.fn(),
   }
 }
 
