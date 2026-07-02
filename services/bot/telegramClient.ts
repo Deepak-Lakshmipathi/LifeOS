@@ -87,19 +87,13 @@ export class RealTelegramClient implements TelegramClient {
           this.offset = update.update_id + 1
           const text = update.message?.text
           const chatId = update.message?.chat.id
-          const photo = update.message?.photo
           const caption = update.message?.caption
           // Telegram orders photo variants smallest-to-largest resolution;
           // the last element is the highest-resolution one.
-          const photoFileId = photo && photo.length > 0 ? photo[photo.length - 1].file_id : undefined
+          const photoFileId = update.message?.photo?.at(-1)?.file_id
 
           if (chatId !== undefined && (text !== undefined || photoFileId !== undefined)) {
-            await onMessage({
-              chatId: String(chatId),
-              text: text ?? '',
-              ...(photoFileId !== undefined ? { photoFileId } : {}),
-              ...(caption !== undefined ? { caption } : {}),
-            })
+            await onMessage({ chatId: String(chatId), text: text ?? '', photoFileId, caption })
           }
         }
       } catch {
