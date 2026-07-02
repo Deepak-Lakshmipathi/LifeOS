@@ -173,6 +173,57 @@ describe('parseTaskLine — both fields, priority first', () => {
   })
 })
 
+// ─── parseTaskLine — id:: durable identity (S16a, ADR-0011 §3) ──────────────
+
+describe('parseTaskLine — id:: present', () => {
+  it('a line with id:: uses that exact value as Task.id (not a fresh uuid)', () => {
+    const t = parseTaskLine(
+      '- [ ] Submit report id:: 550e8400-e29b-41d4-a716-446655440000 done_when:: PR merged priority:: 2',
+      CTX,
+    )
+    expect(t!.id).toBe('550e8400-e29b-41d4-a716-446655440000')
+    expect(t!.title).toBe('Submit report')
+    expect(t!.done_when).toBe('PR merged')
+    expect(t!.priority).toBe(2)
+  })
+
+  it('id:: alone (no other fields) is extracted and stripped from the title', () => {
+    const t = parseTaskLine('- [ ] Minimal task id:: fixed-id-123', CTX)
+    expect(t!.id).toBe('fixed-id-123')
+    expect(t!.title).toBe('Minimal task')
+  })
+
+  it('id:: works regardless of marker order relative to other fields', () => {
+    const t = parseTaskLine(
+      '- [ ] Order check priority:: 1 done_when:: done id:: order-id-456',
+      CTX,
+    )
+    expect(t!.id).toBe('order-id-456')
+    expect(t!.priority).toBe(1)
+    expect(t!.done_when).toBe('done')
+  })
+})
+
+describe('parseTaskLine — id:: absent (legacy line, regression guard)', () => {
+  it('a legacy line with no id:: still parses successfully', () => {
+    const t = parseTaskLine('- [ ] Legacy task done_when:: still works priority:: 3', CTX)
+    expect(t).not.toBeNull()
+    expect(t!.title).toBe('Legacy task')
+  })
+
+  it('a legacy line with no id:: still gets a freshly-synthesised id', () => {
+    const t = parseTaskLine('- [ ] Legacy task', CTX)
+    expect(t!.id).toBeTruthy()
+    expect(typeof t!.id).toBe('string')
+  })
+
+  it('two legacy id-less lines get two different synthesised ids', () => {
+    const a = parseTaskLine('- [ ] Task A', CTX)
+    const b = parseTaskLine('- [ ] Task B', CTX)
+    expect(a!.id).not.toBe(b!.id)
+  })
+})
+
 describe('parseTaskLine — invalid inline field values', () => {
   it('invalid priority (0) → priority absent, task still returned', () => {
     const t = parseTaskLine('- [ ] Task priority:: 0', CTX)

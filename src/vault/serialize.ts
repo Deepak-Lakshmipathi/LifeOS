@@ -6,14 +6,20 @@
  * Pure function — no I/O, never throws.
  *
  * Output format (bracket-free field syntax):
- *   - [ ] Title text done_when:: criterion priority:: 1|2|3
- *   - [x] Title text done_when:: criterion priority:: 1|2|3
+ *   - [ ] Title text id:: <uuid> done_when:: criterion priority:: 1|2|3
+ *   - [x] Title text id:: <uuid> done_when:: criterion priority:: 1|2|3
  *
  * Field serialization rules:
+ *   - id:: is ALWAYS emitted, immediately after the title and BEFORE
+ *     done_when/priority (S16a, ADR-0011 §3) — every Task already has an
+ *     id, so unlike done_when/priority this field is never conditional.
+ *     A legacy line with no id:: gets one stamped the next time any
+ *     mutator rewrites it — a natural side effect of always-emit, no
+ *     separate migration.
  *   - done_when emitted BEFORE priority (canonical order matches ADR-0010)
- *   - A field is emitted ONLY when present on the task (never undefined)
+ *   - done_when/priority are emitted ONLY when present on the task (never
+ *     undefined)
  *   - Single leading space before each `field::` marker
- *   - NO id:: — ids are ephemeral; re-synthesised on every parse
  *   - NO timestamps — created_at / completed_at live only in memory
  *
  * Domain and project are NOT serialized to the task line; they are inferred
@@ -33,6 +39,9 @@ export function serializeTaskLine(task: Task): string {
   const checkbox = task.done ? '- [x] ' : '- [ ] '
 
   let line = checkbox + task.title
+
+  // id:: is unconditional — every Task always has one (S16a, ADR-0011 §3)
+  line += ' id:: ' + task.id
 
   // Emit done_when BEFORE priority (canonical field order — ADR-0010 §4)
   if (task.done_when !== undefined) {

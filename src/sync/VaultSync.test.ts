@@ -69,11 +69,13 @@ describe('VaultSync.add — path resolution and line append', () => {
     const sync = new VaultSync(transport)
     await sync.list()
 
-    await sync.add({ title: 'New task', domain: 'Growth', project: 'Reading' })
+    const added = await sync.add({ title: 'New task', domain: 'Growth', project: 'Reading' })
 
     expect(transport.writeCalls).toHaveLength(1)
     expect(transport.writeCalls[0]!.path).toBe('Growth/Reading.md')
-    expect(transport.writeCalls[0]!.content).toBe('- [ ] Existing task\n- [ ] New task\n')
+    expect(transport.writeCalls[0]!.content).toBe(
+      `- [ ] Existing task\n- [ ] New task id:: ${added.id}\n`,
+    )
   })
 
   it('resolves domain only → <domain>/Inbox.md', async () => {
@@ -113,7 +115,7 @@ describe('VaultSync.add — path resolution and line append', () => {
 
     const task = await sync.add({ title: 'Brand new', priority: 2 })
 
-    expect(transport.writeCalls[0]!.content).toBe(`- [ ] Brand new priority:: 2\n`)
+    expect(transport.writeCalls[0]!.content).toBe(`- [ ] Brand new id:: ${task.id} priority:: 2\n`)
     expect(task.title).toBe('Brand new')
     expect(task.priority).toBe(2)
     expect(task.done).toBe(false)
@@ -124,10 +126,10 @@ describe('VaultSync.add — path resolution and line append', () => {
     const sync = new VaultSync(transport)
     await sync.list()
 
-    await sync.add({ title: 'Criterioned', done_when: 'tests green', priority: 3 })
+    const added = await sync.add({ title: 'Criterioned', done_when: 'tests green', priority: 3 })
 
     expect(transport.writeCalls[0]!.content).toBe(
-      '- [ ] Criterioned done_when:: tests green priority:: 3\n',
+      `- [ ] Criterioned id:: ${added.id} done_when:: tests green priority:: 3\n`,
     )
   })
 
@@ -164,7 +166,9 @@ describe('VaultSync.toggleDone — checkbox flip', () => {
     await sync.toggleDone(taskA.id)
 
     expect(transport.writeCalls).toHaveLength(1)
-    expect(transport.writeCalls[0]!.content).toBe('# Notes\n- [x] Task A\n- [ ] Task B\n')
+    expect(transport.writeCalls[0]!.content).toBe(
+      `# Notes\n- [x] Task A id:: ${taskA.id}\n- [ ] Task B\n`,
+    )
   })
 
   it('flips checked → unchecked on the target line', async () => {
@@ -179,7 +183,7 @@ describe('VaultSync.toggleDone — checkbox flip', () => {
 
     await sync.toggleDone(done.id)
 
-    expect(transport.writeCalls[0]!.content).toBe('- [ ] Done item\n- [ ] Pending\n')
+    expect(transport.writeCalls[0]!.content).toBe(`- [ ] Done item id:: ${done.id}\n- [ ] Pending\n`)
   })
 
   it('every other byte of the file is identical after toggle', async () => {
@@ -192,8 +196,9 @@ describe('VaultSync.toggleDone — checkbox flip', () => {
     await sync.toggleDone(target.id)
 
     const after = transport.writeCalls[0]!.content
-    // Replace the toggled line with the original line — result must equal original
-    const restored = after.replace('- [x] Target task', '- [ ] Target task')
+    // Replace the toggled (now id::-stamped) line with the original line —
+    // every OTHER byte of the file must be identical to the original.
+    const restored = after.replace(`- [x] Target task id:: ${target.id}`, '- [ ] Target task')
     expect(restored).toBe(original)
   })
 
@@ -209,7 +214,9 @@ describe('VaultSync.toggleDone — checkbox flip', () => {
 
     expect(updated.done).toBe(false)
     expect(updated.priority).toBe(2)
-    expect(transport.writeCalls[0]!.content).toBe('- [ ] Review budget priority:: 2\n')
+    expect(transport.writeCalls[0]!.content).toBe(
+      `- [ ] Review budget id:: ${task.id} priority:: 2\n`,
+    )
   })
 
   it('throws when id is unknown', async () => {
@@ -239,7 +246,7 @@ describe('VaultSync.update — inline field rewrite', () => {
 
     expect(updated.priority).toBe(3)
     expect(transport.writeCalls[0]!.content).toBe(
-      '- [ ] Write report priority:: 3\n- [ ] Other task\n',
+      `- [ ] Write report id:: ${report.id} priority:: 3\n- [ ] Other task\n`,
     )
   })
 
@@ -254,7 +261,7 @@ describe('VaultSync.update — inline field rewrite', () => {
     await sync.update(book.id, { done_when: 'all chapters done' })
 
     expect(transport.writeCalls[0]!.content).toBe(
-      '- [ ] Read a book done_when:: all chapters done\n',
+      `- [ ] Read a book id:: ${book.id} done_when:: all chapters done\n`,
     )
   })
 
@@ -268,7 +275,7 @@ describe('VaultSync.update — inline field rewrite', () => {
     const book = tasks[0]!
     await sync.update(book.id, { done_when: '' })
 
-    expect(transport.writeCalls[0]!.content).toBe('- [ ] Read a book\n')
+    expect(transport.writeCalls[0]!.content).toBe(`- [ ] Read a book id:: ${book.id}\n`)
   })
 
   it('updates the title on the line', async () => {
@@ -281,7 +288,9 @@ describe('VaultSync.update — inline field rewrite', () => {
     const old = tasks.find((t) => t.title === 'Old title')!
     await sync.update(old.id, { title: 'New title' })
 
-    expect(transport.writeCalls[0]!.content).toBe('- [ ] New title\n- [ ] Another\n')
+    expect(transport.writeCalls[0]!.content).toBe(
+      `- [ ] New title id:: ${old.id}\n- [ ] Another\n`,
+    )
   })
 
   it('throws for unknown id', async () => {
@@ -435,8 +444,10 @@ describe('VaultSync queue — concurrent mutations serialize FIFO', () => {
     const transport: VaultTransport = {
       readFiles: () => Promise.resolve([]),
       writeFile(_path, content, _message) {
-        // Extract the task title from the written line
-        const match = content.match(/- \[ \] (.+)\n?$/)
+        // Extract the title of the newly-appended (last) line — anchored to
+        // end-of-content so earlier appended lines aren't re-matched. Title
+        // precedes the always-emitted id:: field (S16a).
+        const match = content.match(/- \[ \] (.+?) id:: [^\n]*\n?$/)
         if (match) titles.push(match[1]!)
         return Promise.resolve()
       },
@@ -477,6 +488,8 @@ describe('VaultSync snapshot consistency after mutations', () => {
 
     expect(toggled.done).toBe(true)
     expect(toggled.priority).toBe(2)
-    expect(transport.writeCalls[1]!.content).toBe('- [x] Track spending priority:: 2\n')
+    expect(transport.writeCalls[1]!.content).toBe(
+      `- [x] Track spending id:: ${task.id} priority:: 2\n`,
+    )
   })
 })
