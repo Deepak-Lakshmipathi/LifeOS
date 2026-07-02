@@ -2,7 +2,7 @@
   "name": "lifeos-bot",
   "private": true,
   "version": "0.1.0",
-  "description": "LifeOS Telegram bot — text capture over the shared vault (S16b, ADR-0011). Standalone Node/TS process, separate from the Vite/React PWA.",
+  "description": "LifeOS Telegram bot — text capture over the shared vault (S16b/S16c, ADR-0011). Standalone Node/TS process, separate from the Vite/React PWA.",
   "type": "module",
   "scripts": {
     "start": "tsx index.ts",
@@ -10,7 +10,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.109.0"
+    "@anthropic-ai/sdk": "^0.109.0",
+    "isomorphic-git": "^1.27.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

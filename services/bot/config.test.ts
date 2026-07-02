@@ -6,6 +6,7 @@ describe('loadConfig', () => {
     const env = {
       TELEGRAM_BOT_TOKEN: 'tg-token',
       BOT_VAULT_PAT: 'pat-value',
+      BOT_VAULT_REPO_URL: 'https://github.com/example/vault.git',
       ANTHROPIC_API_KEY: 'sk-ant-value',
       OWNER_TELEGRAM_CHAT_ID: '12345',
     }
@@ -13,21 +14,37 @@ describe('loadConfig', () => {
     expect(loadConfig(env)).toEqual({
       telegramBotToken: 'tg-token',
       botVaultPat: 'pat-value',
+      botVaultRepoUrl: 'https://github.com/example/vault.git',
       anthropicApiKey: 'sk-ant-value',
       ownerTelegramChatId: '12345',
+      botVaultCloneDir: '.vault-clone',
     })
+  })
+
+  it('uses BOT_VAULT_CLONE_DIR when explicitly set, overriding the default', () => {
+    const env = {
+      TELEGRAM_BOT_TOKEN: 'tg-token',
+      BOT_VAULT_PAT: 'pat-value',
+      BOT_VAULT_REPO_URL: 'https://github.com/example/vault.git',
+      ANTHROPIC_API_KEY: 'sk-ant-value',
+      OWNER_TELEGRAM_CHAT_ID: '12345',
+      BOT_VAULT_CLONE_DIR: '/tmp/custom-clone',
+    }
+
+    expect(loadConfig(env).botVaultCloneDir).toBe('/tmp/custom-clone')
   })
 
   it('throws naming every missing var when some are unset', () => {
     const env = {
       TELEGRAM_BOT_TOKEN: 'tg-token',
       // BOT_VAULT_PAT missing
+      // BOT_VAULT_REPO_URL missing
       ANTHROPIC_API_KEY: '',
       // OWNER_TELEGRAM_CHAT_ID missing
     }
 
     expect(() => loadConfig(env)).toThrowError(
-      /Missing required env var\(s\): BOT_VAULT_PAT, ANTHROPIC_API_KEY, OWNER_TELEGRAM_CHAT_ID/,
+      /Missing required env var\(s\): BOT_VAULT_PAT, BOT_VAULT_REPO_URL, ANTHROPIC_API_KEY, OWNER_TELEGRAM_CHAT_ID/,
     )
   })
 
