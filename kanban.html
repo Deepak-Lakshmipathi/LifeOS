@@ -192,7 +192,7 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-07-01", "note": "Groups A–D COMPLETE — MVP (S13) + vault sync (S14 read + S15a/S15b write) all merged. Obsidian vault is now the real source of truth via VaultSync (VITE_VAULT=1). Next: Group E — Telegram bot (S16, human gate). blockedBy reflects TRUE deps for parallel afk-pipeline dispatch (not a strict linear chain)" },
+  "meta": { "project": "LifeOS", "updated": "2026-07-02", "note": "Groups A–D COMPLETE + Group E S16 (a/b/c) MERGED — Telegram bot text→create is live (S16c HITL merged CI-green; the 5-case live verify checklist afk-pipeline-out/s16c-verify-checklist.md is a tracked follow-up, not yet run). Group E modality slices SPECCED: S17 confirm-edit (#75/ADR-0013), S18 voice (#78/ADR-0014), S19 photo (#71+#72/ADR-0012) — all status:ready. HOTSPOT: S17 (#75), S18 (#78), S19b (#72) all edit services/bot/router.ts — do NOT dispatch in the same batch; serialize merges, each rebases on the prior. S19a (#71) is router-free and safe standalone. blockedBy reflects TRUE deps (not a strict linear chain)" },
   "columns": [
     { "id": "backlog", "name": "Backlog" },
     { "id": "ready",   "name": "Ready" },
@@ -256,14 +256,14 @@
       "notes": "Group A finale DONE (atomic slice, PRD #29; PR #31 squash eac5ed1). domain?: string (one of 7) + DOMAIN_COLORS palette + groupByDomain (Domain->Project->Task) + idempotent seedIfEmpty import of seed_tasks_detailed.json (107 tasks, ?noseed test hook). useTasks.refresh added (no liveQuery). Seam widens only (ADR-0004), schema stays v2 (ADR-0005/ADR-0006)."
     },
     {
-      "id": "s6prd", "title": "PRD: S6 NOW view (dumb brain)", "column": "progress", "slice": "S6",
-      "issue": 34, "pr": null, "blockedBy": [],
-      "notes": "Parent spec. Flat priority-ranked NOW surface; pure rankNow + Now/All toggle (ADR-0007). No model/seam change."
+      "id": "s6prd", "title": "PRD: S6 NOW view (dumb brain)", "column": "done", "slice": "S6",
+      "issue": 34, "pr": 37, "blockedBy": [],
+      "notes": "Parent spec. Flat priority-ranked NOW surface; pure rankNow + Now/All toggle (ADR-0007). No model/seam change. Shipped — docs PR #37."
     },
     {
-      "id": "s6", "title": "NOW view (dumb brain)", "column": "progress", "slice": "S6",
-      "issue": 35, "pr": null, "blockedBy": [],
-      "notes": "Group B. First command-center surface — flat priority-ranked NOW list (no balance logic yet). rankNow(tasks) pure helper (priority desc, created_at asc, done excluded) + NowView (top 3 live, Up next/Later folded) + Now/All header toggle. ADR-0007. PRD #34. Dispatched via afk-pipeline auto."
+      "id": "s6", "title": "NOW view (dumb brain)", "column": "done", "slice": "S6",
+      "issue": 35, "pr": 36, "blockedBy": [],
+      "notes": "Group B · Wave 1 DONE (PR #36 feat + #37 docs). First command-center surface — flat priority-ranked NOW list (no balance logic yet). rankNow(tasks) pure helper (priority desc, created_at asc, done excluded) + NowView (top 3 live, Up next/Later folded) + Now/All header toggle. ADR-0007. PRD #34. Now/All toggle later replaced by the S7 tab bar; balance logic added in S10."
     },
     {
       "id": "s7", "title": "Tab bar navigation", "column": "done", "slice": "S7",
@@ -316,24 +316,39 @@
       "notes": "Group D · PRD #56 · HITL DONE — CLOSES Group D (vault sync). Merged PR #61 (build-test + pwa-e2e green; owner hand-verified live-vault). Real GitTransport.writeFile (mkdir-recursive → add → local-authoritative commit → best-effort push) + wipe-reclone data-loss fix (only wipes when nothing ahead of origin) + top-level Inbox/ scan + parseVault Inbox-filename→project undefined. Git path behind VaultTransport iface, not CI-verifiable (no remote) — owner hand-verified add/toggle/update/delete-lands-as-commit, offline-commit-survives, Inbox round-trip with a write-scoped PAT. Vault now the real source of truth (VITE_VAULT=1). ADR-0010."
     },
     {
-      "id": "s16", "title": "Telegram bot: text -> create", "column": "ready", "slice": "S16",
-      "issue": null, "pr": null, "blockedBy": ["s15b"],
-      "notes": "Group E · Wave 8 (SOLO) — NEXT, unblocked (S15b merged). Bot capture pipeline begins: text -> Claude intent/extract -> vault. New services/bot/. Dep S15 (reuses vault write serializer/transport). Foundation for the 3 parallel modality slices. New-transport slice — likely a HUMAN GATE (grill + PRD + ADR first, like S14). Also the slice that pays for durable id:: identity (ADR-0010 §2 upgrade path — bot is the first second live mutator)."
+      "id": "s16a", "title": "Vault id:: durable identity (parser + serializer)", "column": "done", "slice": "S16a",
+      "issue": 64, "pr": 67, "blockedBy": [],
+      "notes": "Group E · Wave 8 — PRD #63 · AFK, status:ready, no blockers. parseTaskLine reads optional id:: marker; serializeTaskLine always emits id:: (right after title, before done_when/priority). Legacy id-less lines unaffected until next write (lazy backfill, no bulk migration). No Task-shape/schema change. Unblocks S16b. ADR-0011 §3 (the id:: upgrade path ADR-0010 §2 named — S16 is the first second live mutator)."
     },
     {
-      "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "backlog", "slice": "S17",
-      "issue": null, "pr": null, "blockedBy": ["s16"],
-      "notes": "Group E · Wave 9 (∥ S18, S19). Per-chat pending-confirmation state; confirm-destructive trust model. Sibling of S18/S19 — all extend the S16 pipeline; same services/bot/ dir so coordinate the intent router merge."
+      "id": "s16b", "title": "Bot core: Telegram intent pipeline (owner guard, Claude NLU, router, create)", "column": "done", "slice": "S16b",
+      "issue": 65, "pr": 68, "blockedBy": ["s16a"],
+      "notes": "Group E · Wave 8 — PRD #63 · AFK, status:blocked on S16a. New services/bot/ (Node/TS, separate deployable). Owner-chat-id guard; Claude NLU (claude-sonnet-5, structured output, create-only this slice, NOT S12's regex parseCapture); self-registering intent-router seam in services/bot/intents/ (one append-only import per future S17/S18/S19 slice, ADR-0011 §4); create handler reuses serializeTaskLine (S15/S16a), writes via an injected VaultTransport tested against a fake (throwing stub for the real transport — S16c fills it in). Fully CI-testable, mirrors S15a's fake-transport pattern. Bot's own BOT_VAULT_PAT (ADR-0011 §2)."
     },
     {
-      "id": "s18", "title": "Telegram bot: voice notes", "column": "backlog", "slice": "S18",
-      "issue": null, "pr": null, "blockedBy": ["s16"],
-      "notes": "Group E · Wave 9 (∥ S17, S19). Voice -> transcript -> intent. Adds a modality to the S16 pipeline — dep S16, NOT S17."
+      "id": "s16c", "title": "Bot real vault transport + live Telegram wiring (HITL)", "column": "done", "slice": "S16c",
+      "issue": 66, "pr": 69, "blockedBy": ["s16b"],
+      "notes": "Group E · Wave 8 — PRD #63 · HITL (like S15b) — real isomorphic-git+Node-fs VaultTransport (mkdir-recursive -> add -> local-authoritative commit -> best-effort push, same discipline as S15b's GitTransport.writeFile) + real Telegram getUpdates long-poll loop (ADR-0011 §1: long-poll worker, not serverless webhook — keeps the git clone warm across messages). Not CI-verifiable (no remote/live Telegram/live Claude in CI) — needs owner hand-verify (real message -> vault commit -> dashboard shows it -> confirmation reply), exactly as S15b required. Closes Group E's create-only slice; unblocks S17."
     },
     {
-      "id": "s19", "title": "Telegram bot: photos (vision)", "column": "backlog", "slice": "S19",
-      "issue": null, "pr": null, "blockedBy": ["s16"],
-      "notes": "Group E · Wave 9 (∥ S17, S18). Completes the vision — Claude vision photo -> batch-confirm tasks. Adds a modality to the S16 pipeline — dep S16, NOT S18."
+      "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "ready", "slice": "S17",
+      "issue": 75, "pr": null, "blockedBy": [],
+      "notes": "Group E · Wave 9 · PRD #74 · ADR-0013 · status:ready (S16 merged). Single tracer-bullet (matcher/gate/handlers mutually load-bearing, not split). In-mem Map<chatId,PendingAction> + 2min TTL (services/bot/confirm/store.ts); fuzzy token-overlap targeting vs fresh parseVault (taskMatch.ts), not id::/last-created; bare y/n checked in router.ts BEFORE NLU (free for S18 voice too). Additive router gate + widened intents/types.ts; registry.ts/create.ts untouched. HOTSPOT: edits services/bot/router.ts — do NOT batch with S18 (#78) or S19b (#72); serialize, rebase second-merger."
+    },
+    {
+      "id": "s18", "title": "Telegram bot: voice notes", "column": "ready", "slice": "S18",
+      "issue": 78, "pr": null, "blockedBy": [],
+      "notes": "Group E · Wave 9 · PRD #77 · ADR-0014 · status:ready (dep S16 only, NOT S17). Voice note -> Groq Whisper (whisper-large-v3-turbo, OpenAI-compat /v1/audio/transcriptions via fetch/FormData, GROQ_API_KEY, no new SDK) -> confident transcript flows through UNMODIFIED S16 classifyAndExtract/dispatchIntent. OGG/Opus passthrough (no transcode). Confidence gate: non-empty text AND mean no_speech_prob<=0.5, else retype reply (no NLU/write). Pure AFK (read-only network; write reuses S16c's verified path). HOTSPOT: adds a voice branch to services/bot/router.ts — do NOT batch with S17 (#75) or S19b (#72)."
+    },
+    {
+      "id": "s19a", "title": "Bot photo ingest: Telegram download + Claude vision extract", "column": "ready", "slice": "S19a",
+      "issue": 71, "pr": null, "blockedBy": [],
+      "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · status:ready (S16 merged). Purely additive, router-FREE, independently unit-testable: telegramClient.ts photo detection + downloadPhoto (getFile -> HTTPS, image/jpeg per Telegram guarantee) + new visionExtract.ts (claude-sonnet-5 vision, {tasks:[...]} structured output capped 20, fields mirror nlu.ts minus intent). SAFE STANDALONE — dodges the router.ts hotspot; dispatch this one first. Unblocks S19b."
+    },
+    {
+      "id": "s19b", "title": "Bot photo batch-confirm + router wiring", "column": "backlog", "slice": "S19b",
+      "issue": 72, "pr": null, "blockedBy": ["s19a"],
+      "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · blocked on S19a. New photoConfirm.ts (numbered-list reply; next text intercepted as all/none/subset; 10min per-chat TTL) + photo/confirm branches in services/bot/router.ts; confirmed tasks call the existing unmodified handleCreate once per task. HOTSPOT: edits services/bot/router.ts — do NOT batch with S17 (#75) or S18 (#78); serialize, rebase second-merger. Convergence point: S19's photoConfirm vs S17's generic confirm — possible later generalization pass (non-blocking)."
     }
   ]
 }
