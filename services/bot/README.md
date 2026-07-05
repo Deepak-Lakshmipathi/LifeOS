@@ -23,6 +23,18 @@ Runtime shape is a long-poll worker, not a webhook — see ADR-0011 Decision 1
 for why (keeps the local git clone warm across messages; no public HTTPS
 endpoint to secure for a single-owner bot).
 
+### Voice notes
+
+A Telegram voice note is downloaded (`telegramClient.ts`'s two-step file
+fetch) and transcribed via Groq's hosted Whisper API
+(`transcription.ts`), then gated on a confidence check computed from the
+transcript's mean `no_speech_prob`. A confident transcript flows into the
+*same* `classifyAndExtract` → dispatch pipeline as a typed message, with the
+reply echoing the transcript back (`heard: '<transcript>' → ...`) for
+transparency; a non-confident transcript short-circuits with a prompt to
+retype instead, before any Claude call or vault write. See
+`docs/adr/0014-bot-voice-transcription.md` for the full design rationale.
+
 ## Running it
 
 ```sh
@@ -56,6 +68,7 @@ logged**. See `.env.example` for the authoritative list; summary:
 | `BOT_VAULT_PAT` | yes | Fine-grained GitHub PAT, `Contents: Read` + `Write`, scoped to the vault repo only. **Distinct from the PWA's `VITE_VAULT_PAT`** (ADR-0011 §2) so the two surfaces can be rotated/revoked independently. |
 | `BOT_VAULT_REPO_URL` | yes | The vault repo's remote URL — the same repo the PWA's `VITE_VAULT_REPO_URL` points at. |
 | `ANTHROPIC_API_KEY` | yes | Claude API key for intent classification + extraction (`nlu.ts`, model pinned to `claude-sonnet-5`). |
+| `GROQ_API_KEY` | yes | Groq API key for Whisper voice-note transcription (`transcription.ts`, model `whisper-large-v3-turbo`). |
 | `OWNER_TELEGRAM_CHAT_ID` | yes | The single Telegram chat id the bot serves. Every other chat id is a complete no-op — no reply, no Claude call, no vault write. |
 | `BOT_VAULT_CLONE_DIR` | no | Local working-copy directory the git transport clones into and reuses across messages. Defaults to `.vault-clone` under `services/bot/` (gitignored — never commit a real clone of the vault). |
 
@@ -118,3 +131,16 @@ Anthropic key available to the CI runner).
 - **NOT CI-verifiable — owner hand-verify required before merge:** see
   `afk-pipeline-out/s16c-verify-checklist.md` for the exact live cases
   (real message → real Claude → real commit+push to the live vault).
+
+## Voice notes — manual smoke test (non-blocking, S18)
+
+Unlike S16c, S18 ships without a HITL gate — `RealTelegramClient.downloadVoiceFile`
+and `GroqTranscriber.transcribe` are both read-only network calls with no new
+vault-write surface (see `docs/adr/0014-bot-voice-transcription.md` §"HITL vs
+AFK"). Transcription *quality* against real audio (accents, background
+noise, Telegram's Opus compression) can't be verified by a fixture-audio
+unit test alone, though — after deploying, send a few real voice notes and
+confirm the transcript and confidence-gate behavior match expectations
+(a clear voice note routes to the create pipeline with an accurate `heard:`
+echo; a mumbled/silent one gets the retype prompt). This is a follow-up
+check, not a merge gate.

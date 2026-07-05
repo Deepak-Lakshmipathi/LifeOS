@@ -8,6 +8,7 @@ describe('loadConfig', () => {
       BOT_VAULT_PAT: 'pat-value',
       BOT_VAULT_REPO_URL: 'https://github.com/example/vault.git',
       ANTHROPIC_API_KEY: 'sk-ant-value',
+      GROQ_API_KEY: 'gsk-value',
       OWNER_TELEGRAM_CHAT_ID: '12345',
     }
 
@@ -16,6 +17,7 @@ describe('loadConfig', () => {
       botVaultPat: 'pat-value',
       botVaultRepoUrl: 'https://github.com/example/vault.git',
       anthropicApiKey: 'sk-ant-value',
+      groqApiKey: 'gsk-value',
       ownerTelegramChatId: '12345',
       botVaultCloneDir: '.vault-clone',
     })
@@ -27,6 +29,7 @@ describe('loadConfig', () => {
       BOT_VAULT_PAT: 'pat-value',
       BOT_VAULT_REPO_URL: 'https://github.com/example/vault.git',
       ANTHROPIC_API_KEY: 'sk-ant-value',
+      GROQ_API_KEY: 'gsk-value',
       OWNER_TELEGRAM_CHAT_ID: '12345',
       BOT_VAULT_CLONE_DIR: '/tmp/custom-clone',
     }
@@ -40,11 +43,12 @@ describe('loadConfig', () => {
       // BOT_VAULT_PAT missing
       // BOT_VAULT_REPO_URL missing
       ANTHROPIC_API_KEY: '',
+      // GROQ_API_KEY missing
       // OWNER_TELEGRAM_CHAT_ID missing
     }
 
     expect(() => loadConfig(env)).toThrowError(
-      /Missing required env var\(s\): BOT_VAULT_PAT, BOT_VAULT_REPO_URL, ANTHROPIC_API_KEY, OWNER_TELEGRAM_CHAT_ID/,
+      /Missing required env var\(s\): BOT_VAULT_PAT, BOT_VAULT_REPO_URL, ANTHROPIC_API_KEY, GROQ_API_KEY, OWNER_TELEGRAM_CHAT_ID/,
     )
   })
 

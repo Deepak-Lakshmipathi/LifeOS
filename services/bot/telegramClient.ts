@@ -1,6 +1,7 @@
 /**
  * telegramClient — long-poll Telegram Bot API wrapper (S16b, ADR-0011 Decision 1;
- * photo detection + download added S19a, ADR-0012 Decision 5).
+ * photo detection + download added S19a, ADR-0012 Decision 5; voice-note
+ * detection + download added S18, ADR-0014 Decision 2).
  *
  * The TelegramClient interface is the only contract the router/handler logic
  * depends on — tests inject a fake implementation, never RealTelegramClient
@@ -21,6 +22,8 @@ export interface TelegramMessage {
   photoFileId?: string
   /** update.message.caption, when the photo (or message) carries one. */
   caption?: string
+  /** update.message.voice.file_id, when the message is a voice note (S18, ADR-0014). */
+  voice?: { fileId: string }
 }
 
 /** The only contract router/handler logic depends on — program to this, not RealTelegramClient. */
@@ -35,6 +38,14 @@ export interface TelegramClient {
    * caller (S19b's router branch) is responsible for catching it.
    */
   downloadPhoto(fileId: string): Promise<{ data: Buffer; mediaType: string }>
+  /**
+   * Two-step Telegram file fetch (getFile → HTTPS download) for a voice
+   * note. Telegram voice notes are always OGG/Opus (ADR-0014 Decision 2) —
+   * no transcoding, the raw bytes are passed straight to the transcriber.
+   * Throws on any fetch failure or a getFile `ok: false` response — the
+   * caller (router.ts's voice branch) is responsible for catching it.
+   */
+  downloadVoiceFile(fileId: string): Promise<Buffer>
 }
 
 interface TelegramUpdate {
@@ -44,6 +55,7 @@ interface TelegramUpdate {
     text?: string
     photo?: Array<{ file_id: string }>
     caption?: string
+    voice?: { file_id: string }
   }
 }
 
@@ -91,9 +103,16 @@ export class RealTelegramClient implements TelegramClient {
           // Telegram orders photo variants smallest-to-largest resolution;
           // the last element is the highest-resolution one.
           const photoFileId = update.message?.photo?.at(-1)?.file_id
+          const voiceFileId = update.message?.voice?.file_id
 
-          if (chatId !== undefined && (text !== undefined || photoFileId !== undefined)) {
-            await onMessage({ chatId: String(chatId), text: text ?? '', photoFileId, caption })
+          if (chatId !== undefined && (text !== undefined || photoFileId !== undefined || voiceFileId !== undefined)) {
+            await onMessage({
+              chatId: String(chatId),
+              text: text ?? '',
+              photoFileId,
+              caption,
+              voice: voiceFileId ? { fileId: voiceFileId } : undefined,
+            })
           }
         }
       } catch {
@@ -125,5 +144,18 @@ export class RealTelegramClient implements TelegramClient {
     const data = Buffer.from(await downloadRes.arrayBuffer())
 
     return { data, mediaType: 'image/jpeg' }
+  }
+
+  async downloadVoiceFile(fileId: string): Promise<Buffer> {
+    const fileRes = await fetch(`${TELEGRAM_API_BASE}/bot${this.token}/getFile?file_id=${fileId}`)
+    const fileData = (await fileRes.json()) as GetFileResponse
+    if (!fileData.ok) {
+      throw new Error(`Telegram getFile failed for file_id ${fileId}`)
+    }
+
+    const downloadRes = await fetch(
+      `${TELEGRAM_API_BASE}/file/bot${this.token}/${fileData.result.file_path}`,
+    )
+    return Buffer.from(await downloadRes.arrayBuffer())
   }
 }

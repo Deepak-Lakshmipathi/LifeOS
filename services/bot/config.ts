@@ -15,6 +15,8 @@ export interface BotConfig {
   botVaultRepoUrl: string
   /** Anthropic API key for Claude NLU. */
   anthropicApiKey: string
+  /** Groq API key for Whisper voice-note transcription (S18, ADR-0014 Decision 1). */
+  groqApiKey: string
   /** The single Telegram chat id the bot serves; every other chat id is ignored. */
   ownerTelegramChatId: string
   /**
@@ -31,6 +33,7 @@ const REQUIRED_VARS = [
   'BOT_VAULT_PAT',
   'BOT_VAULT_REPO_URL',
   'ANTHROPIC_API_KEY',
+  'GROQ_API_KEY',
   'OWNER_TELEGRAM_CHAT_ID',
 ] as const
 
@@ -54,6 +57,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BotConfig {
     botVaultPat: env.BOT_VAULT_PAT!,
     botVaultRepoUrl: env.BOT_VAULT_REPO_URL!,
     anthropicApiKey: env.ANTHROPIC_API_KEY!,
+    groqApiKey: env.GROQ_API_KEY!,
     ownerTelegramChatId: env.OWNER_TELEGRAM_CHAT_ID!,
     botVaultCloneDir: env.BOT_VAULT_CLONE_DIR || DEFAULT_VAULT_CLONE_DIR,
   }
