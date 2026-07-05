@@ -336,8 +336,8 @@
       "notes": "Group E · Wave 9 · PRD #74 · ADR-0013 · status:ready (S16 merged). Single tracer-bullet (matcher/gate/handlers mutually load-bearing, not split). In-mem Map<chatId,PendingAction> + 2min TTL (services/bot/confirm/store.ts); fuzzy token-overlap targeting vs fresh parseVault (taskMatch.ts), not id::/last-created; bare y/n checked in router.ts BEFORE NLU (free for S18 voice too). Additive router gate + widened intents/types.ts; registry.ts/create.ts untouched. HOTSPOT: edits services/bot/router.ts — do NOT batch with S18 (#78) or S19b (#72); serialize, rebase second-merger."
     },
     {
-      "id": "s18", "title": "Telegram bot: voice notes", "column": "ready", "slice": "S18",
-      "issue": 78, "pr": null, "blockedBy": [],
+      "id": "s18", "title": "Telegram bot: voice notes", "column": "done", "slice": "S18",
+      "issue": 78, "pr": 87, "blockedBy": [],
       "notes": "Group E · Wave 9 · PRD #77 · ADR-0014 · status:ready (dep S16 only, NOT S17). Voice note -> Groq Whisper (whisper-large-v3-turbo, OpenAI-compat /v1/audio/transcriptions via fetch/FormData, GROQ_API_KEY, no new SDK) -> confident transcript flows through UNMODIFIED S16 classifyAndExtract/dispatchIntent. OGG/Opus passthrough (no transcode). Confidence gate: non-empty text AND mean no_speech_prob<=0.5, else retype reply (no NLU/write). Pure AFK (read-only network; write reuses S16c's verified path). HOTSPOT: adds a voice branch to services/bot/router.ts — do NOT batch with S17 (#75) or S19b (#72)."
     },
     {
