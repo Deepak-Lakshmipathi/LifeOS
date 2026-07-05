@@ -98,6 +98,77 @@ describe('classifyAndExtract', () => {
     expect(result).toEqual({ intent: 'other' })
   })
 
+  it('maps an "update" extraction with target_reference and mark_done into the expected shape', async () => {
+    const client = fakeClaudeClient({
+      intent: 'update',
+      target_reference: 'call the CA about GST',
+      mark_done: true,
+    })
+
+    const result = await classifyAndExtract(client, 'mark call the CA about GST as done')
+
+    expect(result).toEqual({
+      intent: 'update',
+      target_reference: 'call the CA about GST',
+      mark_done: true,
+    })
+  })
+
+  it('maps an "update" extraction carrying a priority patch', async () => {
+    const client = fakeClaudeClient({
+      intent: 'update',
+      target_reference: 'the GST thing',
+      priority: 3,
+    })
+
+    const result = await classifyAndExtract(client, 'change the GST thing to high priority')
+
+    expect(result).toEqual({
+      intent: 'update',
+      target_reference: 'the GST thing',
+      priority: 3,
+    })
+  })
+
+  it('maps an "update" extraction with a domain hint used to narrow the search', async () => {
+    const client = fakeClaudeClient({
+      intent: 'update',
+      target_reference: 'the GST thing',
+      domain: 'Finance',
+      mark_done: true,
+    })
+
+    const result = await classifyAndExtract(client, 'mark the GST thing in Finance as done')
+
+    expect(result).toEqual({
+      intent: 'update',
+      target_reference: 'the GST thing',
+      domain: 'Finance',
+      mark_done: true,
+    })
+  })
+
+  it('maps a "delete" extraction with target_reference into the expected shape', async () => {
+    const client = fakeClaudeClient({ intent: 'delete', target_reference: 'GST registration' })
+
+    const result = await classifyAndExtract(client, 'delete GST registration')
+
+    expect(result).toEqual({ intent: 'delete', target_reference: 'GST registration' })
+  })
+
+  it('drops an unrecognized domain from an update extraction (same normalization as create)', async () => {
+    const client = fakeClaudeClient({
+      intent: 'update',
+      target_reference: 'fix the faucet',
+      domain: 'Home Improvement', // not a canonical domain
+    })
+
+    const result = await classifyAndExtract(client, 'move fix the faucet out of that other thing')
+
+    expect(result.intent).toBe('update')
+    expect(result.domain).toBeUndefined()
+  })
+
   it('falls back to { intent: "other" } when the model returns unparseable JSON', async () => {
     const client: ClaudeClient = {
       messages: {
