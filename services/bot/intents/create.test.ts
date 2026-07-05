@@ -5,7 +5,7 @@ import { parseTaskLine } from '../../../src/vault/parseVault'
 import type { BotContext } from './types'
 
 function ctxWith(transport: ReturnType<typeof createFakeVaultTransport>): BotContext {
-  return { vaultTransport: transport }
+  return { vaultTransport: transport, chatId: 'owner-123' }
 }
 
 describe('handleCreate', () => {

@@ -1,13 +1,14 @@
 /**
- * router — owner guard + photo batch-confirm + Claude NLU + intent dispatch
- * (S16b, ADR-0011; photo branch + confirm-check branch added S19b,
- * ADR-0012 Decisions 3, 4).
+ * router — owner guard + photo batch-confirm + confirm-destructive gate +
+ * Claude NLU + intent dispatch (S16b, ADR-0011; photo branch + confirm-check
+ * branch added S19b, ADR-0012 Decisions 3, 4; update/delete confirm-gate
+ * added S17, ADR-0013 Decision 4).
  *
  * `dispatchIntent` is the generic seam described in ADR-0011 Decision 4:
  * getIntentHandler(name)?.handle(params, ctx) ?? "not yet supported". It
  * accepts any classified intent name — Claude's own "other", or a future
- * name (e.g. "update") that has no registered handler yet — and never
- * touches the vault when no handler is found.
+ * name that has no registered handler yet — and never touches the vault
+ * when no handler is found.
  *
  * `handleIncomingMessage` is the full per-message pipeline: the owner guard
  * runs first and is a complete no-op for any other chat id (no Claude call,
@@ -15,8 +16,14 @@
  * reaches NLU — it's downloaded, vision-extracted, and turned into a
  * pending batch-confirm prompt (ADR-0012 Decision 4: photo is not a
  * classified intent, there's nothing to classify). A text message while a
- * batch is pending is parsed as all/none/subset instead of being classified.
- * Otherwise, the existing Claude-classify + dispatch flow is unchanged.
+ * photo batch is pending is parsed as all/none/subset instead of being
+ * classified. Next, a text message while an update/delete confirmation is
+ * pending (confirm/store.ts — an independent Map from the photo batch
+ * above) is resolved by confirm/gate.ts's resolvePending instead of being
+ * classified: a bare "y"/"n" is not itself a classifiable intent, and
+ * running it through Claude would be a wasted call at best and a
+ * misclassification risk at worst (ADR-0013 Decision 3). Otherwise, the
+ * existing Claude-classify + dispatch flow is unchanged.
  */
 
 import './intents/index' // side effect: registers every shipped intent handler
@@ -27,6 +34,7 @@ import { classifyAndExtract, type ClaudeClient } from './nlu'
 import type { TelegramClient, TelegramMessage } from './telegramClient'
 import { extractTasksFromImage, type ExtractedTask } from './visionExtract'
 import { setPending, getPending, clearPending, type PendingPhotoConfirmation } from './photoConfirm'
+import { resolvePending } from './confirm/gate'
 import type { VaultTransport } from '../../src/vault/transport'
 
 export const NOT_YET_SUPPORTED = 'not yet supported'
@@ -100,7 +108,7 @@ function parseConfirmReply(text: string, taskCount: number): ConfirmParseResult 
 export async function handleIncomingMessage(msg: TelegramMessage, deps: RouterDeps): Promise<void> {
   if (msg.chatId !== deps.ownerChatId) return
 
-  const ctx: BotContext = { vaultTransport: deps.vaultTransport }
+  const ctx: BotContext = { vaultTransport: deps.vaultTransport, chatId: msg.chatId }
 
   if (msg.photoFileId) {
     await handlePhotoMessage(msg.chatId, msg.photoFileId, msg.caption, deps)
@@ -110,6 +118,15 @@ export async function handleIncomingMessage(msg: TelegramMessage, deps: RouterDe
   const pendingBatch = msg.text ? getPending(msg.chatId) : undefined
   if (pendingBatch) {
     await handleConfirmReply(msg.chatId, msg.text, pendingBatch, ctx, deps)
+    return
+  }
+
+  // Confirm-destructive gate (S17, ADR-0013 Decisions 3-4) — an independent
+  // pending-state Map from the photo batch above; null means nothing is
+  // pending for this chat and the message falls through to NLU as today.
+  const pendingReply = await resolvePending(msg.chatId, msg.text, ctx)
+  if (pendingReply !== null) {
+    await deps.telegramClient.sendMessage(msg.chatId, pendingReply)
     return
   }
 

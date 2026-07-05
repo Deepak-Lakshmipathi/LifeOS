@@ -4,6 +4,8 @@ import type { BotContext } from './intents/types'
 import { createFakeVaultTransport } from './testUtils/fakeVaultTransport'
 import type { ClaudeClient } from './nlu'
 import type { TelegramClient } from './telegramClient'
+import { setPending as setConfirmPending, getPending as getConfirmPending, clearPending as clearConfirmPending } from './confirm/store'
+import type { MatchedTask } from './taskMatch'
 
 function fakeClaudeClient(payload: unknown): ClaudeClient {
   return {
@@ -27,7 +29,7 @@ function fakeTelegramClient(): TelegramClient & {
 describe('dispatchIntent', () => {
   it('dispatches a registered "create" intent to the create handler', async () => {
     const transport = createFakeVaultTransport()
-    const ctx: BotContext = { vaultTransport: transport }
+    const ctx: BotContext = { vaultTransport: transport, chatId: 'owner-123' }
 
     const reply = await dispatchIntent('create', { title: 'Do the thing', domain: 'Growth' }, ctx)
 
@@ -40,9 +42,12 @@ describe('dispatchIntent', () => {
     const transport = createFakeVaultTransport()
     const readSpy = vi.spyOn(transport, 'readFiles')
     const writeSpy = vi.spyOn(transport, 'writeFile')
-    const ctx: BotContext = { vaultTransport: transport }
+    const ctx: BotContext = { vaultTransport: transport, chatId: 'owner-123' }
 
-    const reply = await dispatchIntent('update', { id: 'whatever' }, ctx)
+    // 'update'/'delete' are real registered intents as of S17 — 'photo' is
+    // still handled inline in router.ts rather than through the registry
+    // (ADR-0012 Decision 4), so it remains a genuinely unregistered name.
+    const reply = await dispatchIntent('photo', { id: 'whatever' }, ctx)
 
     expect(reply).toBe(NOT_YET_SUPPORTED)
     expect(readSpy).not.toHaveBeenCalled()
@@ -51,7 +56,7 @@ describe('dispatchIntent', () => {
 
   it('returns "not yet supported" for Claude\'s "other" classification', async () => {
     const transport = createFakeVaultTransport()
-    const ctx: BotContext = { vaultTransport: transport }
+    const ctx: BotContext = { vaultTransport: transport, chatId: 'owner-123' }
 
     const reply = await dispatchIntent('other', {}, ctx)
 
@@ -341,5 +346,81 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     expect(nluClaudeClient.messages.create).toHaveBeenCalledTimes(1)
     expect(vaultTransport.writeFileCalls).toHaveLength(0)
     expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(chatId, NOT_YET_SUPPORTED)
+  })
+})
+
+describe('handleIncomingMessage — confirm-destructive gate (S17, ADR-0013)', () => {
+  function pendingMatch(): MatchedTask {
+    return {
+      task: { id: 'task-1', title: 'Call the CA about GST', done: false, created_at: 1000, domain: 'Finance' },
+      path: 'Finance/Inbox.md',
+      rawLine: '- [ ] Call the CA about GST id:: task-1',
+    }
+  }
+
+  afterEach(() => {
+    clearConfirmPending('owner-gate-1')
+    clearConfirmPending('owner-gate-2')
+    clearConfirmPending('owner-gate-3')
+  })
+
+  it('a "y" reply while a delete confirm is pending commits WITHOUT ever calling classifyAndExtract', async () => {
+    const chatId = 'owner-gate-1'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport([
+      { path: 'Finance/Inbox.md', content: '- [ ] Call the CA about GST id:: task-1\n' },
+    ])
+    setConfirmPending(chatId, {
+      kind: 'confirm',
+      intent: 'delete',
+      match: pendingMatch(),
+      promptedAt: Date.now(),
+    })
+
+    const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'y' }, deps)
+
+    expect(nluClaudeClient.messages.create).not.toHaveBeenCalled()
+    expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, "✓ deleted 'Call the CA about GST'")
+    expect(getConfirmPending(chatId)).toBeUndefined()
+  })
+
+  it('an "n" reply cancels the pending update WITHOUT touching the vault or calling classifyAndExtract', async () => {
+    const chatId = 'owner-gate-2'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport([
+      { path: 'Finance/Inbox.md', content: '- [ ] Call the CA about GST id:: task-1\n' },
+    ])
+    setConfirmPending(chatId, {
+      kind: 'confirm',
+      intent: 'update',
+      match: pendingMatch(),
+      patch: { priority: 3 },
+      promptedAt: Date.now(),
+    })
+
+    const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'n' }, deps)
+
+    expect(nluClaudeClient.messages.create).not.toHaveBeenCalled()
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, 'Cancelled.')
+  })
+
+  it('create regression: with no confirm-store pending state, a message still fires create instantly', async () => {
+    const chatId = 'owner-gate-3'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Water the plants' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+
+    await handleIncomingMessage({ chatId, text: 'water the plants' }, deps)
+
+    expect(claudeClient.messages.create).toHaveBeenCalledTimes(1)
+    expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, "✓ added 'Water the plants' · Inbox")
   })
 })
