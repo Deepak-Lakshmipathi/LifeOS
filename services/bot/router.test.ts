@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { dispatchIntent, handleIncomingMessage, NOT_YET_SUPPORTED, type RouterDeps } from './router'
 import type { BotContext } from './intents/types'
 import { createFakeVaultTransport } from './testUtils/fakeVaultTransport'
@@ -13,11 +13,14 @@ function fakeClaudeClient(payload: unknown): ClaudeClient {
   }
 }
 
-function fakeTelegramClient(): TelegramClient & { sendMessage: ReturnType<typeof vi.fn> } {
+function fakeTelegramClient(): TelegramClient & {
+  sendMessage: ReturnType<typeof vi.fn>
+  downloadPhoto: ReturnType<typeof vi.fn>
+} {
   return {
     pollUpdates: vi.fn(),
     sendMessage: vi.fn().mockResolvedValue(undefined),
-    downloadPhoto: vi.fn(),
+    downloadPhoto: vi.fn().mockResolvedValue({ data: Buffer.from('fake-jpeg-bytes'), mediaType: 'image/jpeg' }),
   }
 }
 
@@ -97,5 +100,246 @@ describe('handleIncomingMessage — owner guard', () => {
 
     expect(vaultTransport.writeFileCalls).toHaveLength(0)
     expect(telegramClient.sendMessage).toHaveBeenCalledWith('owner-123', NOT_YET_SUPPORTED)
+  })
+})
+
+describe('handleIncomingMessage — photo branch (S19b, ADR-0012)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('downloads, extracts, and sends a numbered batch-confirm prompt listing every task + the instruction line', async () => {
+    const chatId = 'owner-photo-1'
+    const claudeClient = fakeClaudeClient({
+      tasks: [
+        { title: 'Renew passport', domain: 'Life Admin', priority: 2 },
+        { title: 'Call plumber', domain: 'Life Admin' },
+        { title: 'Book dentist', priority: 1 },
+      ],
+    })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+
+    await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-1' }, deps)
+
+    expect(telegramClient.downloadPhoto).toHaveBeenCalledWith('file-1')
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(
+      chatId,
+      [
+        '1. Renew passport · Life Admin · P2',
+        '2. Call plumber · Life Admin',
+        '3. Book dentist · Inbox · P1',
+        `Reply 'all' to create all 3, 'none' to cancel, or numbers (e.g. '1,3') for a subset.`,
+      ].join('\n'),
+    )
+  })
+
+  it('a zero-task photo replies "no tasks found" and sets no pending state', async () => {
+    const chatId = 'owner-photo-2'
+    const claudeClient = fakeClaudeClient({ tasks: [] })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+
+    await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-2' }, deps)
+
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(
+      chatId,
+      "Couldn't find any tasks in that photo.",
+    )
+
+    // A subsequent unrelated text message is not treated as a confirm reply
+    // — it flows through the normal NLU path instead.
+    const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
+    const deps2: RouterDeps = { ...deps, claudeClient: nluClaudeClient }
+    await handleIncomingMessage({ chatId, text: 'good morning' }, deps2)
+
+    expect(nluClaudeClient.messages.create).toHaveBeenCalledTimes(1)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, NOT_YET_SUPPORTED)
+  })
+
+  it('replies with a download-failed message and sets no pending when downloadPhoto rejects', async () => {
+    const chatId = 'owner-photo-3'
+    const claudeClient = fakeClaudeClient({ tasks: [] })
+    const telegramClient = fakeTelegramClient()
+    telegramClient.downloadPhoto.mockRejectedValue(new Error('network error'))
+    const vaultTransport = createFakeVaultTransport()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+
+    await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-3' }, deps)
+
+    expect(claudeClient.messages.create).not.toHaveBeenCalled()
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(
+      chatId,
+      "Couldn't download that photo — try sending it again.",
+    )
+  })
+
+  it('a non-owner chat id sending a photo is a complete no-op', async () => {
+    const claudeClient = fakeClaudeClient({ tasks: [{ title: 'sneaky task' }] })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: 'owner-photo-4' }
+
+    await handleIncomingMessage({ chatId: 'stranger-999', text: '', photoFileId: 'file-4' }, deps)
+
+    expect(telegramClient.downloadPhoto).not.toHaveBeenCalled()
+    expect(claudeClient.messages.create).not.toHaveBeenCalled()
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function sendPhoto(
+    chatId: string,
+    photoFileId: string,
+    telegramClient: TelegramClient & { sendMessage: ReturnType<typeof vi.fn>; downloadPhoto: ReturnType<typeof vi.fn> },
+    vaultTransport: ReturnType<typeof createFakeVaultTransport>,
+    tasks: unknown[],
+  ): Promise<void> {
+    const visionClient = fakeClaudeClient({ tasks })
+    const deps: RouterDeps = { claudeClient: visionClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: '', photoFileId }, deps)
+  }
+
+  it("'all' creates every task via handleCreate (one vault write per task) and clears pending", async () => {
+    const chatId = 'owner-confirm-1'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const tasks = [
+      { title: 'Renew passport', domain: 'Life Admin', priority: 2 },
+      { title: 'Call plumber', domain: 'Life Admin' },
+    ]
+    await sendPhoto(chatId, 'file-5', telegramClient, vaultTransport, tasks)
+
+    const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'all' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(2)
+    expect(nluClaudeClient.messages.create).not.toHaveBeenCalled()
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(
+      chatId,
+      [
+        '✓ added 2 tasks:',
+        "✓ added 'Renew passport' · Life Admin · P2",
+        "✓ added 'Call plumber' · Life Admin",
+      ].join('\n'),
+    )
+
+    // Pending is cleared — a follow-up 'all' now falls through to NLU.
+    await handleIncomingMessage({ chatId, text: 'all' }, deps)
+    expect(nluClaudeClient.messages.create).toHaveBeenCalledTimes(1)
+  })
+
+  it("'y' behaves like 'all' for a single-task batch, with no summary prefix", async () => {
+    const chatId = 'owner-confirm-2'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    await sendPhoto(chatId, 'file-6', telegramClient, vaultTransport, [{ title: 'Book dentist' }])
+
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'y' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(chatId, "✓ added 'Book dentist' · Inbox")
+  })
+
+  it("'none' cancels the batch with no vault write", async () => {
+    const chatId = 'owner-confirm-3'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    await sendPhoto(chatId, 'file-7', telegramClient, vaultTransport, [{ title: 'Renew passport' }])
+
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'none' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(chatId, 'Cancelled.')
+  })
+
+  it("'n' cancels the batch just like 'none'", async () => {
+    const chatId = 'owner-confirm-4'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    await sendPhoto(chatId, 'file-8', telegramClient, vaultTransport, [{ title: 'Renew passport' }])
+
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'N' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(chatId, 'Cancelled.')
+  })
+
+  it("a subset reply (e.g. '1,3') creates only the selected tasks, in the given order", async () => {
+    const chatId = 'owner-confirm-5'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const tasks = [
+      { title: 'Renew passport', domain: 'Life Admin' },
+      { title: 'Call plumber', domain: 'Life Admin' },
+      { title: 'Book dentist', domain: 'Body & Mind' },
+    ]
+    await sendPhoto(chatId, 'file-9', telegramClient, vaultTransport, tasks)
+
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: '1,3' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(2)
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(
+      chatId,
+      [
+        '✓ added 2 tasks:',
+        "✓ added 'Renew passport' · Life Admin",
+        "✓ added 'Book dentist' · Body & Mind",
+      ].join('\n'),
+    )
+  })
+
+  it('an invalid reply leaves the pending batch intact and re-sends the instruction; a following "all" still resolves it', async () => {
+    const chatId = 'owner-confirm-6'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const tasks = [{ title: 'Renew passport' }, { title: 'Call plumber' }]
+    await sendPhoto(chatId, 'file-10', telegramClient, vaultTransport, tasks)
+
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'maybe' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(
+      chatId,
+      `Reply 'all' to create all 2, 'none' to cancel, or numbers (e.g. '1,3') for a subset.`,
+    )
+
+    await handleIncomingMessage({ chatId, text: 'all' }, deps)
+    expect(vaultTransport.writeFileCalls).toHaveLength(2)
+  })
+
+  it('an expired pending batch is not treated as a confirm reply — the message flows into the normal NLU path', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 1, 0, 0, 0))
+
+    const chatId = 'owner-confirm-7'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    await sendPhoto(chatId, 'file-11', telegramClient, vaultTransport, [{ title: 'Renew passport' }])
+
+    vi.setSystemTime(new Date(2026, 0, 1, 0, 11, 0)) // 11 minutes later — past the 10-minute TTL
+
+    const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    await handleIncomingMessage({ chatId, text: 'all' }, deps)
+
+    expect(nluClaudeClient.messages.create).toHaveBeenCalledTimes(1)
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenLastCalledWith(chatId, NOT_YET_SUPPORTED)
   })
 })
