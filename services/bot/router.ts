@@ -1,8 +1,9 @@
 /**
  * router — owner guard + photo batch-confirm + confirm-destructive gate +
- * Claude NLU + intent dispatch (S16b, ADR-0011; photo branch + confirm-check
- * branch added S19b, ADR-0012 Decisions 3, 4; update/delete confirm-gate
- * added S17, ADR-0013 Decision 4).
+ * voice-note transcription gate + Claude NLU + intent dispatch (S16b,
+ * ADR-0011; photo branch + confirm-check branch added S19b, ADR-0012
+ * Decisions 3, 4; update/delete confirm-gate added S17, ADR-0013 Decision 4;
+ * voice branch added S18, ADR-0014 Decision 3).
  *
  * `dispatchIntent` is the generic seam described in ADR-0011 Decision 4:
  * getIntentHandler(name)?.handle(params, ctx) ?? "not yet supported". It
@@ -15,15 +16,20 @@
  * no vault write, no reply). After the owner guard, a photo message never
  * reaches NLU — it's downloaded, vision-extracted, and turned into a
  * pending batch-confirm prompt (ADR-0012 Decision 4: photo is not a
- * classified intent, there's nothing to classify). A text message while a
- * photo batch is pending is parsed as all/none/subset instead of being
- * classified. Next, a text message while an update/delete confirmation is
- * pending (confirm/store.ts — an independent Map from the photo batch
- * above) is resolved by confirm/gate.ts's resolvePending instead of being
- * classified: a bare "y"/"n" is not itself a classifiable intent, and
- * running it through Claude would be a wasted call at best and a
- * misclassification risk at worst (ADR-0013 Decision 3). Otherwise, the
- * existing Claude-classify + dispatch flow is unchanged.
+ * classified intent, there's nothing to classify). Next, a voice message is
+ * downloaded and transcribed before any NLU call; a non-confident
+ * transcript short-circuits with a retype prompt (ADR-0014 Decision 3) —
+ * only a confident transcript is fed into the *same* classifyAndExtract →
+ * dispatchIntent pipeline as the text path, with the reply prefixed by the
+ * transcript for transparency. A text message while a photo batch is
+ * pending is parsed as all/none/subset instead of being classified. Next, a
+ * text message while an update/delete confirmation is pending
+ * (confirm/store.ts — an independent Map from the photo batch above) is
+ * resolved by confirm/gate.ts's resolvePending instead of being classified:
+ * a bare "y"/"n" is not itself a classifiable intent, and running it
+ * through Claude would be a wasted call at best and a misclassification
+ * risk at worst (ADR-0013 Decision 3). Otherwise, the existing
+ * Claude-classify + dispatch flow is unchanged.
  */
 
 import './intents/index' // side effect: registers every shipped intent handler
@@ -35,9 +41,12 @@ import type { TelegramClient, TelegramMessage } from './telegramClient'
 import { extractTasksFromImage, type ExtractedTask } from './visionExtract'
 import { setPending, getPending, clearPending, type PendingPhotoConfirmation } from './photoConfirm'
 import { resolvePending } from './confirm/gate'
+import { buildHeardPrefix } from './reply'
+import type { Transcriber } from './transcription'
 import type { VaultTransport } from '../../src/vault/transport'
 
 export const NOT_YET_SUPPORTED = 'not yet supported'
+export const RETYPE_PROMPT = "Couldn't quite catch that — mind typing it instead?"
 
 const NO_TASKS_FOUND_REPLY = "Couldn't find any tasks in that photo."
 const PHOTO_DOWNLOAD_FAILED_REPLY = "Couldn't download that photo — try sending it again."
@@ -49,6 +58,7 @@ export interface RouterDeps {
   claudeClient: ClaudeClient
   telegramClient: TelegramClient
   vaultTransport: VaultTransport
+  transcriber: Transcriber
   ownerChatId: string
 }
 
@@ -115,6 +125,11 @@ export async function handleIncomingMessage(msg: TelegramMessage, deps: RouterDe
     return
   }
 
+  if (msg.voice) {
+    await handleVoiceMessage(msg.chatId, msg.voice.fileId, ctx, deps)
+    return
+  }
+
   const pendingBatch = msg.text ? getPending(msg.chatId) : undefined
   if (pendingBatch) {
     await handleConfirmReply(msg.chatId, msg.text, pendingBatch, ctx, deps)
@@ -158,6 +173,32 @@ async function handlePhotoMessage(
 
   setPending(chatId, tasks)
   await deps.telegramClient.sendMessage(chatId, buildConfirmPrompt(tasks))
+}
+
+/**
+ * Voice-note branch (S18, ADR-0014 Decision 3): download → transcribe →
+ * confidence gate. A non-confident transcript short-circuits with a retype
+ * prompt — no classifyAndExtract, no vault write. A confident transcript
+ * flows through the *unmodified* classifyAndExtract → dispatchIntent
+ * pipeline, with the reply prefixed by the transcript for transparency.
+ */
+async function handleVoiceMessage(
+  chatId: string,
+  fileId: string,
+  ctx: BotContext,
+  deps: RouterDeps,
+): Promise<void> {
+  const audio = await deps.telegramClient.downloadVoiceFile(fileId)
+  const { text: transcript, confident } = await deps.transcriber.transcribe(audio, 'audio/ogg')
+
+  if (!confident) {
+    await deps.telegramClient.sendMessage(chatId, RETYPE_PROMPT)
+    return
+  }
+
+  const extracted = await classifyAndExtract(deps.claudeClient, transcript)
+  const innerReply = await dispatchIntent(extracted.intent, extracted, ctx)
+  await deps.telegramClient.sendMessage(chatId, buildHeardPrefix(transcript) + innerReply)
 }
 
 async function handleConfirmReply(

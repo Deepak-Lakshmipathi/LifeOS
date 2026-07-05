@@ -18,3 +18,12 @@ export function buildCreateReply(task: ReplyTask): string {
   const prioritySegment = task.priority !== undefined ? ` · P${task.priority}` : ''
   return `✓ added '${task.title}' · ${domainLabel}${prioritySegment}`
 }
+
+/**
+ * Prefix prepended to a voice message's reply, echoing the transcript back
+ * to the owner for transparency before the action taken (S18, ADR-0014
+ * Decision 3): `heard: '<transcript>' → <inner reply>`.
+ */
+export function buildHeardPrefix(transcript: string): string {
+  return `heard: '${transcript}' → `
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildCreateReply } from './reply'
+import { buildCreateReply, buildHeardPrefix } from './reply'
 
 describe('buildCreateReply', () => {
   it('includes the priority segment when priority is set', () => {
@@ -16,5 +16,11 @@ describe('buildCreateReply', () => {
 
   it('falls back to Inbox when domain is unset', () => {
     expect(buildCreateReply({ title: 'Untitled scribble' })).toBe("✓ added 'Untitled scribble' · Inbox")
+  })
+})
+
+describe('buildHeardPrefix', () => {
+  it("builds the heard-transcript prefix", () => {
+    expect(buildHeardPrefix('call the CA')).toBe("heard: 'call the CA' → ")
   })
 })

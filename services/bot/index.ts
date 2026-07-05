@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url'
 import { loadConfig } from './config'
 import { RealTelegramClient } from './telegramClient'
 import { createClaudeClient } from './nlu'
+import { createTranscriber } from './transcription'
 import { NodeVaultTransport } from './vaultTransport'
 import { handleIncomingMessage } from './router'
 
@@ -26,6 +27,7 @@ function main(): void {
 
   const telegramClient = new RealTelegramClient(config.telegramBotToken)
   const claudeClient = createClaudeClient(config.anthropicApiKey)
+  const transcriber = createTranscriber(config.groqApiKey)
   const vaultTransport = new NodeVaultTransport({
     repoUrl: config.botVaultRepoUrl,
     pat: config.botVaultPat,
@@ -39,6 +41,7 @@ function main(): void {
       claudeClient,
       telegramClient,
       vaultTransport,
+      transcriber,
       ownerChatId: config.ownerTelegramChatId,
     }).catch((err: unknown) => {
       console.error('Failed to handle message:', err instanceof Error ? err.message : err)

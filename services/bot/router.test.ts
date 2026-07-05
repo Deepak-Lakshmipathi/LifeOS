@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { dispatchIntent, handleIncomingMessage, NOT_YET_SUPPORTED, type RouterDeps } from './router'
+import { dispatchIntent, handleIncomingMessage, NOT_YET_SUPPORTED, RETYPE_PROMPT, type RouterDeps } from './router'
 import type { BotContext } from './intents/types'
 import { createFakeVaultTransport } from './testUtils/fakeVaultTransport'
 import type { ClaudeClient } from './nlu'
 import type { TelegramClient } from './telegramClient'
+import type { Transcriber } from './transcription'
 import { setPending as setConfirmPending, getPending as getConfirmPending, clearPending as clearConfirmPending } from './confirm/store'
 import type { MatchedTask } from './taskMatch'
 
@@ -18,11 +19,21 @@ function fakeClaudeClient(payload: unknown): ClaudeClient {
 function fakeTelegramClient(): TelegramClient & {
   sendMessage: ReturnType<typeof vi.fn>
   downloadPhoto: ReturnType<typeof vi.fn>
+  downloadVoiceFile: ReturnType<typeof vi.fn>
 } {
   return {
     pollUpdates: vi.fn(),
     sendMessage: vi.fn().mockResolvedValue(undefined),
     downloadPhoto: vi.fn().mockResolvedValue({ data: Buffer.from('fake-jpeg-bytes'), mediaType: 'image/jpeg' }),
+    downloadVoiceFile: vi.fn().mockResolvedValue(Buffer.from('fake-ogg-bytes')),
+  }
+}
+
+function fakeTranscriber(result: { text: string; confident: boolean }): Transcriber & {
+  transcribe: ReturnType<typeof vi.fn>
+} {
+  return {
+    transcribe: vi.fn().mockResolvedValue(result),
   }
 }
 
@@ -70,7 +81,7 @@ describe('handleIncomingMessage — owner guard', () => {
     const claudeClient = fakeClaudeClient({ intent: 'create', title: 'sneaky task' })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: 'owner-123' }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: 'owner-123' }
 
     await handleIncomingMessage({ chatId: 'stranger-999', text: 'add a task' }, deps)
 
@@ -83,7 +94,7 @@ describe('handleIncomingMessage — owner guard', () => {
     const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Call the CA about GST', domain: 'Finance' })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: 'owner-123' }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: 'owner-123' }
 
     await handleIncomingMessage({ chatId: 'owner-123', text: 'call the CA about GST' }, deps)
 
@@ -99,12 +110,67 @@ describe('handleIncomingMessage — owner guard', () => {
     const claudeClient = fakeClaudeClient({ intent: 'other' })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: 'owner-123' }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: 'owner-123' }
 
     await handleIncomingMessage({ chatId: 'owner-123', text: 'delete my last task' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(0)
     expect(telegramClient.sendMessage).toHaveBeenCalledWith('owner-123', NOT_YET_SUPPORTED)
+  })
+
+  it('is a complete no-op for a voice message from a non-owner chat id (no download, no transcribe, no send)', async () => {
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'sneaky task' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const transcriber = fakeTranscriber({ text: 'sneaky task', confident: true })
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber, ownerChatId: 'owner-123' }
+
+    await handleIncomingMessage({ chatId: 'stranger-999', text: '', voice: { fileId: 'voice-1' } }, deps)
+
+    expect(telegramClient.downloadVoiceFile).not.toHaveBeenCalled()
+    expect(transcriber.transcribe).not.toHaveBeenCalled()
+    expect(claudeClient.messages.create).not.toHaveBeenCalled()
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleIncomingMessage — voice (S18, ADR-0014)', () => {
+  it('a confident transcript downloads, transcribes, classifies, writes to the vault once, and echoes the transcript in the reply', async () => {
+    const chatId = 'owner-voice-1'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Call the CA about GST', domain: 'Finance' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const transcriber = fakeTranscriber({ text: 'call the CA about GST', confident: true })
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber, ownerChatId: chatId }
+
+    await handleIncomingMessage({ chatId, text: '', voice: { fileId: 'voice-2' } }, deps)
+
+    expect(telegramClient.downloadVoiceFile).toHaveBeenCalledWith('voice-2')
+    expect(transcriber.transcribe).toHaveBeenCalledWith(Buffer.from('fake-ogg-bytes'), 'audio/ogg')
+    expect(claudeClient.messages.create).toHaveBeenCalledTimes(1)
+    expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(
+      chatId,
+      "heard: 'call the CA about GST' → ✓ added 'Call the CA about GST' · Finance",
+    )
+  })
+
+  it('a non-confident transcript replies with RETYPE_PROMPT and never reaches classifyAndExtract or the vault', async () => {
+    const chatId = 'owner-voice-2'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'should not be reached' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const transcriber = fakeTranscriber({ text: 'garbled mumble', confident: false })
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber, ownerChatId: chatId }
+
+    await handleIncomingMessage({ chatId, text: '', voice: { fileId: 'voice-3' } }, deps)
+
+    expect(telegramClient.downloadVoiceFile).toHaveBeenCalledWith('voice-3')
+    expect(transcriber.transcribe).toHaveBeenCalledTimes(1)
+    expect(claudeClient.messages.create).not.toHaveBeenCalled()
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, RETYPE_PROMPT)
   })
 })
 
@@ -124,7 +190,7 @@ describe('handleIncomingMessage — photo branch (S19b, ADR-0012)', () => {
     })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
 
     await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-1' }, deps)
 
@@ -146,7 +212,7 @@ describe('handleIncomingMessage — photo branch (S19b, ADR-0012)', () => {
     const claudeClient = fakeClaudeClient({ tasks: [] })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
 
     await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-2' }, deps)
 
@@ -171,7 +237,7 @@ describe('handleIncomingMessage — photo branch (S19b, ADR-0012)', () => {
     const telegramClient = fakeTelegramClient()
     telegramClient.downloadPhoto.mockRejectedValue(new Error('network error'))
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
 
     await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-3' }, deps)
 
@@ -186,7 +252,7 @@ describe('handleIncomingMessage — photo branch (S19b, ADR-0012)', () => {
     const claudeClient = fakeClaudeClient({ tasks: [{ title: 'sneaky task' }] })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: 'owner-photo-4' }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: 'owner-photo-4' }
 
     await handleIncomingMessage({ chatId: 'stranger-999', text: '', photoFileId: 'file-4' }, deps)
 
@@ -210,7 +276,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     tasks: unknown[],
   ): Promise<void> {
     const visionClient = fakeClaudeClient({ tasks })
-    const deps: RouterDeps = { claudeClient: visionClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: visionClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: '', photoFileId }, deps)
   }
 
@@ -225,7 +291,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     await sendPhoto(chatId, 'file-5', telegramClient, vaultTransport, tasks)
 
     const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
-    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'all' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(2)
@@ -250,7 +316,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     const vaultTransport = createFakeVaultTransport()
     await sendPhoto(chatId, 'file-6', telegramClient, vaultTransport, [{ title: 'Book dentist' }])
 
-    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'y' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(1)
@@ -263,7 +329,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     const vaultTransport = createFakeVaultTransport()
     await sendPhoto(chatId, 'file-7', telegramClient, vaultTransport, [{ title: 'Renew passport' }])
 
-    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'none' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(0)
@@ -276,7 +342,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     const vaultTransport = createFakeVaultTransport()
     await sendPhoto(chatId, 'file-8', telegramClient, vaultTransport, [{ title: 'Renew passport' }])
 
-    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'N' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(0)
@@ -294,7 +360,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     ]
     await sendPhoto(chatId, 'file-9', telegramClient, vaultTransport, tasks)
 
-    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: '1,3' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(2)
@@ -315,7 +381,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     const tasks = [{ title: 'Renew passport' }, { title: 'Call plumber' }]
     await sendPhoto(chatId, 'file-10', telegramClient, vaultTransport, tasks)
 
-    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'maybe' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(0)
@@ -340,7 +406,7 @@ describe('handleIncomingMessage — confirm-check branch (S19b, ADR-0012)', () =
     vi.setSystemTime(new Date(2026, 0, 1, 0, 11, 0)) // 11 minutes later — past the 10-minute TTL
 
     const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
-    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'all' }, deps)
 
     expect(nluClaudeClient.messages.create).toHaveBeenCalledTimes(1)
@@ -378,7 +444,7 @@ describe('handleIncomingMessage — confirm-destructive gate (S17, ADR-0013)', (
     })
 
     const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
-    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'y' }, deps)
 
     expect(nluClaudeClient.messages.create).not.toHaveBeenCalled()
@@ -402,7 +468,7 @@ describe('handleIncomingMessage — confirm-destructive gate (S17, ADR-0013)', (
     })
 
     const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
-    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient: nluClaudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
     await handleIncomingMessage({ chatId, text: 'n' }, deps)
 
     expect(nluClaudeClient.messages.create).not.toHaveBeenCalled()
@@ -415,7 +481,7 @@ describe('handleIncomingMessage — confirm-destructive gate (S17, ADR-0013)', (
     const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Water the plants' })
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport()
-    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, ownerChatId: chatId }
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
 
     await handleIncomingMessage({ chatId, text: 'water the plants' }, deps)
 
