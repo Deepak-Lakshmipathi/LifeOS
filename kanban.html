@@ -331,8 +331,8 @@
       "notes": "Group E · Wave 8 — PRD #63 · HITL (like S15b) — real isomorphic-git+Node-fs VaultTransport (mkdir-recursive -> add -> local-authoritative commit -> best-effort push, same discipline as S15b's GitTransport.writeFile) + real Telegram getUpdates long-poll loop (ADR-0011 §1: long-poll worker, not serverless webhook — keeps the git clone warm across messages). Not CI-verifiable (no remote/live Telegram/live Claude in CI) — needs owner hand-verify (real message -> vault commit -> dashboard shows it -> confirmation reply), exactly as S15b required. Closes Group E's create-only slice; unblocks S17."
     },
     {
-      "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "ready", "slice": "S17",
-      "issue": 75, "pr": null, "blockedBy": [],
+      "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "done", "slice": "S17",
+      "issue": 75, "pr": 85, "blockedBy": [],
       "notes": "Group E · Wave 9 · PRD #74 · ADR-0013 · status:ready (S16 merged). Single tracer-bullet (matcher/gate/handlers mutually load-bearing, not split). In-mem Map<chatId,PendingAction> + 2min TTL (services/bot/confirm/store.ts); fuzzy token-overlap targeting vs fresh parseVault (taskMatch.ts), not id::/last-created; bare y/n checked in router.ts BEFORE NLU (free for S18 voice too). Additive router gate + widened intents/types.ts; registry.ts/create.ts untouched. HOTSPOT: edits services/bot/router.ts — do NOT batch with S18 (#78) or S19b (#72); serialize, rebase second-merger."
     },
     {
