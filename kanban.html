@@ -346,8 +346,8 @@
       "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · status:ready (S16 merged). Purely additive, router-FREE, independently unit-testable: telegramClient.ts photo detection + downloadPhoto (getFile -> HTTPS, image/jpeg per Telegram guarantee) + new visionExtract.ts (claude-sonnet-5 vision, {tasks:[...]} structured output capped 20, fields mirror nlu.ts minus intent). SAFE STANDALONE — dodges the router.ts hotspot; dispatch this one first. Unblocks S19b."
     },
     {
-      "id": "s19b", "title": "Bot photo batch-confirm + router wiring", "column": "backlog", "slice": "S19b",
-      "issue": 72, "pr": null, "blockedBy": ["s19a"],
+      "id": "s19b", "title": "Bot photo batch-confirm + router wiring", "column": "done", "slice": "S19b",
+      "issue": 72, "pr": 83, "blockedBy": ["s19a"],
       "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · blocked on S19a. New photoConfirm.ts (numbered-list reply; next text intercepted as all/none/subset; 10min per-chat TTL) + photo/confirm branches in services/bot/router.ts; confirmed tasks call the existing unmodified handleCreate once per task. HOTSPOT: edits services/bot/router.ts — do NOT batch with S17 (#75) or S18 (#78); serialize, rebase second-merger. Convergence point: S19's photoConfirm vs S17's generic confirm — possible later generalization pass (non-blocking)."
     }
   ]
