@@ -5,6 +5,8 @@ import type { SyncProvider } from '../sync/SyncProvider'
 export interface UseTasksResult {
   tasks: Task[]
   loading: boolean
+  /** Set when the initial load failed (e.g. vault clone/auth error). */
+  error: string | null
   refresh: () => Promise<void>
   addTask: (input: { title: string; done_when?: string; priority?: 1 | 2 | 3; project?: string; domain?: string }) => Promise<void>
   updateTask: (
@@ -18,6 +20,7 @@ export interface UseTasksResult {
 export function useTasks(provider: SyncProvider): UseTasksResult {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     const all = await provider.list()
@@ -25,10 +28,19 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   }, [provider])
 
   useEffect(() => {
-    provider.list().then((all) => {
-      setTasks(all)
-      setLoading(false)
-    })
+    provider
+      .list()
+      .then((all) => {
+        setTasks(all)
+        setLoading(false)
+      })
+      .catch((e) => {
+        // Without this, a failed vault clone/auth leaves loading=true forever
+        // (infinite spinner). Surface the reason and stop loading instead.
+        console.error('[LifeOS] initial task load failed:', e)
+        setError(e instanceof Error ? e.message : String(e))
+        setLoading(false)
+      })
   }, [provider])
 
   const addTask = useCallback(
@@ -69,5 +81,5 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
     [provider, refresh]
   )
 
-  return { tasks, loading, refresh, addTask, updateTask, toggleDone, deleteTask }
+  return { tasks, loading, error, refresh, addTask, updateTask, toggleDone, deleteTask }
 }

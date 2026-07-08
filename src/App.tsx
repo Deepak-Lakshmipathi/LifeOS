@@ -11,6 +11,7 @@ import { PulseView } from './components/PulseView'
 import { TabBar, type ViewTab } from './components/TabBar'
 import { distinctProjects } from './lib/distinctProjects'
 import { seedIfEmpty } from './data/seed'
+import { clearVaultPat } from './vault/pat'
 import { getTimeOfDay, TIME_GRADIENTS, TIME_SOLID_BG } from './lib/timeOfDay'
 
 // The provider is instantiated once at module level.
@@ -46,7 +47,7 @@ function useTimeGradient() {
 }
 
 export default function App() {
-  const { tasks, loading, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
+  const { tasks, loading, error, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
   const projects = distinctProjects(tasks)
   const [tab, setTab] = useState<ViewTab>('now')
   const [addOpen, setAddOpen] = useState(false)
@@ -92,6 +93,32 @@ export default function App() {
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="w-6 h-6 border-2 border-apple-gray-3 border-t-apple-blue rounded-full animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="mx-4 mt-8 p-4 rounded-ios glass-panel text-center">
+            <p className="text-base font-semibold text-apple-label">Couldn’t load your vault</p>
+            <p className="mt-1 text-sm text-apple-gray-1 break-words">{error}</p>
+            <div className="mt-4 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="text-sm font-medium"
+                style={{ color: '#007AFF' }}
+              >
+                Retry
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearVaultPat()
+                  window.location.reload()
+                }}
+                className="text-sm font-medium"
+                style={{ color: '#007AFF' }}
+              >
+                Re-enter token
+              </button>
+            </div>
           </div>
         ) : (
           <AnimatePresence mode="wait">
