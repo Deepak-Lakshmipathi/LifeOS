@@ -2,7 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Base path. GitHub Pages serves at /<repo>/ — set VITE_BASE=/LifeOS/ in the
+// Pages build. Defaults to '/' for local dev and custom-domain hosting.
+const base = process.env.VITE_BASE || '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -15,20 +20,22 @@ export default defineConfig({
         theme_color: '#6366f1',
         background_color: '#0f0f23',
         display: 'standalone',
-        start_url: '/',
+        // Relative so they resolve under `base` (both '/' and '/LifeOS/').
+        start_url: '.',
+        scope: base,
         icons: [
           {
-            src: '/icons/icon-192.png',
+            src: 'icons/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/icons/icon-512.png',
+            src: 'icons/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: '/icons/icon-maskable-512.png',
+            src: 'icons/icon-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',

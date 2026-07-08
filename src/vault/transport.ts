@@ -29,6 +29,7 @@
  */
 
 import { DOMAINS } from '../data/domains'
+import { getVaultPat } from './pat'
 
 // ─── Interface ────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ export class GitTransport implements VaultTransport {
 
     const url = import.meta.env.VITE_VAULT_REPO_URL as string | undefined
     const corsProxy = import.meta.env.VITE_VAULT_CORS_PROXY as string | undefined
-    const pat = import.meta.env.VITE_VAULT_PAT as string | undefined
+    const pat = getVaultPat()
 
     if (!url) throw new Error('VITE_VAULT_REPO_URL is not configured')
 
