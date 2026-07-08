@@ -55,6 +55,8 @@ export default defineConfig({
     // services/** is excluded: services/bot (S16b) is its own standalone
     // Node/TS project with its own vitest config, deps, and test runner —
     // not part of the Vite/React PWA this config builds.
-    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', 'services/**'],
+    // .claude/worktrees holds stale agent worktree copies of the whole repo;
+    // crawling them double-runs every test and causes teardown flakes.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', 'services/**', '.claude/worktrees/**'],
   },
 })

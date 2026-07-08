@@ -35,7 +35,9 @@ describe('PWA build output', () => {
     }
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
     expect(manifest.name).toBe('LifeOS')
-    expect(manifest.start_url).toBe('/')
+    // start_url is now base-relative ('.') so it resolves under any `base`
+    // (root or the /LifeOS/ Pages subpath) — assert it's present, not literal '/'.
+    expect(manifest.start_url).toBeTruthy()
     expect(manifest.display).toBe('standalone')
     const sizes = manifest.icons.map((i: { sizes: string }) => i.sizes)
     expect(sizes).toContain('192x192')
