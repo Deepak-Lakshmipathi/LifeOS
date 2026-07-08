@@ -1,0 +1,6 @@
+name = "lifeos-git-proxy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# No routes/vars needed — deploys to
+# https://lifeos-git-proxy.<your-subdomain>.workers.dev
