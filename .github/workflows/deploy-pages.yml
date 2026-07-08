@@ -31,6 +31,9 @@ jobs:
           VITE_VAULT: '1'
           VITE_VAULT_REPO_URL: https://github.com/Deepak-Lakshmipathi/LiveOS-VaultRepo.git
           VITE_BASE: /LifeOS/
+          # Self-hosted CORS proxy (cors-proxy/). Set once:
+          #   gh variable set VAULT_CORS_PROXY --body "https://<worker>.workers.dev"
+          VITE_VAULT_CORS_PROXY: ${{ vars.VAULT_CORS_PROXY }}
           # NO VITE_VAULT_PAT here — the token is entered at runtime and stored
           # in the browser (src/vault/pat.ts). Never add it, or it bakes into
           # the public bundle.
