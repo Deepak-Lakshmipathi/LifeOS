@@ -76,6 +76,11 @@ export class GitTransport implements VaultTransport {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private fs: any = null
 
+  // In-flight readFiles() promise. App fires two list() calls on mount
+  // (seedIfEmpty + useTasks) — without this, both run a git clone into the
+  // same lightning-fs dir concurrently, race, and reject, hanging the app.
+  private inflight: Promise<{ path: string; content: string }[]> | null = null
+
   /**
    * Lazy-load isomorphic-git / lightning-fs and build the options object
    * shared by every git operation (clone/pull/push). Dynamic imports ensure
@@ -124,6 +129,15 @@ export class GitTransport implements VaultTransport {
   }
 
   async readFiles(): Promise<{ path: string; content: string }[]> {
+    // Collapse concurrent callers into a single clone/pull.
+    if (this.inflight) return this.inflight
+    this.inflight = this._readFiles().finally(() => {
+      this.inflight = null
+    })
+    return this.inflight
+  }
+
+  private async _readFiles(): Promise<{ path: string; content: string }[]> {
     const { git, LightningFS, sharedOpts } = await this.loadGit()
 
     // ── Attempt pull first; fall back to fresh clone only when nothing to

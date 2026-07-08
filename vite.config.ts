@@ -57,6 +57,7 @@ export default defineConfig({
     // not part of the Vite/React PWA this config builds.
     // .claude/worktrees holds stale agent worktree copies of the whole repo;
     // crawling them double-runs every test and causes teardown flakes.
-    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', 'services/**', '.claude/worktrees/**'],
+    // cors-proxy has its own node-run self-check (worker.test.mjs), not a vitest suite.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', 'services/**', '.claude/worktrees/**', 'cors-proxy/**'],
   },
 })
