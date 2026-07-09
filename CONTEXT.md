@@ -80,3 +80,5 @@ _Avoid_: session, transaction, pending write (it gates a write; it is not itself
 
 - "folder" (the seed JSON key) and "domain" (the plan/UI term) refer to the same concept — resolved: the canonical term is **Domain**; "folder" is the storage key only.
 - "sync" was used to mean both the eventual backend and the always-present seam — resolved: **Sync seam** is the interface (exists in Slice 1); real sync is a later Slice.
+
+- **Design language** — all UI work MUST follow `docs/DESIGN_LANGUAGE.md` (Glass Cockpit). Read it before touching any component or style.
