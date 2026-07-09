@@ -1,0 +1,360 @@
+<title>LifeOS — Ops Terminal</title>
+<style>
+  :root{
+    --bg:#0a0e12; --panel:#0e141b; --line:#1c2530;
+    --txt:#c9d4dd; --dim:#6b7a89; --faint:#42505e;
+    --amb:#ffb000; --amb-dim:#8a6200;
+    --good:#3fd97f; --bad:#ff5c5c; --warn:#ffb000; --info:#4db8ff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{color-scheme:dark;scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);
+    font-family:"Cascadia Mono","Cascadia Code",Consolas,"SF Mono",monospace;
+    font-size:13.5px;line-height:1.5;font-variant-numeric:tabular-nums}
+  ::selection{background:var(--amb);color:#000}
+
+  /* ticker */
+  .ticker{position:sticky;top:0;z-index:10;background:#05080b;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:0;overflow-x:auto;white-space:nowrap;font-size:12.5px}
+  .ticker .cell{padding:8px 16px;border-right:1px solid var(--line);color:var(--dim)}
+  .ticker b{color:var(--txt);font-weight:600}
+  .ticker .cell:first-child{color:var(--amb);font-weight:700;letter-spacing:.08em}
+  .up{color:var(--good)} .dn{color:var(--bad)} .wn{color:var(--warn)}
+
+  /* nav */
+  .nav{position:sticky;top:37px;z-index:9;background:rgba(10,14,18,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);display:flex;gap:2px;overflow-x:auto;padding:0 12px}
+  .nav a{color:var(--dim);text-decoration:none;padding:9px 14px;font-size:12px;letter-spacing:.06em}
+  .nav a:hover,.nav a:focus-visible{color:var(--amb);outline:none}
+  .nav .modes{margin-left:auto;display:flex;align-items:center;gap:4px;padding-right:4px}
+  .nav .modes button{background:none;border:1px solid var(--line);color:var(--dim);
+    font:inherit;font-size:11.5px;padding:3px 10px;cursor:pointer}
+  .nav .modes button.on{border-color:var(--amb);color:var(--amb)}
+
+  main{max-width:1060px;margin:0 auto;padding:26px 20px 100px}
+  section{margin-bottom:40px}
+  .shead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;color:var(--amb)}
+  .shead h2{font-size:13px;font-weight:700;letter-spacing:.18em}
+  .shead .rule{flex:1;border-top:1px solid var(--line)}
+  .shead .meta{color:var(--faint);font-size:11.5px}
+
+  .statusline{border:1px solid var(--line);background:var(--panel);padding:12px 16px;margin-bottom:26px;
+    display:flex;gap:26px;flex-wrap:wrap;font-size:12.5px;color:var(--dim)}
+  .statusline b{color:var(--txt)}
+  .statusline .mode-note{color:var(--amb)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{color:var(--faint);font-weight:600;text-align:left;font-size:11px;letter-spacing:.1em;
+    padding:6px 10px;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px;border-bottom:1px solid #131a22;vertical-align:top}
+  tr:hover td{background:#111924}
+  td.num,th.num{text-align:right}
+  .sub{color:var(--dim);font-size:12px;display:block;margin-top:1px}
+  .tag{font-size:10.5px;padding:1px 7px;border:1px solid var(--line);color:var(--dim);letter-spacing:.05em}
+  .tag.hi{border-color:var(--bad);color:var(--bad)}
+  .tag.md{border-color:var(--warn);color:var(--warn)}
+  .tag.resc{border-color:var(--info);color:var(--info)}
+  .ok{color:var(--good)} .fail{color:var(--bad)} .idle{color:var(--faint)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media(max-width:820px){.twocol{grid-template-columns:1fr}}
+
+  .kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #131a22;font-size:13px}
+  .kv:last-child{border:0}
+  .kv .k{color:var(--dim)} .kv .k .sub{font-size:11.5px}
+  .kv .v{text-align:right}
+
+  .meter{height:8px;background:#131a22;border:1px solid var(--line);margin:5px 0 2px}
+  .meter i{display:block;height:100%;background:var(--amb)}
+  .meter i.g{background:var(--good)}
+
+  .bignum{font-size:34px;font-weight:700;color:var(--txt);letter-spacing:-.01em}
+  .panel{border:1px solid var(--line);background:var(--panel);padding:16px 18px}
+
+  /* warmth ascii-ish bars */
+  .wrow{display:grid;grid-template-columns:130px 1fr 90px;gap:12px;align-items:center;padding:5px 0;font-size:12.5px}
+  .wrow .lbl{color:var(--dim)}
+  .wbar{height:11px;background:#131a22;border:1px solid var(--line);position:relative}
+  .wbar i{position:absolute;inset:1px auto 1px 1px;background:var(--amb)}
+  .wbar i.cold{background:var(--info);opacity:.6}
+  .wrow .st{text-align:right;color:var(--faint);font-size:11.5px}
+  .wrow.alert .lbl,.wrow.alert .st{color:var(--info)}
+
+  /* schedule */
+  pre.sched{font-size:13px;line-height:1.9;color:var(--txt);overflow-x:auto}
+  pre.sched .t{color:var(--faint)} pre.sched .gap{color:var(--faint);font-style:italic}
+  pre.sched .ev{color:var(--amb)}
+
+  .draft{border:1px dashed var(--amb-dim);padding:2px 8px;color:var(--amb);font-size:11px;cursor:pointer;background:none;font-family:inherit}
+  .foot{color:var(--faint);text-align:center;font-size:11.5px;border-top:1px solid var(--line);padding-top:18px}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--amb);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media(prefers-reduced-motion:reduce){.cursor{animation:none}}
+  canvas{image-rendering:pixelated}
+</style>
+
+<div class="ticker">
+  <div class="cell">LIFEOS/OPS</div>
+  <div class="cell">NW <b>₹18.4L</b> <span class="up">+2.1%</span></div>
+  <div class="cell">BURN <b>53%</b> of ₹110k</div>
+  <div class="cell">NIFTY-DAY P&amp;L <span class="up">+₹8,610</span></div>
+  <div class="cell">PIPELINE <b>14A/3I</b></div>
+  <div class="cell">STREAK <b>6d</b></div>
+  <div class="cell">COLD <span class="wn">BODY&amp;MIND 9d</span></div>
+  <div class="cell">FLEET <span class="up">4 OK</span> / <span class="dn">1 FAIL</span> / 1 IDLE</div>
+  <div class="cell">2026-07-08 <b id="clock">09:14:07</b> IST</div>
+</div>
+
+<nav class="nav">
+  <a href="#mission">MISSION</a><a href="#attn">ATTENTION</a><a href="#sched">SCHEDULE</a>
+  <a href="#domains">DOMAINS</a><a href="#habits">HABITS</a><a href="#money">MONEY</a><a href="#career">CAREER</a><a href="#fleet">FLEET</a>
+  <div class="modes">
+    <button class="on" data-m="am">AM</button><button data-m="mid">MID</button><button data-m="pm">PM</button>
+  </div>
+</nav>
+
+<main>
+  <div class="statusline">
+    <span>session <b>deepak@lifeos</b><span class="cursor"></span></span>
+    <span>vault <b>synced 08:42</b> · 107 tasks · 0 conflicts</span>
+    <span class="mode-note" id="modenote">AM BRIEF — daily-brief wrote this at 05:31. Win 3 tasks and today counts.</span>
+  </div>
+
+  <!-- MISSION -->
+  <section id="mission">
+    <div class="shead"><h2>▌MISSION</h2><div class="rule"></div><span class="meta">picked by balance brain · veto with `x`</span></div>
+    <table>
+      <thead><tr><th style="width:26px"></th><th>TASK</th><th>WHY / DONE_WHEN</th><th style="width:120px">DOMAIN</th><th style="width:64px">PRI</th></tr></thead>
+      <tbody>
+        <tr><td>[ ]</td>
+          <td><b>Send invoice + handoff doc → NorthStar</b><span class="sub">project: NorthStar build</span></td>
+          <td>closes Milestone 2, unblocks final payment<span class="sub">done_when: invoice emailed + repo access transferred</span></td>
+          <td>BUILDING</td><td><span class="tag hi">P3</span></td></tr>
+        <tr><td>[ ]</td>
+          <td><b>Module 4 quiz — Agentic AI Engineering</b><span class="sub">project: AI upskilling</span></td>
+          <td>tool-use module feeds the agent fleet build<span class="sub">done_when: quiz ≥80% + notes in vault</span></td>
+          <td>GROWTH</td><td><span class="tag md">P2</span></td></tr>
+        <tr><td>[ ]</td>
+          <td><b>30-minute run</b><span class="sub">injected: coldest-domain rescue</span></td>
+          <td>BODY&amp;MIND at 0 heat for 9 days<span class="sub">done_when: 3km+ logged, any pace</span></td>
+          <td>BODY&amp;MIND</td><td><span class="tag resc">RESCUE</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ATTENTION -->
+  <section id="attn">
+    <div class="shead"><h2>▌ATTENTION</h2><div class="rule"></div><span class="meta">email-triage 09:00 · 12 scanned, 3 flagged</span></div>
+    <table>
+      <thead><tr><th style="width:70px">SRC</th><th>ITEM</th><th style="width:110px">AGE/DUE</th><th style="width:110px">ACTION</th></tr></thead>
+      <tbody>
+        <tr><td class="wn">MAIL</td><td>Meera @ NorthStar — revised quote requested<span class="sub">classified: client/money · draft staged by email-triage</span></td>
+          <td class="dn">26h waiting</td><td><button class="draft">REVIEW DRAFT</button></td></tr>
+        <tr><td class="wn">MAIL</td><td>Zeta recruiting — interview slot selection<span class="sub">classified: job/response → linked to pipeline card</span></td>
+          <td class="dn">expires 18:00</td><td><button class="draft">OPEN</button></td></tr>
+        <tr><td class="idle">BILL</td><td>HDFC credit card ₹42,300<span class="sub">auto-extracted from statement mail</span></td>
+          <td>Jul 12 · 4d</td><td><button class="draft">SNOOZE</button></td></tr>
+        <tr><td class="fail">AGNT</td><td>job-scout down — LinkedIn session expired<span class="sub">2 consecutive failures · needs re-auth on THIS PC</span></td>
+          <td class="dn">since 07:00</td><td><button class="draft">FIX</button></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section id="sched">
+    <div class="shead"><h2>▌SCHEDULE</h2><div class="rule"></div><span class="meta">gcal · 3 events, 1 usable gap</span></div>
+    <div class="panel">
+<pre class="sched"><span class="t">10:00–10:45</span>  <span class="ev">█ CLIENT CALL</span>   NorthStar handoff walkthrough
+<span class="t">11:00–12:30</span>  <span class="gap">░ GAP 90min</span>    → fits Module 4 quiz (~45min) + notes
+<span class="t">13:00–15:00</span>  <span class="ev">█ DEEP WORK</span>    freelance build (protected block)
+<span class="t">18:30–19:15</span>  <span class="ev">█ RUN</span>          rescue task · Body &amp; Mind</pre>
+    </div>
+  </section>
+
+  <!-- DOMAINS -->
+  <section id="domains">
+    <div class="shead"><h2>▌DOMAIN WARMTH</h2><div class="rule"></div><span class="meta">derived, never logged · 14-day window</span></div>
+    <div class="panel">
+      <div class="wrow"><span class="lbl">BUILDING THINGS</span><div class="wbar"><i style="width:86%"></i></div><span class="st">hot · 12 done</span></div>
+      <div class="wrow"><span class="lbl">CAREER</span><div class="wbar"><i style="width:64%"></i></div><span class="st">warm · 7 done</span></div>
+      <div class="wrow"><span class="lbl">GROWTH</span><div class="wbar"><i style="width:58%"></i></div><span class="st">warm · 5 done</span></div>
+      <div class="wrow"><span class="lbl">FINANCE</span><div class="wbar"><i style="width:44%"></i></div><span class="st">mild · 3 done</span></div>
+      <div class="wrow"><span class="lbl">LIFE ADMIN</span><div class="wbar"><i style="width:22%"></i></div><span class="st">cooling · 2 done</span></div>
+      <div class="wrow alert"><span class="lbl">BODY &amp; MIND</span><div class="wbar"><i class="cold" style="width:6%"></i></div><span class="st">COLD 9d ← rescue</span></div>
+      <div class="wrow alert"><span class="lbl">RELATIONSHIP</span><div class="wbar"><i class="cold" style="width:9%"></i></div><span class="st">COLD 7d</span></div>
+    </div>
+  </section>
+
+  <!-- HABITS -->
+  <section id="habits">
+    <div class="shead"><h2>▌HABITS</h2><div class="rule"></div><span class="meta">30-day window · ■ hit · · miss · _ today</span></div>
+    <table>
+      <thead><tr><th>HABIT</th><th style="width:300px">LAST 30D</th><th class="num" style="width:80px">RATE</th><th class="num" style="width:90px">STREAK</th><th>FEEDS</th></tr></thead>
+      <tbody>
+        <tr><td><b>workout / run</b><span class="sub">today's rescue restarts it</span></td>
+          <td class="hgrid" data-h="1101110111011010110100000000000">—</td>
+          <td class="num">53%</td><td class="num fail">✕ 9d</td><td class="sub" style="font-size:12px">BODY&amp;MIND warmth</td></tr>
+        <tr><td><b>course study block</b><span class="sub">≥45 min</span></td>
+          <td class="hgrid" data-h="0110111011101110111011101101110">—</td>
+          <td class="num">73%</td><td class="num ok">6d</td><td class="sub" style="font-size:12px">GROWTH warmth</td></tr>
+        <tr><td><b>read 20 min</b></td>
+          <td class="hgrid" data-h="1011101110111111011111111111110">—</td>
+          <td class="num">83%</td><td class="num ok">12d</td><td class="sub" style="font-size:12px">GROWTH warmth</td></tr>
+        <tr><td><b>sleep by 23:30</b><span class="sub">from phone downtime</span></td>
+          <td class="hgrid" data-h="1010110010101101001011010110010">—</td>
+          <td class="num">50%</td><td class="num wn">0d</td><td class="sub" style="font-size:12px">BODY&amp;MIND warmth</td></tr>
+        <tr><td><b>inbox-zero sweep</b></td>
+          <td class="hgrid" data-h="0111011101110111011101110111110">—</td>
+          <td class="num">77%</td><td class="num ok">5d</td><td class="sub" style="font-size:12px">LIFE ADMIN warmth</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- MONEY -->
+  <section id="money">
+    <div class="shead"><h2>▌MONEY</h2><div class="rule"></div><span class="meta">finance-sync 02:15 · kite ok · csv Jul-05</span></div>
+    <div class="twocol">
+      <div class="panel">
+        <div class="kv"><span class="k">NET WORTH</span><span class="v bignum">₹18,42,000</span></div>
+        <canvas id="nw" width="460" height="90" style="width:100%;height:90px"></canvas>
+        <div class="kv"><span class="k">Δ month</span><span class="v up">+₹38,400 (+2.1%)</span></div>
+        <div class="kv"><span class="k">Δ year</span><span class="v up">+₹4.3L (+30.5%)</span></div>
+        <div class="kv"><span class="k">runway (cash / avg burn)</span><span class="v">4.8 months</span></div>
+      </div>
+      <div class="panel">
+        <div class="kv"><span class="k">JUL INCOME<span class="sub">2 freelance invoices</span></span><span class="v up">₹1,10,000</span></div>
+        <div class="meter"><i class="g" style="width:100%"></i></div>
+        <div class="kv"><span class="k">JUL SPEND<span class="sub">through Jul 8</span></span><span class="v">₹58,200 · 53%</span></div>
+        <div class="meter"><i style="width:53%"></i></div>
+        <div class="kv" style="margin-top:8px"><span class="k">top spend</span><span class="v">rent 22.0k · food 9.4k · infra 3.1k</span></div>
+      </div>
+    </div>
+    <div class="twocol" style="margin-top:24px">
+      <div class="panel">
+        <table>
+          <thead><tr><th>HOLDING</th><th class="num">VALUE</th><th class="num">DAY</th><th class="num">ALLOC</th></tr></thead>
+          <tbody>
+            <tr><td>Zerodha equity<span class="sub">kite connect</span></td><td class="num">₹6,20,000</td><td class="num up">+1.4%</td><td class="num">34%</td></tr>
+            <tr><td>Mutual funds<span class="sub">groww csv</span></td><td class="num">₹4,10,000</td><td class="num up">+0.3%</td><td class="num">22%</td></tr>
+            <tr><td>US stocks<span class="sub">manual</span></td><td class="num">$2,100</td><td class="num dn">−0.8%</td><td class="num">10%</td></tr>
+            <tr><td>Cash + FD</td><td class="num">₹2,80,000</td><td class="num">—</td><td class="num">15%</td></tr>
+            <tr><td>Other<span class="sub">EPF etc.</span></td><td class="num">₹3,50,000</td><td class="num">—</td><td class="num">19%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>DUE ≤14D</th><th class="num">AMT</th><th class="num">DATE</th><th class="num">T−</th></tr></thead>
+          <tbody>
+            <tr><td>HDFC credit card</td><td class="num">₹42,300</td><td class="num">Jul 12</td><td class="num dn">4d</td></tr>
+            <tr><td>Groq API<span class="sub">fleet infra</span></td><td class="num">$12</td><td class="num">Jul 15</td><td class="num">7d</td></tr>
+            <tr><td>GST filing<span class="sub">quarterly</span></td><td class="num">—</td><td class="num">Jul 20</td><td class="num wn">12d</td></tr>
+            <tr><td style="color:var(--faint)">rent ✓ paid</td><td class="num" style="color:var(--faint)">₹22,000</td><td class="num" style="color:var(--faint)">Jul 01</td><td class="num ok">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAREER -->
+  <section id="career">
+    <div class="shead"><h2>▌CAREER</h2><div class="rule"></div><span class="meta">job-scout ✕ · manual entries live</span></div>
+    <div class="twocol">
+      <div class="panel">
+        <table>
+          <thead><tr><th>PIPELINE</th><th>STAGE</th><th class="num">AGE</th><th>NEXT</th></tr></thead>
+          <tbody>
+            <tr><td><b>Zeta</b> — Backend Eng</td><td class="wn">INTERVIEW R2</td><td class="num">14d</td><td class="dn">pick slot TODAY</td></tr>
+            <tr><td><b>Razorpay</b> — Platform</td><td class="wn">INTERVIEW</td><td class="num">9d</td><td>sys-design Jul 14</td></tr>
+            <tr><td><b>Zomato</b> — SDE II</td><td>APPLIED</td><td class="num">6d</td><td class="idle">no reply — nudge?</td></tr>
+            <tr><td><b>CRED</b> — Backend</td><td>APPLIED</td><td class="num">10d</td><td class="idle">—</td></tr>
+            <tr><td><b>Sarvam AI</b> — Applied AI<span class="sub">job-scout match 87%</span></td><td class="ok">FOUND</td><td class="num">1d</td><td>apply?</td></tr>
+          </tbody>
+        </table>
+        <div class="kv" style="margin-top:6px"><span class="k">totals</span><span class="v">8 found · 14 applied · 3 interview · 6 closed</span></div>
+      </div>
+      <div class="panel">
+        <div class="kv"><span class="k">Agentic AI Engineering<span class="sub">module 4/7 · next: tool-use quiz (ON MISSION)</span></span><span class="v">62%</span></div>
+        <div class="meter"><i style="width:62%"></i></div>
+        <div class="kv" style="margin-top:10px"><span class="k">System Design Primer<span class="sub">next: consistent hashing → prep for Razorpay Jul 14</span></span><span class="v">30%</span></div>
+        <div class="meter"><i style="width:30%"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLEET -->
+  <section id="fleet">
+    <div class="shead"><h2>▌AGENT FLEET</h2><div class="rule"></div><span class="meta">6 agents · mixed infra (gha / pc / vps)</span></div>
+    <table>
+      <thead><tr><th style="width:54px">STATE</th><th>AGENT</th><th style="width:130px">INFRA</th><th style="width:130px">LAST RUN</th><th>LOG TAIL</th></tr></thead>
+      <tbody>
+        <tr><td class="ok">[OK]</td><td><b>daily-brief</b><span class="sub">writes morning brief → vault</span></td>
+          <td>gha · 05:30</td><td>05:31 · 42s</td><td class="sub" style="font-size:12px">brief.md committed · 6-day streak</td></tr>
+        <tr><td class="ok">[OK]</td><td><b>email-triage</b><span class="sub">gmail → flags + drafts</span></td>
+          <td>pc · hourly</td><td>09:00 · 8s</td><td class="sub" style="font-size:12px">12 scanned, 3 flagged, 2 drafts staged</td></tr>
+        <tr><td class="ok">[OK]</td><td><b>finance-sync</b><span class="sub">kite + csv → nw history</span></td>
+          <td>gha · 02:15</td><td>02:15 · 8s</td><td class="sub" style="font-size:12px">holdings updated · 31 runs, 0 fails</td></tr>
+        <tr><td class="fail">[FAIL]</td><td><b>job-scout</b><span class="sub">boards → pipeline drafts</span></td>
+          <td>pc · 07:00</td><td class="dn">✕2 · 07:00</td><td class="dn" style="font-size:12px">ERR linkedin session expired — re-auth required</td></tr>
+        <tr><td class="ok">[LIVE]</td><td><b>telegram-bot</b><span class="sub">text/voice/photo capture</span></td>
+          <td>vps · long-poll</td><td>push 08:42</td><td class="sub" style="font-size:12px">voice note → task created (id:: 8f2a…)</td></tr>
+        <tr><td class="idle">[IDLE]</td><td><b>supervisor</b><span class="sub">audits fleet logs, tunes prompts</span></td>
+          <td>gha · Sun 06:00</td><td>Jul 06</td><td class="sub" style="font-size:12px">next audit Sunday</td></tr>
+      </tbody>
+    </table>
+
+    <div class="panel" style="margin-top:16px;border-color:var(--amb-dim)">
+      <div class="shead" style="margin-bottom:8px"><h2 style="color:var(--amb);font-size:11.5px">SUPERVISOR REPORT · JUL 06</h2><div class="rule"></div></div>
+      <table>
+        <tbody>
+          <tr><td>email-triage</td><td>precision <b class="ok">91% (+4)</b></td><td class="sub">2/23 flags noise (newsletters w/ "invoice") → sender-domain rule added</td></tr>
+          <tr><td>job-scout</td><td>match quality <b class="wn">drifting</b></td><td class="sub">3/8 finds below seniority bar → prompt patch pending YOUR approval (vault: agents/supervisor/2026-07-06.md)</td></tr>
+          <tr><td>finance-sync</td><td><b class="ok">0 fails / 31 runs</b></td><td class="sub">recommend csv-parse weekly, saves 24 runs/mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">LIFEOS · OPTION B — OPS TERMINAL · one scroll, no tabs · all data illustrative</div>
+</main>
+
+<script>
+// clock
+setInterval(()=>{const d=new Date();
+  document.getElementById('clock').textContent=d.toTimeString().slice(0,8)},1000);
+
+// mode switch
+const notes={
+  am:'AM BRIEF — daily-brief wrote this at 05:31. Win 3 tasks and today counts.',
+  mid:'MIDDAY CHECK — 1/3 mission done. Deep-work block starts 13:00. Zeta slot still unpicked.',
+  pm:'PM REVIEW — 2/3 done, 5 tasks total. Meera reply still owed. Rescue seed queued for tomorrow.'};
+document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.modes button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('modenote').textContent=notes[b.dataset.m];
+});
+
+// habit grids: bitstring → glyphs (last char = today, pending)
+document.querySelectorAll('.hgrid').forEach(td=>{
+  const bits=td.dataset.h;let out='';
+  for(let i=0;i<bits.length;i++){
+    if(i===bits.length-1){out+='<span style="color:var(--amb)">_</span>';continue}
+    out+=bits[i]==='1'?'<span style="color:var(--amb)">■</span>'
+                      :'<span style="color:var(--faint)">·</span>';
+  }
+  td.innerHTML='<span style="letter-spacing:2px;font-size:12px">'+out+'</span>';
+});
+
+// net-worth sparkline, terminal style
+const nw=document.getElementById('nw'),c=nw.getContext('2d');
+const pts=[14.1,14.3,14.0,14.8,15.2,15.1,15.9,16.4,16.2,17.1,18.0,18.42];
+const w=nw.width,h=nw.height,min=13.5,max=19;
+const X=i=>i/(pts.length-1)*(w-10)+5,Y=v=>h-6-(v-min)/(max-min)*(h-16);
+c.strokeStyle='#1c2530';c.setLineDash([2,4]);
+for(let i=1;i<4;i++){c.beginPath();c.moveTo(0,h*i/4);c.lineTo(w,h*i/4);c.stroke()}
+c.setLineDash([]);
+c.beginPath();pts.forEach((v,i)=>i?c.lineTo(X(i),Y(v)):c.moveTo(X(i),Y(v)));
+c.strokeStyle='#ffb000';c.lineWidth=1.5;c.stroke();
+pts.forEach((v,i)=>{c.fillStyle=i===pts.length-1?'#ffb000':'#8a6200';
+  c.fillRect(X(i)-1.5,Y(v)-1.5,3,3)});
+</script>

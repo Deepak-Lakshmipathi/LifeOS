@@ -1,8 +1,13 @@
 # LifeOS — Handoff
 
-Last updated: 2026-07-08. Picks up after **the PWA is DEPLOYED and LIVE** — hosted on GitHub Pages, wired to a real private vault repo, installable, and confirmed loading real tasks on desktop **and** mobile. The whole slice backbone S1–S19 was already shipped (Groups A–E); this session took the PWA face from "runs locally" to "live on the internet with a self-hosted git path." The Telegram bot's owner-only live verify (S16c) is still the one outstanding gate.
+Last updated: 2026-07-08 (second session that day). Picks up after **the v2 vision + design language were locked** — a planning-only session (no code): the owner was grilled on what LifeOS v2 should be, three contrasting cockpit mockups were built, the **Glass Cockpit** direction was chosen, and `docs/DESIGN_LANGUAGE.md` was written as the canonical visual contract. The PWA remains deployed and live; the Telegram bot's owner-only live verify (S16c) is still the one outstanding gate.
 
-> **NEXT SESSION — read this first.** The PWA is live at **https://deepak-lakshmipathi.github.io/LifeOS/** (enter your vault PAT once, it clones the vault and loads your 107 tasks). Deploy is automatic on push to `master` via `.github/workflows/deploy-pages.yml`. No implementation slices remain; every kanban card is `done`. **The only outstanding blocker is the owner-only S16c bot live-verify** (see "Outstanding HITL") — an agent cannot do it. After that: real-usage feedback, then whatever Group F / v2 scope the owner decides. See the "Deployment" section below for the hosting + proxy + PAT model.
+> **NEXT SESSION — read this first.** Read `docs/DESIGN_LANGUAGE.md` (the LOCKED visual contract — every UI change must conform) and `memory/lifeos-v2-vision-2026-07-08.md` (the full v2 scope). The PWA is live at **https://deepak-lakshmipathi.github.io/LifeOS/**. No v1 slices remain. Next work, in order: (1) owner runs the S16c bot live-verify (unchanged, see "Outstanding HITL"); (2) execute **`docs/LIFEOS_V2_ROADMAP.md`** — the v2 slice backbone already exists (one slice = one issue = one Sonnet subagent), covering the cockpit reshape, habits, career, agents + supervisor, money, and Gmail/Calendar integrations, all landing data into the vault as markdown; (3) dispatch via afk-pipeline as usual.
+
+## v2 vision + design lock (this session, 2026-07-08 pm) 🎨
+- **LifeOS v2 = life cockpit, not task tracker.** Grill session locked scope: time-aware check-in cockpit (morning brief / midday check / evening review), Today's Mission (1–3 balance-brain picks, why + done_when always visible), unified Attention stack (client email, job replies, bills, agent failures — Gmail-fed), Life Vitals row, calendar blocks + gap hints, habits (each habit FEEDS a domain's warmth), money (net worth/burn/portfolio/bills; Zerodha/Groww/CSV first), career tab (job pipeline kanban + course progress), agent fleet health board incl. a **supervisor** agent (weekly log audit, accuracy metrics, prompt patches gated on owner approval — confirm-destructive spirit extends to agent self-modification). Full detail: `memory/lifeos-v2-vision-2026-07-08.md`.
+- **Design LOCKED: Glass Cockpit.** Three mockups built (`docs/mockups/cockpit-glass.html` ← chosen, `cockpit-terminal.html`, `cockpit-edition.html` — the other two kept for reference only). The contract extracted from the winner lives in **`docs/DESIGN_LANGUAGE.md`** — tokens, component specs, layout/IA (6 tabs: Home/Money/Career/Agents/Domains/Pulse), time-of-day system, motion/a11y, Do/Don'ts. Load it into every future coding session; deviations need a written one-line reason in the PR.
+- Nothing shipped to `src/` this session — docs + mockups only.
 
 ## What LifeOS is
 A personal, Apple-feel life tracker for a single user (the repo owner), built local-first as an installable PWA that runs offline on Windows and Android, with an Obsidian markdown vault as the real source of truth and three faces: **PWA dashboard, Telegram bot, Obsidian itself.** Seed data in `seed_tasks_detailed.json` (107 tasks) captures long-term intent. Read `CONTEXT.md` for the glossary, `docs/slices/README.md` for the slice backbone + product vision, `memory/lifeos-vision-2026-06-22.md` for full design rationale.
@@ -43,7 +48,9 @@ The PWA face is hosted, installable, and wired to a real vault. Everything is si
 ## Outstanding HITL — S16c live verify (owner-only, cannot be automated) ⛔
 S16c shipped CI-green but the git-network + live-Telegram path is not CI-verifiable (no remote/token/key in CI). The 5-case checklist at `afk-pipeline-out/s16c-verify-checklist.md` has **not** been run. Before trusting the bot in production, the owner must: set up `services/bot/.env` (bot-scoped `BOT_VAULT_PAT`, Telegram token via @BotFather, owner chat-id, `ANTHROPIC_API_KEY`), `cd services/bot && npm install && npm start`, then verify: (1) owner text → real commit (author `LifeOS Bot`, non-empty `id::`) → pushed → shows on PWA → `✓ added` reply; (2) offline commit survives + pushes on reconnect; (3) non-owner ignored; (4) ambiguous domain → Inbox; (5) non-create intent → "not yet supported". **An agent cannot do this.**
 
-## Next task — USER TESTING 🧪
+## Next task — v2 PLANNING + user testing 🧪
+(v2 planning now leads — see "v2 vision + design lock" above. The user-testing checklist below still stands for validating v1 while v2 is sliced.)
+
 No code slices remain. The PWA face is now **deployed and confirmed loading real tasks** (desktop + mobile), so the remaining job is real-usage testing + the one bot gate. The **guiding artifact is the "Get started & test" tab of `lifeos-hub.html`** (rebuild from source with `node scripts/build-hub.mjs .` — never hand-edit the generated HTML). It now covers both the hosted install path and local dev.
 
 Order of operations:
@@ -88,6 +95,9 @@ docs/adr/0011-…             bot transport / identity / router seam (S16)
 docs/adr/0012-bot-photo-vision.md      S19 (photo)
 docs/adr/0013-bot-confirm-destructive.md  S17 (confirm)
 docs/adr/0014-bot-voice-transcription.md  S18 (voice; renumbered from a parallel-run 0012 collision)
+docs/DESIGN_LANGUAGE.md     LOCKED v2 visual contract (Glass Cockpit) — read before ANY UI work
+docs/LIFEOS_V2_ROADMAP.md   v2 slice backbone (one slice = one issue = one subagent)
+docs/mockups/               cockpit-glass.html (chosen) + terminal/edition (reference only)
 kanban.html                 live board (#board-data JSON); all cards done
 lifeos-hub.html             GENERATED showcase (Overview/Get-Started/Kanban/Graph tabs) — edit scripts/build-hub.mjs then rebuild
 afk-pipeline-out/           deploy tables + s16c-verify-checklist.md
