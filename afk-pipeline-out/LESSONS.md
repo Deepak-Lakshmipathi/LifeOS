@@ -7,3 +7,4 @@ One line per lesson. P0 reads this file as context; P6 appends after every run. 
 - 2026-07-05 (S17/18/19b): `src/router.ts` is a hotspot — slices sharing it must serialize even with no dependency edge.
 - 2026-07-05: kanban board flips ship as separate CI-gated PRs, not folded into slice PRs.
 - 2026-07-01 (S14): docs branch left unmerged lagged master by 92 min — docs merge is part of the run, not a human chore (now P6).
+- 2026-07-10 (PRs #96/#97): pwa-e2e offline-persistence test flaked 2/2 first attempts (rerun-green both) - fingerprint recorded in config; test needs a stabilization fix, file it rather than normalizing reruns. Also: gh pr checks --watch exits 0 on failing checks - never chain it straight into gh pr merge; assert green explicitly.

@@ -16,7 +16,7 @@ Acceptance criteria in slices target **Vitest unit/component tests** (jsdom + Te
 
 Treat any red NOT matching an entry below as real until proven otherwise (inspect `--log-failed` first). A fingerprint entry needs: failing step name, error signature, typical run duration, and rerun-to-green evidence.
 
-- **pwa-e2e offline-persistence flake** — job `pwa-e2e` (Tier 1 Playwright), test `e2e/pwa.spec.ts:94 tasks added online persist after going offline and reloading`; signature `expect(getByText('emu-test')).toBeVisible()` timeout 8000ms, element(s) not found; run ~1m30s; rerun-to-green evidence: run 29077750317 (2026-07-10, docs-only diff PR #96 — could not have touched PWA runtime; failed, rerun passed).
+- **pwa-e2e offline-persistence flake** — job `pwa-e2e` (Tier 1 Playwright), test `e2e/pwa.spec.ts:94 tasks added online persist after going offline and reloading`; signature `expect(getByText('emu-test')).toBeVisible()` timeout 8000ms, element(s) not found; run ~1m30s; rerun-to-green evidence: runs 29077750317 (PR #96) and 29078008134 (PR #97), both 2026-07-10, both docs-only diffs — failed first attempt, rerun passed. **High frequency (2/2 first attempts that day): the test itself needs a stabilization fix (likely offline-reload timing), not just reruns.**
 
 ## Labels
 
