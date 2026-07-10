@@ -13,3 +13,7 @@ Canonical label names (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-f
 ### Domain docs
 
 Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### AFK pipeline config
+
+Per-repo constitution for the `afk-pipeline` skill (target repo, test policy, flake fingerprints, model tiers, hotspots): `docs/agents/afk-pipeline.md`. Lessons ledger + run manifests: `afk-pipeline-out/`.
