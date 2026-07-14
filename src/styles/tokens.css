@@ -1,0 +1,54 @@
+/**
+ * Glass Cockpit design tokens (S20).
+ * Verbatim from docs/DESIGN_LANGUAGE.md §2 — the LOCKED visual contract.
+ * Every later v2 slice consumes these tokens; never a raw value.
+ * Dark is the only theme.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* §2.1 Color — grounds + surfaces */
+  --bg: #0b0f1e;
+  --bg2: #10162b;
+  --panel: rgba(255,255,255,.055);
+  --panel-brd: rgba(255,255,255,.09);
+
+  /* §2.1 Color — text */
+  --txt: #e8ecf6;
+  --dim: #8b93ab;
+  --faint: #5a6178;
+
+  /* §2.1 Color — domains (canonical order: Building · Career · Growth ·
+     Life Admin · Body & Mind · Finance · Relationship) */
+  --d-build: #f59e0b;
+  --d-career: #38bdf8;
+  --d-growth: #a78bfa;
+  --d-admin: #94a3b8;
+  --d-body: #2dd4bf;
+  --d-fin: #4ade80;
+  --d-rel: #f472b6;
+
+  /* §2.1 Color — semantic state (marks state only; --d-fin shares #4ade80
+     with --good but is referenced by its own token) */
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+
+  /* §2.2 Type — the only font stack in the app */
+  --font-sans: "SF Pro Display", -apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+
+  /* §2.3 Radius */
+  --r: 18px;          /* card */
+  --r-tile: 14px;     /* vital tile · mission task · pipeline col */
+  --r-row: 12px;      /* attention row */
+  --r-job: 10px;      /* job card */
+  --r-chip: 9px;      /* calendar chip · icon well */
+  --r-dot: 4px;       /* habit dot */
+  --r-pill: 999px;    /* chips · pills · segments */
+
+  /* §2.3 Blur */
+  --blur-seg: 12px;
+  --blur-tile: 14px;  /* vitals + tab bar */
+  --blur-card: 16px;
+}

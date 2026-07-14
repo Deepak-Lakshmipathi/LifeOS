@@ -6,18 +6,39 @@ export default {
   ],
   theme: {
     extend: {
+      // Glass Cockpit (v2) — DESIGN_LANGUAGE.md §2.4, verbatim.
+      // The apple-*/ios/glass keys below are v1 and stay until each view is
+      // restyled onto tokens (S21+).
       fontFamily: {
         sans: [
-          '-apple-system',
-          'BlinkMacSystemFont',
           '"SF Pro Display"',
-          '"SF Pro Text"',
-          '"Helvetica Neue"',
-          'Arial',
+          '-apple-system',
+          '"Segoe UI Variable Display"',
+          '"Segoe UI"',
+          'system-ui',
           'sans-serif',
         ],
       },
       colors: {
+        bg: '#0b0f1e',
+        bg2: '#10162b',
+        txt: '#e8ecf6',
+        dim: '#8b93ab',
+        faint: '#5a6178',
+        good: '#4ade80',
+        warn: '#fbbf24',
+        bad: '#f87171',
+        domain: {
+          build: '#f59e0b',
+          career: '#38bdf8',
+          growth: '#a78bfa',
+          admin: '#94a3b8',
+          body: '#2dd4bf',
+          fin: '#4ade80',
+          rel: '#f472b6',
+        },
+        panel: 'rgba(255,255,255,.055)',
+        'panel-brd': 'rgba(255,255,255,.09)',
         apple: {
           blue: '#007AFF',
           green: '#34C759',
@@ -36,10 +57,17 @@ export default {
         },
       },
       borderRadius: {
+        card: '18px',
+        tile: '14px',
+        row: '12px',
+        chip: '9px',
         'ios': '12px',
         'ios-sm': '8px',
         'ios-lg': '16px',
       },
+      backdropBlur: { seg: '12px', tile: '14px', card: '16px' },
+      maxWidth: { shell: '1180px' },
+      transitionDuration: { DEFAULT: '200ms', tab: '300ms' },
       boxShadow: {
         'ios': '0 2px 8px rgba(0,0,0,0.08)',
         'ios-md': '0 4px 16px rgba(0,0,0,0.12)',
