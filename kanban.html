@@ -192,165 +192,820 @@
 <!-- ===================== CANONICAL DATA — edit freely ===================== -->
 <script id="board-data" type="application/json">
 {
-  "meta": { "project": "LifeOS", "updated": "2026-07-02", "note": "Groups A–D COMPLETE + Group E S16 (a/b/c) MERGED — Telegram bot text→create is live (S16c HITL merged CI-green; the 5-case live verify checklist afk-pipeline-out/s16c-verify-checklist.md is a tracked follow-up, not yet run). Group E modality slices SPECCED: S17 confirm-edit (#75/ADR-0013), S18 voice (#78/ADR-0014), S19 photo (#71+#72/ADR-0012) — all status:ready. HOTSPOT: S17 (#75), S18 (#78), S19b (#72) all edit services/bot/router.ts — do NOT dispatch in the same batch; serialize merges, each rebases on the prior. S19a (#71) is router-free and safe standalone. blockedBy reflects TRUE deps (not a strict linear chain)" },
-  "columns": [
-    { "id": "backlog", "name": "Backlog" },
-    { "id": "ready",   "name": "Ready" },
-    { "id": "progress","name": "In Progress" },
-    { "id": "done",    "name": "Done" }
-  ],
-  "cards": [
-    {
-      "id": "s1a", "title": "Local-first task loop", "column": "done", "slice": "S1",
-      "issue": 2, "pr": 4, "blockedBy": [],
-      "notes": "Dexie + SyncProvider seam, Apple-feel UI."
-    },
-    {
-      "id": "s1b", "title": "PWA shell: installable + offline", "column": "done", "slice": "S1",
-      "issue": 3, "pr": 6, "blockedBy": [],
-      "notes": "CI gates emulated PWA install/offline. See docs/testing/pwa-emulation-protocol.md."
-    },
-    {
-      "id": "s2a", "title": "done_when seam + Task model + hook", "column": "done", "slice": "S2",
-      "issue": 9, "pr": 11, "blockedBy": [],
-      "notes": "Seam went mutation-generic: add(input) + update(id, patch). ADR-0004."
-    },
-    {
-      "id": "s2b", "title": "done_when UI: create field, inline edit, render", "column": "done", "slice": "S2",
-      "issue": 10, "pr": 12, "blockedBy": ["s2a"],
-      "notes": "Always-visible 'Done when…' field, tap-title inline edit, secondary card render."
-    },
-    {
-      "id": "s3a", "title": "priority seam + Task model + Dexie v2 + hook", "column": "done", "slice": "S3",
-      "issue": 16, "pr": 18, "blockedBy": [],
-      "notes": "First Dexie index / schema-version bump. Merged to master 274f0b6."
-    },
-    {
-      "id": "s3b", "title": "priority UI: Low/Med/High control + weight badge", "column": "done", "slice": "S3",
-      "issue": 17, "pr": 21, "blockedBy": ["s3a"],
-      "notes": "Shared PriorityControl (1|2|3|undefined), weight badge. Merged 3079633 (#21; superseded #19). Closes S3."
-    },
-    {
-      "id": "s3prd", "title": "PRD: Slice S3 — Task gains priority", "column": "done", "slice": "S3",
-      "issue": 15, "pr": null, "blockedBy": [],
-      "notes": "Parent spec for S3a/S3b."
-    },
-    {
-      "id": "s4prd", "title": "PRD: Slice S4 — Task belongs to a Project", "column": "done", "slice": "S4",
-      "issue": 24, "pr": null, "blockedBy": [],
-      "notes": "Parent spec. Project = denormalized string on Task (ADR-0005); no Dexie index."
-    },
-    {
-      "id": "s4", "title": "Task belongs to a Project (project?: string + grouped list)", "column": "done", "slice": "S4",
-      "issue": 25, "pr": 26, "blockedBy": [],
-      "notes": "Atomic slice. project? on Task, native datalist suggestions, groupByProject -> Inbox-first sections. Seam widens only (ADR-0004), schema stays v2 (ADR-0005). Merged 4452220; docs PR #27."
-    },
-    {
-      "id": "s5prd", "title": "PRD: Slice S5 — Domain + seed the vault shape", "column": "done", "slice": "S5",
-      "issue": 29, "pr": null, "blockedBy": [],
-      "notes": "Parent spec. domain?: string (one of 7), denormalized string, no Dexie index (ADR-0005); seed-on-empty importer (ADR-0006)."
-    },
-    {
-      "id": "s5", "title": "Domain + seed (domain?: string + nested list + seed import)", "column": "done", "slice": "S5",
-      "issue": 30, "pr": 31, "blockedBy": [],
-      "notes": "Group A finale DONE (atomic slice, PRD #29; PR #31 squash eac5ed1). domain?: string (one of 7) + DOMAIN_COLORS palette + groupByDomain (Domain->Project->Task) + idempotent seedIfEmpty import of seed_tasks_detailed.json (107 tasks, ?noseed test hook). useTasks.refresh added (no liveQuery). Seam widens only (ADR-0004), schema stays v2 (ADR-0005/ADR-0006)."
-    },
-    {
-      "id": "s6prd", "title": "PRD: S6 NOW view (dumb brain)", "column": "done", "slice": "S6",
-      "issue": 34, "pr": 37, "blockedBy": [],
-      "notes": "Parent spec. Flat priority-ranked NOW surface; pure rankNow + Now/All toggle (ADR-0007). No model/seam change. Shipped — docs PR #37."
-    },
-    {
-      "id": "s6", "title": "NOW view (dumb brain)", "column": "done", "slice": "S6",
-      "issue": 35, "pr": 36, "blockedBy": [],
-      "notes": "Group B · Wave 1 DONE (PR #36 feat + #37 docs). First command-center surface — flat priority-ranked NOW list (no balance logic yet). rankNow(tasks) pure helper (priority desc, created_at asc, done excluded) + NowView (top 3 live, Up next/Later folded) + Now/All header toggle. ADR-0007. PRD #34. Now/All toggle later replaced by the S7 tab bar; balance logic added in S10."
-    },
-    {
-      "id": "s7", "title": "Tab bar navigation", "column": "done", "slice": "S7",
-      "issue": 39, "pr": 40, "blockedBy": ["s6"],
-      "notes": "Group B · Wave 1 DONE (dual-green merge, PR #40). Bottom tab-bar nav shell (Now/Domains/Pulse/+); deleted the throwaway Now/All toggle; add flow moved to + sheet. Unblocks Wave 2 (S8 ∥ S9)."
-    },
-    {
-      "id": "s8", "title": "Tap-the-dot complete + undo", "column": "done", "slice": "S8",
-      "issue": 41, "pr": 43, "blockedBy": ["s7"],
-      "notes": "Group B · Wave 2 DONE (dual-green merge, PR #43). Tap-dot → fill/✓/ring-pulse/fade-fold + 3s Undo toast; reduced-motion honored. No model/seam change. DEBT: TaskItem's createPortal Domains-undo path + TaskList go unused once S9 swaps Domains tab → tiles — remove in a cleanup chore."
-    },
-    {
-      "id": "s9", "title": "Domain warmth (derived) + Domains map", "column": "done", "slice": "S9",
-      "issue": 42, "pr": 44, "blockedBy": ["s7"],
-      "notes": "Group B · Wave 2 DONE (dual-green merge, PR #44). completed_at on Task (non-indexed, schema stays v2 — ADR-0005 extension); pure computeWarmth (5 buckets, 21 tests); DomainsMap warmth tiles replace the grouped list on the Domains tab. Cleanup of orphaned TaskList + S8 dead-path folded into S10."
-    },
-    {
-      "id": "s10", "title": "Balance brain v1", "column": "done", "slice": "S10",
-      "issue": 45, "pr": 46, "blockedBy": ["s9"],
-      "notes": "Group B · Wave 3 DONE (dual-green merge, PR #46). rankNow(tasks,warmth,opts) — priority order, ~2/domain cap, 1 rescue from coldest (cold/stale) domain; pure, 25 tests; ADR-0008. Cleanup folded in: deleted orphaned TaskList.tsx + S8 dead Domains-undo portal. Closes Group B logic."
-    },
-    {
-      "id": "s11", "title": "Glass / depth visual pass", "column": "done", "slice": "S11",
-      "issue": 47, "pr": 48, "blockedBy": ["s10"],
-      "notes": "Group C (skin) · Wave 4 DONE (dual-green merge, PR #48). GlassPanel primitive + glass tokens (tailwind/CSS vars), time-of-day gradient (pure timeOfDay helper, 16 tests), domain-color edge glow, frosted tab bar/header; reduced-transparency + reduced-motion fallbacks; PWA audit green. Glass system S12/S13 inherit."
-    },
-    {
-      "id": "s12", "title": "Smart capture on the + tab", "column": "done", "slice": "S12",
-      "issue": null, "pr": 49, "blockedBy": ["s11"],
-      "notes": "Group C · Wave 5 (∥ S13) DONE (dual-green merge, PR #49, commit 884de66). Pure parseCapture helper + CaptureSheet smart capture on the + tab."
-    },
-    {
-      "id": "s13", "title": "Pulse tab (light)", "column": "done", "slice": "S13",
-      "issue": null, "pr": null, "blockedBy": ["s11", "s9"],
-      "notes": "Group C · Wave 5 (∥ S12) DONE — CLOSES MVP (Groups A–C). doneThisWeek + completionsByDay pure metrics (injected clock, unit-tested); PulseView with count + warmth standings + 7-day sparkline; glass-styled; replaces S7 placeholder. No Dexie schema change."
-    },
-    {
-      "id": "s14", "title": "Obsidian vault read (VaultSync)", "column": "done", "slice": "S14",
-      "issue": 53, "pr": 54, "blockedBy": [],
-      "notes": "Group D · Wave 6 (SOLO) DONE — merged dual-green (PR #54). git-as-transport (ADR-0009): isomorphic-git in-browser clone behind VaultTransport iface; pure parseVault/parseTaskLine (52/52 tests); VaultSync read-only (mutations throw until S15); VITE_VAULT flag, LocalOnly stays default. NO schema change. PRD #52. Unblocks S15 write."
-    },
-    {
-      "id": "s15a", "title": "Vault write core (serializer + VaultSync mutations)", "column": "done", "slice": "S15a",
-      "issue": 57, "pr": 59, "blockedBy": [],
-      "notes": "Group D · PRD #56 · AFK DONE — merged dual-green (PR #59, 343/343 tests, ponytail-review green-lit). Pure serializeTaskLine + VaultSync real mutations (single-line splice, in-memory source-map identity, promise-chain write-queue) via a FAKE transport. writeFile added to VaultTransport iface + throwing GitTransport stub. NO Task-shape change (schema v2), NO id:: in markdown, NO migration (ADR-0010). Unblocks S15b."
-    },
-    {
-      "id": "s15b", "title": "Git write transport + wipe-fix + Inbox (HITL)", "column": "done", "slice": "S15b",
-      "issue": 58, "pr": 61, "blockedBy": [],
-      "notes": "Group D · PRD #56 · HITL DONE — CLOSES Group D (vault sync). Merged PR #61 (build-test + pwa-e2e green; owner hand-verified live-vault). Real GitTransport.writeFile (mkdir-recursive → add → local-authoritative commit → best-effort push) + wipe-reclone data-loss fix (only wipes when nothing ahead of origin) + top-level Inbox/ scan + parseVault Inbox-filename→project undefined. Git path behind VaultTransport iface, not CI-verifiable (no remote) — owner hand-verified add/toggle/update/delete-lands-as-commit, offline-commit-survives, Inbox round-trip with a write-scoped PAT. Vault now the real source of truth (VITE_VAULT=1). ADR-0010."
-    },
-    {
-      "id": "s16a", "title": "Vault id:: durable identity (parser + serializer)", "column": "done", "slice": "S16a",
-      "issue": 64, "pr": 67, "blockedBy": [],
-      "notes": "Group E · Wave 8 — PRD #63 · AFK, status:ready, no blockers. parseTaskLine reads optional id:: marker; serializeTaskLine always emits id:: (right after title, before done_when/priority). Legacy id-less lines unaffected until next write (lazy backfill, no bulk migration). No Task-shape/schema change. Unblocks S16b. ADR-0011 §3 (the id:: upgrade path ADR-0010 §2 named — S16 is the first second live mutator)."
-    },
-    {
-      "id": "s16b", "title": "Bot core: Telegram intent pipeline (owner guard, Claude NLU, router, create)", "column": "done", "slice": "S16b",
-      "issue": 65, "pr": 68, "blockedBy": ["s16a"],
-      "notes": "Group E · Wave 8 — PRD #63 · AFK, status:blocked on S16a. New services/bot/ (Node/TS, separate deployable). Owner-chat-id guard; Claude NLU (claude-sonnet-5, structured output, create-only this slice, NOT S12's regex parseCapture); self-registering intent-router seam in services/bot/intents/ (one append-only import per future S17/S18/S19 slice, ADR-0011 §4); create handler reuses serializeTaskLine (S15/S16a), writes via an injected VaultTransport tested against a fake (throwing stub for the real transport — S16c fills it in). Fully CI-testable, mirrors S15a's fake-transport pattern. Bot's own BOT_VAULT_PAT (ADR-0011 §2)."
-    },
-    {
-      "id": "s16c", "title": "Bot real vault transport + live Telegram wiring (HITL)", "column": "done", "slice": "S16c",
-      "issue": 66, "pr": 69, "blockedBy": ["s16b"],
-      "notes": "Group E · Wave 8 — PRD #63 · HITL (like S15b) — real isomorphic-git+Node-fs VaultTransport (mkdir-recursive -> add -> local-authoritative commit -> best-effort push, same discipline as S15b's GitTransport.writeFile) + real Telegram getUpdates long-poll loop (ADR-0011 §1: long-poll worker, not serverless webhook — keeps the git clone warm across messages). Not CI-verifiable (no remote/live Telegram/live Claude in CI) — needs owner hand-verify (real message -> vault commit -> dashboard shows it -> confirmation reply), exactly as S15b required. Closes Group E's create-only slice; unblocks S17."
-    },
-    {
-      "id": "s17", "title": "Telegram bot: confirm update/delete", "column": "done", "slice": "S17",
-      "issue": 75, "pr": 85, "blockedBy": [],
-      "notes": "Group E · Wave 9 · PRD #74 · ADR-0013 · status:ready (S16 merged). Single tracer-bullet (matcher/gate/handlers mutually load-bearing, not split). In-mem Map<chatId,PendingAction> + 2min TTL (services/bot/confirm/store.ts); fuzzy token-overlap targeting vs fresh parseVault (taskMatch.ts), not id::/last-created; bare y/n checked in router.ts BEFORE NLU (free for S18 voice too). Additive router gate + widened intents/types.ts; registry.ts/create.ts untouched. HOTSPOT: edits services/bot/router.ts — do NOT batch with S18 (#78) or S19b (#72); serialize, rebase second-merger."
-    },
-    {
-      "id": "s18", "title": "Telegram bot: voice notes", "column": "done", "slice": "S18",
-      "issue": 78, "pr": 87, "blockedBy": [],
-      "notes": "Group E · Wave 9 · PRD #77 · ADR-0014 · status:ready (dep S16 only, NOT S17). Voice note -> Groq Whisper (whisper-large-v3-turbo, OpenAI-compat /v1/audio/transcriptions via fetch/FormData, GROQ_API_KEY, no new SDK) -> confident transcript flows through UNMODIFIED S16 classifyAndExtract/dispatchIntent. OGG/Opus passthrough (no transcode). Confidence gate: non-empty text AND mean no_speech_prob<=0.5, else retype reply (no NLU/write). Pure AFK (read-only network; write reuses S16c's verified path). HOTSPOT: adds a voice branch to services/bot/router.ts — do NOT batch with S17 (#75) or S19b (#72)."
-    },
-    {
-      "id": "s19a", "title": "Bot photo ingest: Telegram download + Claude vision extract", "column": "done", "slice": "S19a",
-      "issue": 71, "pr": 81, "blockedBy": [],
-      "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · status:ready (S16 merged). Purely additive, router-FREE, independently unit-testable: telegramClient.ts photo detection + downloadPhoto (getFile -> HTTPS, image/jpeg per Telegram guarantee) + new visionExtract.ts (claude-sonnet-5 vision, {tasks:[...]} structured output capped 20, fields mirror nlu.ts minus intent). SAFE STANDALONE — dodges the router.ts hotspot; dispatch this one first. Unblocks S19b."
-    },
-    {
-      "id": "s19b", "title": "Bot photo batch-confirm + router wiring", "column": "done", "slice": "S19b",
-      "issue": 72, "pr": 83, "blockedBy": ["s19a"],
-      "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · blocked on S19a. New photoConfirm.ts (numbered-list reply; next text intercepted as all/none/subset; 10min per-chat TTL) + photo/confirm branches in services/bot/router.ts; confirmed tasks call the existing unmodified handleCreate once per task. HOTSPOT: edits services/bot/router.ts — do NOT batch with S17 (#75) or S18 (#78); serialize, rebase second-merger. Convergence point: S19's photoConfirm vs S17's generic confirm — possible later generalization pass (non-blocking)."
-    }
-  ]
+ "meta": {
+  "project": "LifeOS",
+  "updated": "2026-07-14",
+  "note": "v1 (S1-S19) DONE — 30 cards in done. v2 (S20-S57) loaded: 38 cards, tickets in docs/slices/, waves+deps via blockedBy. DISPATCH RULES: s24 alone (App.tsx). HomeView chain serial: s27>s28>s29>s32>s34>s37>s48>s50. VitalsRow chain: s26>s41>s45. AgentsView chain: s49>s53>s54. Parsers (s30/33/36/39/43/47) + agents (s35/38/42/46/51/55) + tab views (s40/44) fully parallel. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
+ },
+ "columns": [
+  {
+   "id": "backlog",
+   "name": "Backlog"
+  },
+  {
+   "id": "ready",
+   "name": "Ready"
+  },
+  {
+   "id": "progress",
+   "name": "In Progress"
+  },
+  {
+   "id": "done",
+   "name": "Done"
+  }
+ ],
+ "cards": [
+  {
+   "id": "s1a",
+   "title": "Local-first task loop",
+   "column": "done",
+   "slice": "S1",
+   "issue": 2,
+   "pr": 4,
+   "blockedBy": [],
+   "notes": "Dexie + SyncProvider seam, Apple-feel UI."
+  },
+  {
+   "id": "s1b",
+   "title": "PWA shell: installable + offline",
+   "column": "done",
+   "slice": "S1",
+   "issue": 3,
+   "pr": 6,
+   "blockedBy": [],
+   "notes": "CI gates emulated PWA install/offline. See docs/testing/pwa-emulation-protocol.md."
+  },
+  {
+   "id": "s2a",
+   "title": "done_when seam + Task model + hook",
+   "column": "done",
+   "slice": "S2",
+   "issue": 9,
+   "pr": 11,
+   "blockedBy": [],
+   "notes": "Seam went mutation-generic: add(input) + update(id, patch). ADR-0004."
+  },
+  {
+   "id": "s2b",
+   "title": "done_when UI: create field, inline edit, render",
+   "column": "done",
+   "slice": "S2",
+   "issue": 10,
+   "pr": 12,
+   "blockedBy": [
+    "s2a"
+   ],
+   "notes": "Always-visible 'Done when…' field, tap-title inline edit, secondary card render."
+  },
+  {
+   "id": "s3a",
+   "title": "priority seam + Task model + Dexie v2 + hook",
+   "column": "done",
+   "slice": "S3",
+   "issue": 16,
+   "pr": 18,
+   "blockedBy": [],
+   "notes": "First Dexie index / schema-version bump. Merged to master 274f0b6."
+  },
+  {
+   "id": "s3b",
+   "title": "priority UI: Low/Med/High control + weight badge",
+   "column": "done",
+   "slice": "S3",
+   "issue": 17,
+   "pr": 21,
+   "blockedBy": [
+    "s3a"
+   ],
+   "notes": "Shared PriorityControl (1|2|3|undefined), weight badge. Merged 3079633 (#21; superseded #19). Closes S3."
+  },
+  {
+   "id": "s3prd",
+   "title": "PRD: Slice S3 — Task gains priority",
+   "column": "done",
+   "slice": "S3",
+   "issue": 15,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Parent spec for S3a/S3b."
+  },
+  {
+   "id": "s4prd",
+   "title": "PRD: Slice S4 — Task belongs to a Project",
+   "column": "done",
+   "slice": "S4",
+   "issue": 24,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Parent spec. Project = denormalized string on Task (ADR-0005); no Dexie index."
+  },
+  {
+   "id": "s4",
+   "title": "Task belongs to a Project (project?: string + grouped list)",
+   "column": "done",
+   "slice": "S4",
+   "issue": 25,
+   "pr": 26,
+   "blockedBy": [],
+   "notes": "Atomic slice. project? on Task, native datalist suggestions, groupByProject -> Inbox-first sections. Seam widens only (ADR-0004), schema stays v2 (ADR-0005). Merged 4452220; docs PR #27."
+  },
+  {
+   "id": "s5prd",
+   "title": "PRD: Slice S5 — Domain + seed the vault shape",
+   "column": "done",
+   "slice": "S5",
+   "issue": 29,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Parent spec. domain?: string (one of 7), denormalized string, no Dexie index (ADR-0005); seed-on-empty importer (ADR-0006)."
+  },
+  {
+   "id": "s5",
+   "title": "Domain + seed (domain?: string + nested list + seed import)",
+   "column": "done",
+   "slice": "S5",
+   "issue": 30,
+   "pr": 31,
+   "blockedBy": [],
+   "notes": "Group A finale DONE (atomic slice, PRD #29; PR #31 squash eac5ed1). domain?: string (one of 7) + DOMAIN_COLORS palette + groupByDomain (Domain->Project->Task) + idempotent seedIfEmpty import of seed_tasks_detailed.json (107 tasks, ?noseed test hook). useTasks.refresh added (no liveQuery). Seam widens only (ADR-0004), schema stays v2 (ADR-0005/ADR-0006)."
+  },
+  {
+   "id": "s6prd",
+   "title": "PRD: S6 NOW view (dumb brain)",
+   "column": "done",
+   "slice": "S6",
+   "issue": 34,
+   "pr": 37,
+   "blockedBy": [],
+   "notes": "Parent spec. Flat priority-ranked NOW surface; pure rankNow + Now/All toggle (ADR-0007). No model/seam change. Shipped — docs PR #37."
+  },
+  {
+   "id": "s6",
+   "title": "NOW view (dumb brain)",
+   "column": "done",
+   "slice": "S6",
+   "issue": 35,
+   "pr": 36,
+   "blockedBy": [],
+   "notes": "Group B · Wave 1 DONE (PR #36 feat + #37 docs). First command-center surface — flat priority-ranked NOW list (no balance logic yet). rankNow(tasks) pure helper (priority desc, created_at asc, done excluded) + NowView (top 3 live, Up next/Later folded) + Now/All header toggle. ADR-0007. PRD #34. Now/All toggle later replaced by the S7 tab bar; balance logic added in S10."
+  },
+  {
+   "id": "s7",
+   "title": "Tab bar navigation",
+   "column": "done",
+   "slice": "S7",
+   "issue": 39,
+   "pr": 40,
+   "blockedBy": [
+    "s6"
+   ],
+   "notes": "Group B · Wave 1 DONE (dual-green merge, PR #40). Bottom tab-bar nav shell (Now/Domains/Pulse/+); deleted the throwaway Now/All toggle; add flow moved to + sheet. Unblocks Wave 2 (S8 ∥ S9)."
+  },
+  {
+   "id": "s8",
+   "title": "Tap-the-dot complete + undo",
+   "column": "done",
+   "slice": "S8",
+   "issue": 41,
+   "pr": 43,
+   "blockedBy": [
+    "s7"
+   ],
+   "notes": "Group B · Wave 2 DONE (dual-green merge, PR #43). Tap-dot → fill/✓/ring-pulse/fade-fold + 3s Undo toast; reduced-motion honored. No model/seam change. DEBT: TaskItem's createPortal Domains-undo path + TaskList go unused once S9 swaps Domains tab → tiles — remove in a cleanup chore."
+  },
+  {
+   "id": "s9",
+   "title": "Domain warmth (derived) + Domains map",
+   "column": "done",
+   "slice": "S9",
+   "issue": 42,
+   "pr": 44,
+   "blockedBy": [
+    "s7"
+   ],
+   "notes": "Group B · Wave 2 DONE (dual-green merge, PR #44). completed_at on Task (non-indexed, schema stays v2 — ADR-0005 extension); pure computeWarmth (5 buckets, 21 tests); DomainsMap warmth tiles replace the grouped list on the Domains tab. Cleanup of orphaned TaskList + S8 dead-path folded into S10."
+  },
+  {
+   "id": "s10",
+   "title": "Balance brain v1",
+   "column": "done",
+   "slice": "S10",
+   "issue": 45,
+   "pr": 46,
+   "blockedBy": [
+    "s9"
+   ],
+   "notes": "Group B · Wave 3 DONE (dual-green merge, PR #46). rankNow(tasks,warmth,opts) — priority order, ~2/domain cap, 1 rescue from coldest (cold/stale) domain; pure, 25 tests; ADR-0008. Cleanup folded in: deleted orphaned TaskList.tsx + S8 dead Domains-undo portal. Closes Group B logic."
+  },
+  {
+   "id": "s11",
+   "title": "Glass / depth visual pass",
+   "column": "done",
+   "slice": "S11",
+   "issue": 47,
+   "pr": 48,
+   "blockedBy": [
+    "s10"
+   ],
+   "notes": "Group C (skin) · Wave 4 DONE (dual-green merge, PR #48). GlassPanel primitive + glass tokens (tailwind/CSS vars), time-of-day gradient (pure timeOfDay helper, 16 tests), domain-color edge glow, frosted tab bar/header; reduced-transparency + reduced-motion fallbacks; PWA audit green. Glass system S12/S13 inherit."
+  },
+  {
+   "id": "s12",
+   "title": "Smart capture on the + tab",
+   "column": "done",
+   "slice": "S12",
+   "issue": null,
+   "pr": 49,
+   "blockedBy": [
+    "s11"
+   ],
+   "notes": "Group C · Wave 5 (∥ S13) DONE (dual-green merge, PR #49, commit 884de66). Pure parseCapture helper + CaptureSheet smart capture on the + tab."
+  },
+  {
+   "id": "s13",
+   "title": "Pulse tab (light)",
+   "column": "done",
+   "slice": "S13",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s11",
+    "s9"
+   ],
+   "notes": "Group C · Wave 5 (∥ S12) DONE — CLOSES MVP (Groups A–C). doneThisWeek + completionsByDay pure metrics (injected clock, unit-tested); PulseView with count + warmth standings + 7-day sparkline; glass-styled; replaces S7 placeholder. No Dexie schema change."
+  },
+  {
+   "id": "s14",
+   "title": "Obsidian vault read (VaultSync)",
+   "column": "done",
+   "slice": "S14",
+   "issue": 53,
+   "pr": 54,
+   "blockedBy": [],
+   "notes": "Group D · Wave 6 (SOLO) DONE — merged dual-green (PR #54). git-as-transport (ADR-0009): isomorphic-git in-browser clone behind VaultTransport iface; pure parseVault/parseTaskLine (52/52 tests); VaultSync read-only (mutations throw until S15); VITE_VAULT flag, LocalOnly stays default. NO schema change. PRD #52. Unblocks S15 write."
+  },
+  {
+   "id": "s15a",
+   "title": "Vault write core (serializer + VaultSync mutations)",
+   "column": "done",
+   "slice": "S15a",
+   "issue": 57,
+   "pr": 59,
+   "blockedBy": [],
+   "notes": "Group D · PRD #56 · AFK DONE — merged dual-green (PR #59, 343/343 tests, ponytail-review green-lit). Pure serializeTaskLine + VaultSync real mutations (single-line splice, in-memory source-map identity, promise-chain write-queue) via a FAKE transport. writeFile added to VaultTransport iface + throwing GitTransport stub. NO Task-shape change (schema v2), NO id:: in markdown, NO migration (ADR-0010). Unblocks S15b."
+  },
+  {
+   "id": "s15b",
+   "title": "Git write transport + wipe-fix + Inbox (HITL)",
+   "column": "done",
+   "slice": "S15b",
+   "issue": 58,
+   "pr": 61,
+   "blockedBy": [],
+   "notes": "Group D · PRD #56 · HITL DONE — CLOSES Group D (vault sync). Merged PR #61 (build-test + pwa-e2e green; owner hand-verified live-vault). Real GitTransport.writeFile (mkdir-recursive → add → local-authoritative commit → best-effort push) + wipe-reclone data-loss fix (only wipes when nothing ahead of origin) + top-level Inbox/ scan + parseVault Inbox-filename→project undefined. Git path behind VaultTransport iface, not CI-verifiable (no remote) — owner hand-verified add/toggle/update/delete-lands-as-commit, offline-commit-survives, Inbox round-trip with a write-scoped PAT. Vault now the real source of truth (VITE_VAULT=1). ADR-0010."
+  },
+  {
+   "id": "s16a",
+   "title": "Vault id:: durable identity (parser + serializer)",
+   "column": "done",
+   "slice": "S16a",
+   "issue": 64,
+   "pr": 67,
+   "blockedBy": [],
+   "notes": "Group E · Wave 8 — PRD #63 · AFK, status:ready, no blockers. parseTaskLine reads optional id:: marker; serializeTaskLine always emits id:: (right after title, before done_when/priority). Legacy id-less lines unaffected until next write (lazy backfill, no bulk migration). No Task-shape/schema change. Unblocks S16b. ADR-0011 §3 (the id:: upgrade path ADR-0010 §2 named — S16 is the first second live mutator)."
+  },
+  {
+   "id": "s16b",
+   "title": "Bot core: Telegram intent pipeline (owner guard, Claude NLU, router, create)",
+   "column": "done",
+   "slice": "S16b",
+   "issue": 65,
+   "pr": 68,
+   "blockedBy": [
+    "s16a"
+   ],
+   "notes": "Group E · Wave 8 — PRD #63 · AFK, status:blocked on S16a. New services/bot/ (Node/TS, separate deployable). Owner-chat-id guard; Claude NLU (claude-sonnet-5, structured output, create-only this slice, NOT S12's regex parseCapture); self-registering intent-router seam in services/bot/intents/ (one append-only import per future S17/S18/S19 slice, ADR-0011 §4); create handler reuses serializeTaskLine (S15/S16a), writes via an injected VaultTransport tested against a fake (throwing stub for the real transport — S16c fills it in). Fully CI-testable, mirrors S15a's fake-transport pattern. Bot's own BOT_VAULT_PAT (ADR-0011 §2)."
+  },
+  {
+   "id": "s16c",
+   "title": "Bot real vault transport + live Telegram wiring (HITL)",
+   "column": "done",
+   "slice": "S16c",
+   "issue": 66,
+   "pr": 69,
+   "blockedBy": [
+    "s16b"
+   ],
+   "notes": "Group E · Wave 8 — PRD #63 · HITL (like S15b) — real isomorphic-git+Node-fs VaultTransport (mkdir-recursive -> add -> local-authoritative commit -> best-effort push, same discipline as S15b's GitTransport.writeFile) + real Telegram getUpdates long-poll loop (ADR-0011 §1: long-poll worker, not serverless webhook — keeps the git clone warm across messages). Not CI-verifiable (no remote/live Telegram/live Claude in CI) — needs owner hand-verify (real message -> vault commit -> dashboard shows it -> confirmation reply), exactly as S15b required. Closes Group E's create-only slice; unblocks S17."
+  },
+  {
+   "id": "s17",
+   "title": "Telegram bot: confirm update/delete",
+   "column": "done",
+   "slice": "S17",
+   "issue": 75,
+   "pr": 85,
+   "blockedBy": [],
+   "notes": "Group E · Wave 9 · PRD #74 · ADR-0013 · status:ready (S16 merged). Single tracer-bullet (matcher/gate/handlers mutually load-bearing, not split). In-mem Map<chatId,PendingAction> + 2min TTL (services/bot/confirm/store.ts); fuzzy token-overlap targeting vs fresh parseVault (taskMatch.ts), not id::/last-created; bare y/n checked in router.ts BEFORE NLU (free for S18 voice too). Additive router gate + widened intents/types.ts; registry.ts/create.ts untouched. HOTSPOT: edits services/bot/router.ts — do NOT batch with S18 (#78) or S19b (#72); serialize, rebase second-merger."
+  },
+  {
+   "id": "s18",
+   "title": "Telegram bot: voice notes",
+   "column": "done",
+   "slice": "S18",
+   "issue": 78,
+   "pr": 87,
+   "blockedBy": [],
+   "notes": "Group E · Wave 9 · PRD #77 · ADR-0014 · status:ready (dep S16 only, NOT S17). Voice note -> Groq Whisper (whisper-large-v3-turbo, OpenAI-compat /v1/audio/transcriptions via fetch/FormData, GROQ_API_KEY, no new SDK) -> confident transcript flows through UNMODIFIED S16 classifyAndExtract/dispatchIntent. OGG/Opus passthrough (no transcode). Confidence gate: non-empty text AND mean no_speech_prob<=0.5, else retype reply (no NLU/write). Pure AFK (read-only network; write reuses S16c's verified path). HOTSPOT: adds a voice branch to services/bot/router.ts — do NOT batch with S17 (#75) or S19b (#72)."
+  },
+  {
+   "id": "s19a",
+   "title": "Bot photo ingest: Telegram download + Claude vision extract",
+   "column": "done",
+   "slice": "S19a",
+   "issue": 71,
+   "pr": 81,
+   "blockedBy": [],
+   "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · status:ready (S16 merged). Purely additive, router-FREE, independently unit-testable: telegramClient.ts photo detection + downloadPhoto (getFile -> HTTPS, image/jpeg per Telegram guarantee) + new visionExtract.ts (claude-sonnet-5 vision, {tasks:[...]} structured output capped 20, fields mirror nlu.ts minus intent). SAFE STANDALONE — dodges the router.ts hotspot; dispatch this one first. Unblocks S19b."
+  },
+  {
+   "id": "s19b",
+   "title": "Bot photo batch-confirm + router wiring",
+   "column": "done",
+   "slice": "S19b",
+   "issue": 72,
+   "pr": 83,
+   "blockedBy": [
+    "s19a"
+   ],
+   "notes": "Group E · Wave 9 · PRD #70 · ADR-0012 · blocked on S19a. New photoConfirm.ts (numbered-list reply; next text intercepted as all/none/subset; 10min per-chat TTL) + photo/confirm branches in services/bot/router.ts; confirmed tasks call the existing unmodified handleCreate once per task. HOTSPOT: edits services/bot/router.ts — do NOT batch with S17 (#75) or S18 (#78); serialize, rebase second-merger. Convergence point: S19's photoConfirm vs S17's generic confirm — possible later generalization pass (non-blocking)."
+  },
+  {
+   "id": "s20",
+   "title": "S20 — Glass tokens → tokens.css + Tailwind",
+   "column": "ready",
+   "slice": "S20",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "v2 Glass Cockpit · Phase 0 · Wave 0 · [UI] · ticket: docs/slices/slice-S20-glass-tokens.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Gates ALL v2. Byte-exact to DESIGN_LANGUAGE §2. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s21",
+   "title": "S21 — Glass primitives: Card/Chip/Vital/Segmented",
+   "column": "backlog",
+   "slice": "S21",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s20"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 0 · Wave 1 · [UI] · ticket: docs/slices/slice-S21-glass-primitives.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). New src/components/glass/. Cursor spotlight required on Card. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s22",
+   "title": "S22 — Aurora canvas background",
+   "column": "backlog",
+   "slice": "S22",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s20"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 0 · Wave 1 · [UI] · ticket: docs/slices/slice-S22-aurora-bg.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). rAF drift; reduced-motion = one static frame, no rAF. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s23",
+   "title": "S23 — useTimeOfDay: greeting/body-class/palette",
+   "column": "backlog",
+   "slice": "S23",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s20"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 0 · Wave 1 · [UI] · ticket: docs/slices/slice-S23-time-of-day.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). EXTENDS src/lib/timeOfDay.ts (v1). am/mid/pm boundaries tested. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s24",
+   "title": "S24 — Cockpit shell: 6-tab IA restructure",
+   "column": "backlog",
+   "slice": "S24",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s21"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 1 · Wave 2 · [UI] · ticket: docs/slices/slice-S24-cockpit-shell-tabs.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). HOTSPOT: the ONLY v2 slice allowed to touch src/App.tsx. DISPATCH ALONE. Creates all stub views (Header/VitalsRow/Home/Money/Career/Agents) so later slices never edit App. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s25",
+   "title": "S25 — Cockpit header: greeting + time seg + note",
+   "column": "backlog",
+   "slice": "S25",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24",
+    "s23"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 1 · Wave 3 · [UI] · ticket: docs/slices/slice-S25-cockpit-header.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Fills Header stub. Shine on greeting only. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s26",
+   "title": "S26 — Vitals row shell: 5 tiles, warmth live",
+   "column": "backlog",
+   "slice": "S26",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24",
+    "s21"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 1 · Wave 3 · [UI] · ticket: docs/slices/slice-S26-vitals-row.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Fills VitalsRow stub. CHAIN HEAD: S41→S45 extend this file. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s27",
+   "title": "S27 — Today’s Mission card",
+   "column": "backlog",
+   "slice": "S27",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 2 · Wave 4 · [UI] · ticket: docs/slices/slice-S27-todays-mission.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). HomeView CHAIN HEAD. Reuses rankNow + computeWarmth; new pure missionPicks; rescue ❄ chip; why+done_when always visible. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s28",
+   "title": "S28 — Mission dot-tap completes → warms domain",
+   "column": "backlog",
+   "slice": "S28",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s27"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 2 · Wave 5 · [UI] · ticket: docs/slices/slice-S28-mission-complete.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Reuse v1 complete flow via seam; undo works. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s29",
+   "title": "S29 — Evening Day Review card",
+   "column": "backlog",
+   "slice": "S29",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s28"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 2 · Wave 6 · [UI] · ticket: docs/slices/slice-S29-day-review.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). pm-only; dayStats pure fn. True dep S27; chain-serialized after S28. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s30",
+   "title": "S30 — Habits vault contract + parser",
+   "column": "backlog",
+   "slice": "S30",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 3 · Wave 3 · [UI] · ticket: docs/slices/slice-S30-habits-contract.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Habits/log.md append-only. Parser+fixture only, no UI. Fully parallel. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s31",
+   "title": "S31 — Habit hits feed domain warmth",
+   "column": "backlog",
+   "slice": "S31",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s30"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 3 · Wave 4 · [UI] · ticket: docs/slices/slice-S31-habits-warmth.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Widens computeWarmth(tasks, events?) back-compat; v1 tests untouched. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s32",
+   "title": "S32 — Habits card: 7-day grid + tap-today",
+   "column": "backlog",
+   "slice": "S32",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s29",
+    "s30"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 3 · Wave 7 · [UI] · ticket: docs/slices/slice-S32-habits-card.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). True dep S30; HomeView chain after S29. Tap appends via transport seam. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s33",
+   "title": "S33 — Calendar vault contract + parser",
+   "column": "backlog",
+   "slice": "S33",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 4 · Wave 3 · [UI] · ticket: docs/slices/slice-S33-calendar-contract.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Calendar/today.md + freeGaps pure logic. Fully parallel. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s34",
+   "title": "S34 — Today card: slots, chips, gap-fit hints",
+   "column": "backlog",
+   "slice": "S34",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s32",
+    "s33"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 4 · Wave 8 · [UI] · ticket: docs/slices/slice-S34-today-card.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). True dep S33; HomeView chain after S32. Every gap gets a suggested task. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s35",
+   "title": "S35 — calendar-sync agent (GH Actions)",
+   "column": "backlog",
+   "slice": "S35",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s33"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 4 · Wave 4 · [AGENT] · ticket: docs/slices/slice-S35-calendar-sync-agent.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owns Calendar/**. Own PAT. Mocked-API tests roundtrip via S33 parser. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s36",
+   "title": "S36 — Mail/attention vault contract + parser",
+   "column": "backlog",
+   "slice": "S36",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 5 · Wave 3 · [UI] · ticket: docs/slices/slice-S36-mail-contract.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Mail/attention.md, 5 labels, provenance fields. Fully parallel. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s37",
+   "title": "S37 — “Needs you” attention stack",
+   "column": "backlog",
+   "slice": "S37",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s34",
+    "s36"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 5 · Wave 9 · [UI] · ticket: docs/slices/slice-S37-attention-stack.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). True dep S36; HomeView chain after S34. Provenance sub-line mandatory (§8). Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s38",
+   "title": "S38 — email-triage agent (GH Actions + Claude)",
+   "column": "backlog",
+   "slice": "S38",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s36"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 5 · Wave 4 · [AGENT] · ticket: docs/slices/slice-S38-email-triage-agent.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owns Mail/**. Claude classify mocked in tests; drafts to Mail/drafts/. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s39",
+   "title": "S39 — Finance vault contracts + parsers",
+   "column": "backlog",
+   "slice": "S39",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 6 · Wave 3 · [UI] · ticket: docs/slices/slice-S39-finance-contracts.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). 4 files: networth table, portfolio, burn, bills. formatINR. Fully parallel. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s40",
+   "title": "S40 — Money tab: networth/burn/portfolio/bills",
+   "column": "backlog",
+   "slice": "S40",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s39"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 6 · Wave 4 · [UI] · ticket: docs/slices/slice-S40-money-tab.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Own dir src/components/money/: Sparkline, Donut, BarMeter, BillsList. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s41",
+   "title": "S41 — Wire net-worth + burn vital tiles",
+   "column": "backlog",
+   "slice": "S41",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s39",
+    "s26"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 6 · Wave 5 · [UI] · ticket: docs/slices/slice-S41-money-vitals.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). HOTSPOT VitalsRow chain: after S26, before S45. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s42",
+   "title": "S42 — finance-sync agent (THIS PC: Kite+Groww)",
+   "column": "backlog",
+   "slice": "S42",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s39"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 6 · Wave 4 · [AGENT] · ticket: docs/slices/slice-S42-finance-sync-agent.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owns Finance/** except bills.md. ONE atomic commit. Local creds only. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s43",
+   "title": "S43 — Career vault contracts + parsers",
+   "column": "backlog",
+   "slice": "S43",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 7 · Wave 3 · [UI] · ticket: docs/slices/slice-S43-career-contracts.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). pipeline.md (4 stages) + courses.md. Fully parallel. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s44",
+   "title": "S44 — Career tab: pipeline kanban + courses",
+   "column": "backlog",
+   "slice": "S44",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s43"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 7 · Wave 4 · [UI] · ticket: docs/slices/slice-S44-career-tab.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Own dir. REUSES money BarMeter (import, no copy). Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s45",
+   "title": "S45 — Pipeline vital + course→mission candidate",
+   "column": "backlog",
+   "slice": "S45",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s41",
+    "s43",
+    "s27"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 7 · Wave 6 · [UI] · ticket: docs/slices/slice-S45-career-vitals-mission.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). HOTSPOT VitalsRow (after S41) + missionPicks (after S27). Rescue logic untouched. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s46",
+   "title": "S46 — job-scout agent (GH Actions)",
+   "column": "backlog",
+   "slice": "S46",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s43"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 7 · Wave 4 · [AGENT] · ticket: docs/slices/slice-S46-job-scout-agent.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Append-only found entries; dedup; owner lines byte-untouched. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s47",
+   "title": "S47 — Agent-run contract: runs.jsonl + status.json",
+   "column": "backlog",
+   "slice": "S47",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s24"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 8 · Wave 3 · [UI] · ticket: docs/slices/slice-S47-agent-run-contract.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Substrate for fleet health. agents/lib/runLog.mjs + src/vault/agentStatus.ts. healthOf staleness thresholds. Blocks S48-S52,S56. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s48",
+   "title": "S48 — Fleet mini strip on Home",
+   "column": "backlog",
+   "slice": "S48",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s37",
+    "s47"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 8 · Wave 10 · [UI] · ticket: docs/slices/slice-S48-fleet-strip.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). True dep S47; HomeView chain after S37. Blink = red only. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s49",
+   "title": "S49 — Agents tab: fleet table",
+   "column": "backlog",
+   "slice": "S49",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s47"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 8 · Wave 4 · [UI] · ticket: docs/slices/slice-S49-agents-tab.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). AgentsView CHAIN HEAD (S53→S54 follow). 7-agent manifest; infra badges. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s50",
+   "title": "S50 — daily-brief agent + Home surface",
+   "column": "backlog",
+   "slice": "S50",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s48",
+    "s47"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 8 · Wave 11 · [AGENT] · ticket: docs/slices/slice-S50-daily-brief-agent.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owns Briefs/**. Claude compose, exactly 5 lines. Tiny HomeView edit — chain tail. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s51",
+   "title": "S51 — Bot logs runs → Health board",
+   "column": "backlog",
+   "slice": "S51",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s47"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 8 · Wave 4 · [AGENT] · ticket: docs/slices/slice-S51-bot-run-logging.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). services/bot only; heartbeat 15min; logging never breaks handling; 141 v1 tests untouched. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s52",
+   "title": "S52 — Supervisor report + proposal contracts",
+   "column": "backlog",
+   "slice": "S52",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s47"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 9 · Wave 4 · [UI] · ticket: docs/slices/slice-S52-supervisor-contract.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Report + proposals/ frontmatter (status pending/approved/rejected); setProposalStatus is byte-surgical. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s53",
+   "title": "S53 — Supervisor report card (Agents tab)",
+   "column": "backlog",
+   "slice": "S53",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s52",
+    "s49"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 9 · Wave 5 · [UI] · ticket: docs/slices/slice-S53-supervisor-card.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). AgentsView chain after S49. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s54",
+   "title": "S54 — Proposal approval flow (owner-gated)",
+   "column": "backlog",
+   "slice": "S54",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s52",
+    "s53"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 9 · Wave 6 · [UI] · ticket: docs/slices/slice-S54-proposal-approval.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Two-step approve (confirm-destructive, ADR-0013 spirit); flip via transport seam. AgentsView chain after S53. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s55",
+   "title": "S55 — supervisor agent (GH Actions weekly)",
+   "column": "backlog",
+   "slice": "S55",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s52"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 9 · Wave 5 · [AGENT] · ticket: docs/slices/slice-S55-supervisor-agent.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Proposals-only invariant: can never emit approved. Owns agents/supervisor/** + proposals/**. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s56",
+   "title": "S56 — Git-history guard: shallow + rotation",
+   "column": "backlog",
+   "slice": "S56",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s47"
+   ],
+   "notes": "v2 Glass Cockpit · Phase 10 · Wave 5 · [HARD] · ticket: docs/slices/slice-S56-git-history-guard.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). depth:1 both transports; monthly jsonl rotation; idempotent. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s57",
+   "title": "S57 — Per-agent scoped tokens + push wrapper",
+   "column": "backlog",
+   "slice": "S57",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "v2 Glass Cockpit · Phase 10 · Wave 5 · [HARD] · ticket: docs/slices/slice-S57-scoped-tokens-push.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). agents/lib/push.mjs pull-rebase-retry; docs/agents/vault-tokens.md inventory. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  }
+ ]
 }
 </script>
 <!-- ====================================================================== -->

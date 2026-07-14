@@ -51,6 +51,8 @@ S16c shipped CI-green but the git-network + live-Telegram path is not CI-verifia
 ## Next task — v2 EXECUTION 🚀
 v2 is fully prepped: design LOCKED (`docs/DESIGN_LANGUAGE.md`), backbone sliced + numbered (`docs/LIFEOS_V2_ROADMAP.md`, S20–S57), afk-pipeline v2 config seeded (`docs/agents/afk-pipeline.md`, PR #96), v1 archived (`docs/archive/V1_ARCHIVE.md`).
 
+**Tickets are CUT (2026-07-14):** all 38 v2 slices have dispatch-ready tickets in `docs/slices/slice-S20…S57` (context, write-set, subtasks, numbered DoD, tests) + kanban cards `s20…s57` with `blockedBy` = true dep graph + hotspot chains. Wave plan + hotspot rules: `docs/slices/README.md`. Merge gate is now **triple-green** — CI + review + an eval subagent that checks the PR diff against the ticket's DoD (process in `docs/agents/afk-pipeline.md` "Eval gate").
+
 Order of operations:
 1. **Dispatch Phase 0** (S20 tokens → S21 primitives → S22 aurora → S23 timeOfDay) via afk-pipeline — S21/S22/S23 all dep on S20, so S20 lands first, then the other three can run parallel (disjoint write-sets).
 2. Then Phase 1 (shell: S24 pill-tabs, S25 header, S26 vitals row) → Phase 2 (Home from existing data) → fan out Phases 3–7 in parallel.
