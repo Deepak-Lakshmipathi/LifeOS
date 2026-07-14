@@ -30,8 +30,8 @@ describe('design tokens (DESIGN_LANGUAGE §2.1)', () => {
   it.each([
     ['--bg', '#0b0f1e'],
     ['--bg2', '#10162b'],
-    ['--panel', 'rgba(255, 255, 255, .055)'],
-    ['--panel-brd', 'rgba(255, 255, 255, .09)'],
+    ['--panel', 'rgba(255,255,255,.055)'],
+    ['--panel-brd', 'rgba(255,255,255,.09)'],
     ['--txt', '#e8ecf6'],
     ['--dim', '#8b93ab'],
     ['--faint', '#5a6178'],

@@ -11,8 +11,8 @@
   /* §2.1 Color — grounds + surfaces */
   --bg: #0b0f1e;
   --bg2: #10162b;
-  --panel: rgba(255, 255, 255, .055);
-  --panel-brd: rgba(255, 255, 255, .09);
+  --panel: rgba(255,255,255,.055);
+  --panel-brd: rgba(255,255,255,.09);
 
   /* §2.1 Color — text */
   --txt: #e8ecf6;
