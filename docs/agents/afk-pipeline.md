@@ -30,4 +30,18 @@ Canonical vocabulary in [triage-labels.md](triage-labels.md): `ready-for-agent`,
 
 ## Known hotspots
 
-`src/router.ts` — nav registration; any two slices touching it must serialize (see S17/18/19b run).
+- `services/bot/router.ts` — message-ingest dispatch; any two slices touching it must serialize (see S17/18/19b run).
+- **v2 (S20–S57):** `src/App.tsx` — S24 ONLY, dispatched alone, ever. `src/components/home/HomeView.tsx` — chain s27→s28→s29→s32→s34→s37→s48→s50, serialize + rebase. `src/components/cockpit/VitalsRow.tsx` — s26→s41→s45. `src/components/agents/AgentsView.tsx` — s49→s53→s54. All other v2 slices are pairwise-disjoint (vault parsers = one `src/vault/*.ts` file each; agents = one `agents/<name>/` dir each; tab views = one dir each).
+
+## Eval gate (v2 — the third green, MANDATORY before merge)
+
+Every v2 slice PR merges only on **triple-green**:
+
+1. **CI green** (build-test; bot-test when `services/bot` touched).
+2. **Review green** (ponytail-review).
+3. **Eval green** — dispatch a FRESH read-only eval subagent (Sonnet; not the implementer, no shared context) with exactly three inputs: (a) the slice ticket `docs/slices/slice-S##-*.md`, (b) `gh pr diff <N>`, (c) the CI run result. It must:
+   - verify each numbered **Definition of Done** item against the diff, one row per item: `#N — PASS/FAIL — evidence (file:line or test name)`;
+   - check the diff stays inside the ticket's **Write-set** (out-of-scope files = FAIL unless the PR body carries a one-line justified deviation);
+   - for **[UI]** slices, check design-language conformance: tokens only (no new raw colors/radii/blurs), reduced-motion honored, §8 Do/Don't not violated;
+   - end with `VERDICT: PASS` or `VERDICT: FAIL` + the table, posted as a PR comment.
+   FAIL → back to the implementer with the table; a 2nd FAIL escalates the implementer one model tier (standard escalation rule). No human override recorded in the ticket = no merge on FAIL.
