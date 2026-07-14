@@ -5,7 +5,7 @@
   "description": "LifeOS Telegram bot — text capture over the shared vault (S16b/S16c, ADR-0011). Standalone Node/TS process, separate from the Vite/React PWA.",
   "type": "module",
   "scripts": {
-    "start": "tsx index.ts",
+    "start": "tsx --env-file=.env index.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
