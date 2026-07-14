@@ -17,11 +17,12 @@ Telegram conversation.
 2. A Telegram bot registered with `@BotFather`, its token, and your own
    Telegram chat id (message the bot once, or use `@userinfobot`, to find
    it).
-3. A real `ANTHROPIC_API_KEY`.
+3. A real `ANTHROPIC_API_KEY`, and a `GROQ_API_KEY` (S18 made it a required
+   boot var even for text-only verification).
 4. `services/bot/.env` (copied from `.env.example`, gitignored) filled in
-   with all five vars: `TELEGRAM_BOT_TOKEN`, `BOT_VAULT_PAT`,
-   `BOT_VAULT_REPO_URL`, `ANTHROPIC_API_KEY`, `OWNER_TELEGRAM_CHAT_ID`
-   (`BOT_VAULT_CLONE_DIR` optional).
+   with all six required vars: `TELEGRAM_BOT_TOKEN`, `BOT_VAULT_PAT`,
+   `BOT_VAULT_REPO_URL`, `ANTHROPIC_API_KEY`, `GROQ_API_KEY` (added by S18),
+   `OWNER_TELEGRAM_CHAT_ID` (`BOT_VAULT_CLONE_DIR` optional).
 5. `cd services/bot && npm install && npm start` — leave it running for the
    cases below.
 

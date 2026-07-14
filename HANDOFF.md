@@ -1,8 +1,8 @@
 # LifeOS — Handoff
 
-Last updated: 2026-07-08 (second session that day). Picks up after **the v2 vision + design language were locked** — a planning-only session (no code): the owner was grilled on what LifeOS v2 should be, three contrasting cockpit mockups were built, the **Glass Cockpit** direction was chosen, and `docs/DESIGN_LANGUAGE.md` was written as the canonical visual contract. The PWA remains deployed and live; the Telegram bot's owner-only live verify (S16c) is still the one outstanding gate.
+Last updated: 2026-07-14. Picks up after the **v1 housekeeping session**: all v1 planning docs (`docs/slices/*` + v1 run artifacts) were collapsed into **`docs/archive/V1_ARCHIVE.md`** (PR #99), the v2 roadmap slices were renumbered **S20–S57** (continuing v1's S1–S19 convention), and the S16c verify prep landed (`GROQ_API_KEY` now a required boot var; bot `npm start` loads `.env` via `tsx --env-file`). The PWA remains deployed and live; the Telegram bot's owner-only live verify (S16c) is still the one outstanding gate.
 
-> **NEXT SESSION — read this first.** Read `docs/DESIGN_LANGUAGE.md` (the LOCKED visual contract — every UI change must conform) and `memory/lifeos-v2-vision-2026-07-08.md` (the full v2 scope). The PWA is live at **https://deepak-lakshmipathi.github.io/LifeOS/**. No v1 slices remain. Next work, in order: (1) owner runs the S16c bot live-verify (unchanged, see "Outstanding HITL"); (2) execute **`docs/LIFEOS_V2_ROADMAP.md`** — the v2 slice backbone already exists (one slice = one issue = one Sonnet subagent), covering the cockpit reshape, habits, career, agents + supervisor, money, and Gmail/Calendar integrations, all landing data into the vault as markdown; (3) dispatch via afk-pipeline as usual.
+> **NEXT SESSION — START V2.** Read `docs/DESIGN_LANGUAGE.md` (the LOCKED visual contract — every UI change must conform) and **`docs/LIFEOS_V2_ROADMAP.md`** (the v2 backbone, slices S20–S57; one slice = one issue = one Sonnet subagent). The PWA is live at **https://deepak-lakshmipathi.github.io/LifeOS/**. Begin **Phase 0** (gates everything): S20 Glass tokens → S21 primitives → S22 aurora bg → S23 `useTimeOfDay` — dispatch each via afk-pipeline as usual, feeding `docs/DESIGN_LANGUAGE.md` into every `[UI]` slice. After Phase 0+1, Phases 3–7 fan out in parallel (path-partitioned). In parallel, the owner still owes the S16c bot live-verify (see "Outstanding HITL") — it gates bot production-trust, not v2 work.
 
 ## v2 vision + design lock (this session, 2026-07-08 pm) 🎨
 - **LifeOS v2 = life cockpit, not task tracker.** Grill session locked scope: time-aware check-in cockpit (morning brief / midday check / evening review), Today's Mission (1–3 balance-brain picks, why + done_when always visible), unified Attention stack (client email, job replies, bills, agent failures — Gmail-fed), Life Vitals row, calendar blocks + gap hints, habits (each habit FEEDS a domain's warmth), money (net worth/burn/portfolio/bills; Zerodha/Groww/CSV first), career tab (job pipeline kanban + course progress), agent fleet health board incl. a **supervisor** agent (weekly log audit, accuracy metrics, prompt patches gated on owner approval — confirm-destructive spirit extends to agent self-modification). Full detail: `memory/lifeos-v2-vision-2026-07-08.md`.
@@ -48,16 +48,14 @@ The PWA face is hosted, installable, and wired to a real vault. Everything is si
 ## Outstanding HITL — S16c live verify (owner-only, cannot be automated) ⛔
 S16c shipped CI-green but the git-network + live-Telegram path is not CI-verifiable (no remote/token/key in CI). The 5-case checklist at `afk-pipeline-out/s16c-verify-checklist.md` has **not** been run. Before trusting the bot in production, the owner must: set up `services/bot/.env` (bot-scoped `BOT_VAULT_PAT`, Telegram token via @BotFather, owner chat-id, `ANTHROPIC_API_KEY`), `cd services/bot && npm install && npm start`, then verify: (1) owner text → real commit (author `LifeOS Bot`, non-empty `id::`) → pushed → shows on PWA → `✓ added` reply; (2) offline commit survives + pushes on reconnect; (3) non-owner ignored; (4) ambiguous domain → Inbox; (5) non-create intent → "not yet supported". **An agent cannot do this.**
 
-## Next task — v2 PLANNING + user testing 🧪
-(v2 planning now leads — see "v2 vision + design lock" above. The user-testing checklist below still stands for validating v1 while v2 is sliced.)
-
-No code slices remain. The PWA face is now **deployed and confirmed loading real tasks** (desktop + mobile), so the remaining job is real-usage testing + the one bot gate. The **guiding artifact is the "Get started & test" tab of `lifeos-hub.html`** (rebuild from source with `node scripts/build-hub.mjs .` — never hand-edit the generated HTML). It now covers both the hosted install path and local dev.
+## Next task — v2 EXECUTION 🚀
+v2 is fully prepped: design LOCKED (`docs/DESIGN_LANGUAGE.md`), backbone sliced + numbered (`docs/LIFEOS_V2_ROADMAP.md`, S20–S57), afk-pipeline v2 config seeded (`docs/agents/afk-pipeline.md`, PR #96), v1 archived (`docs/archive/V1_ARCHIVE.md`).
 
 Order of operations:
-1. **Owner runs the S16c bot live-verify** (see Outstanding HITL below) — the last production-trust gate. An agent cannot do it.
-2. Walk the PWA checklist against the **live site** (capture, complete/undo, warmth, Pulse, offline, install-from-hosted, and confirm an edit lands as a commit in `LiveOS-VaultRepo` + shows in the Cloudflare Worker logs).
-3. Walk the bot checklist (photo batch `all`/`none`/subset, voice confident vs muffled, confirm-gated edit/delete `y`/`n`/timeout/stale-target).
-4. Capture feedback → file issues → decide v2 / Group F scope.
+1. **Dispatch Phase 0** (S20 tokens → S21 primitives → S22 aurora → S23 timeOfDay) via afk-pipeline — S21/S22/S23 all dep on S20, so S20 lands first, then the other three can run parallel (disjoint write-sets).
+2. Then Phase 1 (shell: S24 pill-tabs, S25 header, S26 vitals row) → Phase 2 (Home from existing data) → fan out Phases 3–7 in parallel.
+3. **In parallel, owner runs the S16c bot live-verify** (see Outstanding HITL below) — the last v1 production-trust gate. An agent cannot do it. Prep is done (`.env` autoload, checklist updated for `GROQ_API_KEY`).
+4. v1 user-testing checklist ("Get started & test" tab of `lifeos-hub.html`) still stands — walk it as real usage alongside v2 work; feedback → issues.
 
 Known follow-ups (non-blocking): the Pages deploy workflow's `actions/*@v4` run on a deprecated Node 20 (bump when convenient); the runtime PAT uses a `window.prompt` (fine for single-user; a small settings input is the obvious upgrade).
 
