@@ -1,3 +1,5 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -27,11 +29,12 @@
 
   body {
     @apply antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    /* Background is set dynamically by App.tsx via time-of-day gradient.
-       This fallback solid keeps things readable if JS hasn't run yet. */
-    background-color: #EBF6FE;
-    color: #000000;
+    font-family: var(--font-sans);
+    /* Glass Cockpit ground (DESIGN_LANGUAGE §2.1). App.tsx still paints a v1
+       time-of-day gradient over this at runtime; S22 (aurora) + S24 (shell)
+       remove that and let --bg show through. */
+    background-color: var(--bg);
+    color: var(--txt);
   }
 }
 
