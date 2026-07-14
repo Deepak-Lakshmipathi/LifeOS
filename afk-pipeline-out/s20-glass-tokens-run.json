@@ -1,0 +1,32 @@
+{
+  "slug": "s20-glass-tokens",
+  "slice": "S20",
+  "mode": "auto",
+  "path": "light (single pre-resolved slice; ticket carried PRD-lite + DoD, so P1 grill / P2 spec / P3 breakdown were skipped)",
+  "date": "2026-07-14",
+  "issue": 103,
+  "pr": 104,
+  "merge_commit": "dc47069",
+  "phases": {
+    "p0_context": "config + LESSONS.md + ticket + DESIGN_LANGUAGE §2/§3 loaded",
+    "p5_dispatch": "orchestrator implemented inline — no subagent dispatched",
+    "p6_retro": "board flip + manifest + lessons"
+  },
+  "attempts": 1,
+  "review_rejects": 0,
+  "eval_rejects": 0,
+  "flake_reruns": 0,
+  "fallbacks_fired": [],
+  "triple_green": {
+    "ci": "green first attempt on both heads (build-test, bot-test, pwa-e2e); pwa-e2e did NOT flake this run",
+    "review": "ponytail-review green; flagged 1 tautological test, declined (ticket subtask 4 mandates it verbatim)",
+    "eval": "fresh Sonnet subagent, VERDICT: PASS — 5/5 DoD, write-set clean; caught --panel/--panel-brd spaced-vs-compact rgba drift, fixed pre-merge"
+  },
+  "deviations": [
+    "Tailwind extend MERGED with v1 apple-*/ios/glass keys rather than replaced — replacing breaks every shipped v1 component and fails DoD #4. v1 keys retire per-view in S21+.",
+    "body sits on --bg/--txt but App.tsx (S24's exclusive hotspot, out of write-set) still paints the v1 light gradient at runtime — dark ground lands visibly with S22/S24."
+  ],
+  "out_of_scope_findings": [
+    "tailwind.config.js carries a v1 `spring: cubic-bezier(0.34, 1.56, 0.64, 1)` bounce easing; v2 motion contract §7 has no bounce. Untouched (not in write-set) — candidate for a v1-teardown slice."
+  ]
+}
