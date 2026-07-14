@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { getTimeOfDay, TIME_GRADIENTS, TIME_SOLID_BG } from './timeOfDay'
+import { getTimeOfDay, TIME_GRADIENTS, TIME_SOLID_BG, cockpitMode } from './timeOfDay'
 import type { TimeOfDayBucket } from './timeOfDay'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -119,5 +119,41 @@ describe('TIME_SOLID_BG', () => {
     for (const b of buckets) {
       expect(TIME_SOLID_BG[b]).toMatch(/^#[0-9A-Fa-f]{6}$/)
     }
+  })
+})
+
+// ── cockpitMode (v2, docs/DESIGN_LANGUAGE.md §6) ─────────────────────────────
+//
+// Boundary-exact tests per S23 DoD #1: 11:59 / 12:00 / 17:59 / 18:00.
+
+describe('cockpitMode', () => {
+  function tsAt(hour: number, minute: number): number {
+    const d = new Date(2024, 0, 15) // Jan 15 2024, arbitrary fixed day
+    d.setHours(hour, minute, 0, 0)
+    return d.getTime()
+  }
+
+  it('returns "am" at 00:00 (midnight)', () => {
+    expect(cockpitMode(tsAt(0, 0))).toBe('am')
+  })
+
+  it('returns "am" at 11:59 (last minute before mid)', () => {
+    expect(cockpitMode(tsAt(11, 59))).toBe('am')
+  })
+
+  it('returns "mid" at 12:00 (mid boundary start)', () => {
+    expect(cockpitMode(tsAt(12, 0))).toBe('mid')
+  })
+
+  it('returns "mid" at 17:59 (last minute before pm)', () => {
+    expect(cockpitMode(tsAt(17, 59))).toBe('mid')
+  })
+
+  it('returns "pm" at 18:00 (pm boundary start)', () => {
+    expect(cockpitMode(tsAt(18, 0))).toBe('pm')
+  })
+
+  it('returns "pm" at 23:59 (end of day)', () => {
+    expect(cockpitMode(tsAt(23, 59))).toBe('pm')
   })
 })
