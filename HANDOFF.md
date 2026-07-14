@@ -1,13 +1,36 @@
 # LifeOS — Handoff
 
-Last updated: 2026-07-14. Picks up after the **v1 housekeeping session**: all v1 planning docs (`docs/slices/*` + v1 run artifacts) were collapsed into **`docs/archive/V1_ARCHIVE.md`** (PR #99), the v2 roadmap slices were renumbered **S20–S57** (continuing v1's S1–S19 convention), and the S16c verify prep landed (`GROQ_API_KEY` now a required boot var; bot `npm start` loads `.env` via `tsx --env-file`). The PWA remains deployed and live; the Telegram bot's owner-only live verify (S16c) is still the one outstanding gate.
+Last updated: 2026-07-14 (pm). Picks up after the **S20 session**: v2 Wave 0 is **merged** — the Glass Cockpit design tokens are in code (PR #104 `dc47069`, board flip #105 `abbf9b8`). Wave 1 is now fully unblocked. The PWA remains deployed and live; the Telegram bot's owner-only live verify (S16c) is still the one outstanding human gate.
 
-> **NEXT SESSION — START V2.** Read `docs/DESIGN_LANGUAGE.md` (the LOCKED visual contract — every UI change must conform) and **`docs/LIFEOS_V2_ROADMAP.md`** (the v2 backbone, slices S20–S57; one slice = one issue = one Sonnet subagent). The PWA is live at **https://deepak-lakshmipathi.github.io/LifeOS/**. Begin **Phase 0** (gates everything): S20 Glass tokens → S21 primitives → S22 aurora bg → S23 `useTimeOfDay` — dispatch each via afk-pipeline as usual, feeding `docs/DESIGN_LANGUAGE.md` into every `[UI]` slice. After Phase 0+1, Phases 3–7 fan out in parallel (path-partitioned). In parallel, the owner still owes the S16c bot live-verify (see "Outstanding HITL") — it gates bot production-trust, not v2 work.
+> **NEXT SESSION — DISPATCH WAVE 1 (4 slices, in parallel).** Run `/lifeos-boot`, then fan out **S21 · S22 · S23 · S57** concurrently — one Sonnet subagent per slice, each in its **own git worktree off fresh `origin/master`**, each dispatched as `/afk-pipeline auto` with its whole ticket file as input. Their write-sets are pairwise disjoint (verified below), so they cannot conflict. Feed `docs/DESIGN_LANGUAGE.md` into every `[UI]` slice. Merge each on **triple-green** (CI + ponytail-review + fresh eval subagent vs the ticket's numbered DoD). **Then S24 ALONE** — it is the sole `src/App.tsx` toucher, ever, and it gates the 8-wide Wave 3.
+
+### Wave 1 dispatch table (copy this into the next session)
+
+| Slice | Ticket | Write-set (why it's safe to parallelize) | Model |
+|---|---|---|---|
+| **S21** — Glass primitives | `docs/slices/slice-S21-glass-primitives.md` | NEW `src/components/glass/{Card,Chip,Vital,Segmented}.tsx` (+ tests). New dir; touches no existing component. | Sonnet |
+| **S22** — Aurora canvas | `docs/slices/slice-S22-aurora-bg.md` | NEW `src/components/glass/Aurora.tsx` (+ test). Same dir as S21 but **different files** — git merges cleanly. | Sonnet |
+| **S23** — `useTimeOfDay` | `docs/slices/slice-S23-time-of-day.md` | MODIFY `src/lib/timeOfDay.ts` (+ its test), NEW `src/hooks/useTimeOfDay.ts` (+ test). Disjoint from `components/**`. | Sonnet |
+| **S57** — Scoped tokens + push wrapper | `docs/slices/slice-S57-scoped-tokens-push.md` | NEW `agents/lib/push.mjs` (+ test), NEW `docs/agents/vault-tokens.md`. `Deps: none`; zero overlap with `src/**`. Hardening — pull it forward because it's free parallelism. | Sonnet |
+
+**Concurrency ceiling is 4 — not "everything".** The v2 graph is 11 waves deep and two chains are irreducibly serial: `src/App.tsx` (S24 alone, always) and `src/components/home/HomeView.tsx` (S27→S28→S29→S32→S34→S37→S48→S50, each mounting one card, rebase onto prior merge). `VitalsRow` (S26→S41→S45) and `AgentsView` (S49→S53→S54) serialize too. Real fan-out arrives at **Wave 3** (8 slices: S25·S26·S30·S33·S36·S39·S43·S47) once S24 lands the stub views. Full table: `docs/slices/README.md`.
+
+**After Wave 1 → S24 (alone) → Wave 3 (8-wide).** Do not batch a hotspot-sharing slice with anything — v1's hardest-won lesson (`afk-pipeline-out/LESSONS.md`).
 
 ## v2 vision + design lock (this session, 2026-07-08 pm) 🎨
 - **LifeOS v2 = life cockpit, not task tracker.** Grill session locked scope: time-aware check-in cockpit (morning brief / midday check / evening review), Today's Mission (1–3 balance-brain picks, why + done_when always visible), unified Attention stack (client email, job replies, bills, agent failures — Gmail-fed), Life Vitals row, calendar blocks + gap hints, habits (each habit FEEDS a domain's warmth), money (net worth/burn/portfolio/bills; Zerodha/Groww/CSV first), career tab (job pipeline kanban + course progress), agent fleet health board incl. a **supervisor** agent (weekly log audit, accuracy metrics, prompt patches gated on owner approval — confirm-destructive spirit extends to agent self-modification). Full detail: `memory/lifeos-v2-vision-2026-07-08.md`.
 - **Design LOCKED: Glass Cockpit.** Three mockups built (`docs/mockups/cockpit-glass.html` ← chosen, `cockpit-terminal.html`, `cockpit-edition.html` — the other two kept for reference only). The contract extracted from the winner lives in **`docs/DESIGN_LANGUAGE.md`** — tokens, component specs, layout/IA (6 tabs: Home/Money/Career/Agents/Domains/Pulse), time-of-day system, motion/a11y, Do/Don'ts. Load it into every future coding session; deviations need a written one-line reason in the PR.
 - Nothing shipped to `src/` this session — docs + mockups only.
+
+## v2 progress (Glass Cockpit — slices S20–S57)
+
+**Wave 0 done: S20 — design tokens (#103 → PR #104, merged `dc47069`).** `docs/DESIGN_LANGUAGE.md` §2 is now code: `src/styles/tokens.css` (all 17 §2.1 colors, §2.2 font stack, §2.3 radius/blur vars, `color-scheme: dark`), the §2.4 Tailwind mapping, and `src/index.css` on `--bg`/`--txt`. 379/379 tests green. Two things the next session must know:
+
+- **The app still LOOKS like v1.** `body` sits on `--bg` now, but `src/App.tsx:79` paints a v1 light time-of-day gradient inline over it at runtime. `App.tsx` is **S24's exclusive hotspot** (out of every other slice's write-set), so the dark ground only becomes visible once **S22 (aurora) + S24 (shell)** land. This is expected — not a regression, don't "fix" it in a S21/S22/S23 PR.
+- **The Tailwind extend is MERGED, not replaced.** v2's §2.4 keys sit *alongside* the v1 `apple-*` / `rounded-ios` / `shadow-glass-*` keys, because every shipped v1 component still uses them; replacing outright breaks the app. The v1 keys retire per-view as S21+ restyles each surface. A test in `src/test/tokens.test.tsx` pins them compiling until then.
+- **Known cruft, deliberately not touched:** `tailwind.config.js` still carries a v1 `spring: cubic-bezier(0.34, 1.56, 0.64, 1)` bounce easing that the v2 motion contract (§7) has no room for. Out of S20's write-set. Kill it in a v1-teardown slice, or let it die as the v1 keys retire.
+
+**The eval gate earns its keep on `[UI]` slices** — on S20 it caught `rgba` spacing drift between `tokens.css` and `tailwind.config.js` that both CI *and* review passed over. "Byte-exact to the contract" needs a reader that diffs characters. Keep dispatching it fresh (no shared context with the implementer).
 
 ## What LifeOS is
 A personal, Apple-feel life tracker for a single user (the repo owner), built local-first as an installable PWA that runs offline on Windows and Android, with an Obsidian markdown vault as the real source of truth and three faces: **PWA dashboard, Telegram bot, Obsidian itself.** Seed data in `seed_tasks_detailed.json` (107 tasks) captures long-term intent. Read `CONTEXT.md` for the glossary, `docs/archive/V1_ARCHIVE.md` for the archived v1 slice backbone + product vision (v2 backbone: `docs/LIFEOS_V2_ROADMAP.md`, slices S20–S57), `memory/lifeos-vision-2026-06-22.md` for full design rationale.
