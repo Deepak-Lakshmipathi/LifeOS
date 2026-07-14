@@ -74,89 +74,92 @@ cockpit against fixtures first, wire real agents later.
 Legend — **[UI]** fixture-testable, no secrets · **[AGENT]** needs infra/secrets
 · **dep** = must land first.
 
+Slice numbering continues v1's backbone (S1–S19, archived in
+`docs/archive/V1_ARCHIVE.md`): v2 = **S20–S57**.
+
 ### Phase 0 — Design system foundation
 Turns `docs/DESIGN_LANGUAGE.md` (Fable output) into code. Gates everything.
 
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 0.1 | **[UI]** Port Glass tokens → `tokens.css` `:root` + Tailwind `theme.extend` (colors, domains, radii, blur, semantic) | snapshot component renders with vars | — |
-| 0.2 | **[UI]** Glass primitives: `<Card>` (cursor spotlight), `<Chip>` variants, `<Vital>` tile, `<Segmented>` | component render + state tests | 0.1 |
-| 0.3 | **[UI]** Aurora canvas bg component + reduced-motion guard | mounts; no RAF under reduced-motion | 0.1 |
-| 0.4 | **[UI]** `useTimeOfDay()` am/mid/pm → greeting + body class + aurora palette (extend existing `timeOfDay.ts`) | boundary tests | 0.1 |
+| S20 | **[UI]** Port Glass tokens → `tokens.css` `:root` + Tailwind `theme.extend` (colors, domains, radii, blur, semantic) | snapshot component renders with vars | — |
+| S21 | **[UI]** Glass primitives: `<Card>` (cursor spotlight), `<Chip>` variants, `<Vital>` tile, `<Segmented>` | component render + state tests | S20 |
+| S22 | **[UI]** Aurora canvas bg component + reduced-motion guard | mounts; no RAF under reduced-motion | S20 |
+| S23 | **[UI]** `useTimeOfDay()` am/mid/pm → greeting + body class + aurora palette (extend existing `timeOfDay.ts`) | boundary tests | S20 |
 
 ### Phase 1 — Cockpit shell (IA restructure)
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 1.1 | **[UI]** Pill-tab nav Home/Money/Career/Agents/Domains/Pulse; Domains+Pulse keep existing views | tab switch shows/hides section | 0.2 |
-| 1.2 | **[UI]** Cockpit header: greeting + time segmented control + mission-note subtitle | renders per time-of-day | 0.4 |
-| 1.3 | **[UI]** Vitals row shell: 5 tiles, warmth tile from real `computeWarmth`, rest stubbed; count-up | warmth tile reflects warmth output | 0.2 |
+| S24 | **[UI]** Pill-tab nav Home/Money/Career/Agents/Domains/Pulse; Domains+Pulse keep existing views | tab switch shows/hides section | S21 |
+| S25 | **[UI]** Cockpit header: greeting + time segmented control + mission-note subtitle | renders per time-of-day | S23 |
+| S26 | **[UI]** Vitals row shell: 5 tiles, warmth tile from real `computeWarmth`, rest stubbed; count-up | warmth tile reflects warmth output | S21 |
 
 ### Phase 2 — Home from EXISTING data (no new integrations)
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 2.1 | **[UI]** Today's Mission: reuse `rankNow`, top 1–3 + coldest-domain rescue inject; mtask cards (why + done_when + chips) + veto | rescue inject + veto behavior | 1.1 |
-| 2.2 | **[UI]** Mission dot-tap completes task in vault (reuse complete flow) → warms domain | complete → warmth updates | 2.1 |
-| 2.3 | **[UI]** Evening Day Review card (pm only): mission-done / tasks-completed / domains-warmed counts | pm visibility + counts | 2.1 |
+| S27 | **[UI]** Today's Mission: reuse `rankNow`, top 1–3 + coldest-domain rescue inject; mtask cards (why + done_when + chips) + veto | rescue inject + veto behavior | S24 |
+| S28 | **[UI]** Mission dot-tap completes task in vault (reuse complete flow) → warms domain | complete → warmth updates | S27 |
+| S29 | **[UI]** Evening Day Review card (pm only): mission-done / tasks-completed / domains-warmed counts | pm visibility + counts | S27 |
 
 ### Phase 3 — Habits (no external API; feeds warmth)
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 3.1 | **[UI]** `Habits/log.md` contract + parser (append-only `- [x] X (domain::) (date::) (source::)`) | parse fixture, roundtrip | 1.1 |
-| 3.2 | **[UI]** Habit-hit domain events feed `computeWarmth` (a hit heats its domain) | hit raises domain warmth | 3.1 |
-| 3.3 | **[UI]** Habits card: 7-day grid, streak hot/broken, tap-today appends a log line | render fixture, tap appends | 3.1 |
+| S30 | **[UI]** `Habits/log.md` contract + parser (append-only `- [x] X (domain::) (date::) (source::)`) | parse fixture, roundtrip | S24 |
+| S31 | **[UI]** Habit-hit domain events feed `computeWarmth` (a hit heats its domain) | hit raises domain warmth | S30 |
+| S32 | **[UI]** Habits card: 7-day grid, streak hot/broken, tap-today appends a log line | render fixture, tap appends | S30 |
 
 ### Phase 4 — Calendar
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 4.1 | **[UI]** `Calendar/today.md` contract + parser (blocks + free gaps) | parse fixture | 1.1 |
-| 4.2 | **[UI]** Today card: time slots + tinted event chips + gap-fit hint (fit a mission task) | render fixture, gap-fit hint | 4.1 |
-| 4.3 | **[AGENT]** calendar-sync (GH Actions, GCal OAuth) → writes `Calendar/today.md` | writes valid file from mocked API resp | 4.1 |
+| S33 | **[UI]** `Calendar/today.md` contract + parser (blocks + free gaps) | parse fixture | S24 |
+| S34 | **[UI]** Today card: time slots + tinted event chips + gap-fit hint (fit a mission task) | render fixture, gap-fit hint | S33 |
+| S35 | **[AGENT]** calendar-sync (GH Actions, GCal OAuth) → writes `Calendar/today.md` | writes valid file from mocked API resp | S33 |
 
 ### Phase 5 — Gmail / Attention
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 5.1 | **[UI]** `Mail/attention.md` contract + parser (label/from/draft ref) | parse fixture | 1.1 |
-| 5.2 | **[UI]** "Needs you" stack: arows, icon by label, action buttons, draft-ready state | render fixture, action wired | 5.1 |
-| 5.3 | **[AGENT]** email-triage (GH Actions, Gmail OAuth) → classify → write attention + `Mail/drafts/*` | classify fixture emails → valid files | 5.1 |
+| S36 | **[UI]** `Mail/attention.md` contract + parser (label/from/draft ref) | parse fixture | S24 |
+| S37 | **[UI]** "Needs you" stack: arows, icon by label, action buttons, draft-ready state | render fixture, action wired | S36 |
+| S38 | **[AGENT]** email-triage (GH Actions, Gmail OAuth) → classify → write attention + `Mail/drafts/*` | classify fixture emails → valid files | S36 |
 
 ### Phase 6 — Money
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 6.1 | **[UI]** `Finance/` contracts + parsers: networth-history (append table), portfolio, burn-vs-income, bills-radar | parse each fixture | 1.1 |
-| 6.2 | **[UI]** Money tab: net-worth big + sparkline, burn bars, portfolio donut + legend, bills rows | render fixtures; sparkline/donut draw | 6.1 |
-| 6.3 | **[UI]** Wire net-worth + burn vital tiles to `Finance/` files | tiles reflect fixture | 6.1, 1.3 |
-| 6.4 | **[AGENT]** finance-sync (this PC, Kite Connect + Groww CSV watch) → write `Finance/**` in one atomic commit | sample Kite resp + CSV → valid files | 6.1 |
+| S39 | **[UI]** `Finance/` contracts + parsers: networth-history (append table), portfolio, burn-vs-income, bills-radar | parse each fixture | S24 |
+| S40 | **[UI]** Money tab: net-worth big + sparkline, burn bars, portfolio donut + legend, bills rows | render fixtures; sparkline/donut draw | S39 |
+| S41 | **[UI]** Wire net-worth + burn vital tiles to `Finance/` files | tiles reflect fixture | S39, S26 |
+| S42 | **[AGENT]** finance-sync (this PC, Kite Connect + Groww CSV watch) → write `Finance/**` in one atomic commit | sample Kite resp + CSV → valid files | S39 |
 
 ### Phase 7 — Career
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 7.1 | **[UI]** `Career/pipeline.md` (stage:: kanban) + `Career/courses.md` (progress::) contract + parsers | parse fixtures | 1.1 |
-| 7.2 | **[UI]** Career tab: 4-col kanban (group by stage) + hot card; courses w/ progress + next-lesson pointer | render fixtures, stage grouping | 7.1 |
-| 7.3 | **[UI]** Wire job-pipeline vital tile; surface course "next" as a mission candidate | pipeline counts; course→mission link | 7.1, 1.3 |
-| 7.4 | **[AGENT]** job-scout (GH Actions; escalate→PC if browser session needed) → write pipeline Found entries | sample board results → valid lines | 7.1 |
+| S43 | **[UI]** `Career/pipeline.md` (stage:: kanban) + `Career/courses.md` (progress::) contract + parsers | parse fixtures | S24 |
+| S44 | **[UI]** Career tab: 4-col kanban (group by stage) + hot card; courses w/ progress + next-lesson pointer | render fixtures, stage grouping | S43 |
+| S45 | **[UI]** Wire job-pipeline vital tile; surface course "next" as a mission candidate | pipeline counts; course→mission link | S43, S26 |
+| S46 | **[AGENT]** job-scout (GH Actions; escalate→PC if browser session needed) → write pipeline Found entries | sample board results → valid lines | S43 |
 
 ### Phase 8 — Agent fleet substrate + Health
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 8.1 | **[UI]** Agent-run contract: shared writer helper for `runs.jsonl` + `status.json` + parser | write+parse roundtrip; O(1) status read | 1.1 |
-| 8.2 | **[UI]** Fleet mini strip (Home): LED per agent from status.json (ok/bad/idle + staleness) | render fixture; staleness→amber/red | 8.1 |
-| 8.3 | **[UI]** Agents tab: fleet table w/ infra badges (GHA/PC/VPS), last-run, note/err | render fixture | 8.1 |
-| 8.4 | **[AGENT]** daily-brief (GH Actions) reads vault → `Briefs/<date>.md`; Home surfaces it | compose from fixture vault → valid brief | 8.1 |
-| 8.5 | **[AGENT]** telegram-bot logs runs via 8.1 helper so it appears on Health | a capture logs a run | 8.1 |
+| S47 | **[UI]** Agent-run contract: shared writer helper for `runs.jsonl` + `status.json` + parser | write+parse roundtrip; O(1) status read | S24 |
+| S48 | **[UI]** Fleet mini strip (Home): LED per agent from status.json (ok/bad/idle + staleness) | render fixture; staleness→amber/red | S47 |
+| S49 | **[UI]** Agents tab: fleet table w/ infra badges (GHA/PC/VPS), last-run, note/err | render fixture | S47 |
+| S50 | **[AGENT]** daily-brief (GH Actions) reads vault → `Briefs/<date>.md`; Home surfaces it | compose from fixture vault → valid brief | S47 |
+| S51 | **[AGENT]** telegram-bot logs runs via S47 helper so it appears on Health | a capture logs a run | S47 |
 
 ### Phase 9 — Supervisor (control plane, human-gated)
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 9.1 | **[UI]** `agents/supervisor/<date>.md` + `proposals/<agent>-<date>.md` (`status: pending`) contract + parsers | parse fixtures | 8.1 |
-| 9.2 | **[UI]** Supervisor card: render latest report + metrics | render fixture | 9.1 |
-| 9.3 | **[UI]** Proposal approval: PWA lists pending, approve flips `status: approved` in vault (confirm-destructive, owner-gated) | approve → file status changes | 9.1 |
-| 9.4 | **[AGENT]** supervisor (GH Actions weekly) reads all `runs.jsonl` → accuracy/staleness → report + proposals | fixture runs.jsonl → valid report | 9.1 |
+| S52 | **[UI]** `agents/supervisor/<date>.md` + `proposals/<agent>-<date>.md` (`status: pending`) contract + parsers | parse fixtures | S47 |
+| S53 | **[UI]** Supervisor card: render latest report + metrics | render fixture | S52 |
+| S54 | **[UI]** Proposal approval: PWA lists pending, approve flips `status: approved` in vault (confirm-destructive, owner-gated) | approve → file status changes | S52 |
+| S55 | **[AGENT]** supervisor (GH Actions weekly) reads all `runs.jsonl` → accuracy/staleness → report + proposals | fixture runs.jsonl → valid report | S52 |
 
 ### Phase 10 — Hardening (systems-architect risk list)
 | # | Slice | Test | Dep |
 |---|-------|------|-----|
-| 10.1 | Git-history guard: shallow-clone depth + log rotation (`runs.jsonl` monthly, networth prune) so in-browser clone stays fast | rotation keeps N months; depth set | 8.1 |
-| 10.2 | Per-agent scoped tokens + shared push wrapper (`pull --rebase` → push → retry on reject) | simulated rejected push retries | — |
+| S56 | Git-history guard: shallow-clone depth + log rotation (`runs.jsonl` monthly, networth prune) so in-browser clone stays fast | rotation keeps N months; depth set | S47 |
+| S57 | Per-agent scoped tokens + shared push wrapper (`pull --rebase` → push → retry on reject) | simulated rejected push retries | — |
 
 ---
 
@@ -172,7 +175,7 @@ Phase 10 anytime after Phase 8.
 - **Critical path:** 0 → 1 → 8 → 9. Everything else fans out.
 - **All-UI fast track:** ship every `[UI]` slice against fixtures for a fully
   clickable cockpit with zero secrets; land `[AGENT]` slices to make it live.
-- ~35 slices; ~24 are `[UI]` (no infra), ~7 are `[AGENT]`, 2 hardening.
+- 38 slices (S20–S57); 29 are `[UI]` (no infra), 7 are `[AGENT]`, 2 hardening.
 
 ## Running a slice AFK
 

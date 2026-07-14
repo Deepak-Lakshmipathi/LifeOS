@@ -10,7 +10,7 @@ Last updated: 2026-07-08 (second session that day). Picks up after **the v2 visi
 - Nothing shipped to `src/` this session — docs + mockups only.
 
 ## What LifeOS is
-A personal, Apple-feel life tracker for a single user (the repo owner), built local-first as an installable PWA that runs offline on Windows and Android, with an Obsidian markdown vault as the real source of truth and three faces: **PWA dashboard, Telegram bot, Obsidian itself.** Seed data in `seed_tasks_detailed.json` (107 tasks) captures long-term intent. Read `CONTEXT.md` for the glossary, `docs/slices/README.md` for the slice backbone + product vision, `memory/lifeos-vision-2026-06-22.md` for full design rationale.
+A personal, Apple-feel life tracker for a single user (the repo owner), built local-first as an installable PWA that runs offline on Windows and Android, with an Obsidian markdown vault as the real source of truth and three faces: **PWA dashboard, Telegram bot, Obsidian itself.** Seed data in `seed_tasks_detailed.json` (107 tasks) captures long-term intent. Read `CONTEXT.md` for the glossary, `docs/archive/V1_ARCHIVE.md` for the archived v1 slice backbone + product vision (v2 backbone: `docs/LIFEOS_V2_ROADMAP.md`, slices S20–S57), `memory/lifeos-vision-2026-06-22.md` for full design rationale.
 
 ## Current state (on `master`, tip `e6c8a62`)
 **Slices S1–S19 ALL complete + the PWA is DEPLOYED LIVE.** Working installable offline PWA (nav shell, glass look, smart capture, Pulse, NOW balance-brain), a live Obsidian-vault backend behind `VITE_VAULT=1`, and a full Telegram bot (`services/bot/`): text→create, confirm-gated update/delete, photo→vision batch-confirm, voice→transcription. The hosted PWA now clones a real private vault repo in-browser through a self-hosted CORS proxy and loads real tasks — verified on desktop and mobile.
@@ -100,7 +100,7 @@ docs/LIFEOS_V2_ROADMAP.md   v2 slice backbone (one slice = one issue = one subag
 docs/mockups/               cockpit-glass.html (chosen) + terminal/edition (reference only)
 kanban.html                 live board (#board-data JSON); all cards done
 lifeos-hub.html             GENERATED showcase (Overview/Get-Started/Kanban/Graph tabs) — edit scripts/build-hub.mjs then rebuild
-afk-pipeline-out/           deploy tables + s16c-verify-checklist.md
+afk-pipeline-out/           LESSONS.md + s16c-verify-checklist.md (v1 deploy tables collapsed into docs/archive/V1_ARCHIVE.md)
 src/main.tsx                shims Buffer + process (browser) before any vault code loads
 src/vault/pat.ts            runtime PAT (localStorage prompt); DEV-guarded env fallback so it never bakes into a build
 src/vault/transport.ts      GitTransport — now dedupes concurrent readFiles() behind one in-flight clone
