@@ -1,0 +1,8 @@
+{
+  "agent": "email-triage",
+  "last_run": "2026-07-14T09:30:00Z",
+  "ok": true,
+  "note": "4 flagged, 1 draft",
+  "duration_ms": 8200,
+  "expected_cadence_min": 60
+}
