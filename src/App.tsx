@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { LocalOnly } from './sync/LocalOnly'
 import { VaultSync } from './sync/VaultSync'
 import type { SyncProvider } from './sync/SyncProvider'
@@ -22,14 +22,16 @@ import { clearVaultPat } from './vault/pat'
 // Swap to a RemoteSync implementation here when sync lands (ADR-0002).
 const provider: SyncProvider = import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
 
-// §7 tab fade: opacity + 6px rise over .3s ease. Reduced-motion is honored by
-// the global `@media(prefers-reduced-motion:reduce)` reset in index.css.
-const tabMotion = {
+// §7 tab fade: opacity + 6px rise over .3s ease — the same framer-motion
+// `useReducedMotion()` gate the rest of the app uses (TaskItem, UndoToast).
+// Under reduced motion the section still swaps, just with no movement/fade.
+const TAB_FADE = {
   initial: { opacity: 0, y: 6 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: 6 },
   transition: { duration: 0.3, ease: 'easeOut' },
 } as const
+const TAB_STATIC = { initial: false, animate: { opacity: 1, y: 0 }, transition: { duration: 0 } } as const
 
 /**
  * App — the Glass Cockpit shell (§5). Its only job is layout + mount points:
@@ -43,6 +45,7 @@ export default function App() {
   const { tasks, loading, error, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
   const projects = distinctProjects(tasks)
   const [tab, setTab] = useState<ViewTab>('home')
+  const tabMotion = useReducedMotion() ? TAB_STATIC : TAB_FADE
 
   // One-shot seed import on mount: no-ops when DB is non-empty or ?noseed is set (ADR-0006).
   useEffect(() => {

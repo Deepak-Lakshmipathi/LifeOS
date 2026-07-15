@@ -52,6 +52,7 @@ export function HomeView({ tasks, onToggle, onDelete, onUpdate, onAdd, projects 
         <button
           type="button"
           onClick={() => setAddOpen(true)}
+          aria-label="Add task"
           className="rounded-[999px] border border-panel-brd bg-panel px-4 py-[7px] text-[13px] text-txt backdrop-blur-seg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-txt"
         >
           + New task

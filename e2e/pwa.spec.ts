@@ -12,9 +12,11 @@ import { test, expect } from '@playwright/test'
  *
  * Selectors are derived from the actual markup:
  *   - Add-task input: aria-label "Capture task" (CaptureSheet.tsx) — inside the + sheet
- *   - Tab bar: aria-label "Main navigation" (TabBar.tsx); tab buttons have aria-label per tab
+ *   - Tab bar: data-testid "tab-bar" (TabBar.tsx); tab buttons are labeled per tab
  *   - Task title text: rendered as <span> containing task.title (TaskItem.tsx)
- *   - App heading: <h1> "Tasks" (App.tsx)
+ *   - Shell-loaded signal: the tab bar (data-testid "tab-bar"). S24 replaced the
+ *     v1 <h1>Tasks</h1> with the cockpit header, so the tab bar is now the stable
+ *     "app rendered, not an error page" anchor.
  */
 
 // ---------------------------------------------------------------------------
@@ -71,20 +73,14 @@ test('app shell renders offline after SW caches it', async ({ page, context }) =
   await page.goto('/?noseed')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
-  // Confirm the UI loaded correctly first
-  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
-
-  // Confirm the tab bar is rendered
+  // Confirm the UI loaded correctly first (tab bar = shell-rendered signal)
   await expect(page.getByTestId('tab-bar')).toBeVisible()
 
   // Go offline and reload — SW should serve the cached shell
   await context.setOffline(true)
   await page.reload()
 
-  // The <h1>Tasks</h1> heading must still be visible, not a browser error page
-  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
-
-  // Tab bar must also survive offline
+  // The shell must still render (tab bar visible), not a browser error page
   await expect(page.getByTestId('tab-bar')).toBeVisible()
 })
 
@@ -110,8 +106,8 @@ test('tasks added online persist after going offline and reloading', async ({ pa
   await context.setOffline(true)
   await page.reload()
 
-  // App shell must render
-  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
+  // App shell must render (tab bar = shell-rendered signal)
+  await expect(page.getByTestId('tab-bar')).toBeVisible()
 
   // Task data from IndexedDB must still be listed
   await expect(page.getByText('emu-test')).toBeVisible()
