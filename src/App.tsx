@@ -1,194 +1,122 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { LocalOnly } from './sync/LocalOnly'
 import { VaultSync } from './sync/VaultSync'
 import type { SyncProvider } from './sync/SyncProvider'
 import { useTasks } from './hooks/useTasks'
-import { CaptureSheet } from './components/CaptureSheet'
-import { NowView } from './components/NowView'
+import { Aurora } from './components/glass/Aurora'
+import { Header } from './components/cockpit/Header'
+import { VitalsRow } from './components/cockpit/VitalsRow'
+import { TabBar, type ViewTab } from './components/TabBar'
+import { HomeView } from './components/home/HomeView'
+import { MoneyView } from './components/money/MoneyView'
+import { CareerView } from './components/career/CareerView'
+import { AgentsView } from './components/agents/AgentsView'
 import { DomainsMap } from './components/DomainsMap'
 import { PulseView } from './components/PulseView'
-import { TabBar, type ViewTab } from './components/TabBar'
 import { distinctProjects } from './lib/distinctProjects'
 import { seedIfEmpty } from './data/seed'
 import { clearVaultPat } from './vault/pat'
-import { getTimeOfDay, TIME_GRADIENTS, TIME_SOLID_BG } from './lib/timeOfDay'
 
 // The provider is instantiated once at module level.
 // Swap to a RemoteSync implementation here when sync lands (ADR-0002).
 const provider: SyncProvider = import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
 
+// §7 tab fade: opacity + 6px rise over .3s ease — the same framer-motion
+// `useReducedMotion()` gate the rest of the app uses (TaskItem, UndoToast).
+// Under reduced motion the section still swaps, just with no movement/fade.
+const TAB_FADE = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 6 },
+  transition: { duration: 0.3, ease: 'easeOut' },
+} as const
+const TAB_STATIC = { initial: false, animate: { opacity: 1, y: 0 }, transition: { duration: 0 } } as const
 
 /**
- * Returns the CSS background value appropriate for the current time of day.
- * Reads matchMedia to detect prefers-reduced-transparency; falls back to
- * a solid color when the user has reduced transparency turned on.
+ * App — the Glass Cockpit shell (§5). Its only job is layout + mount points:
+ * an aurora canvas ground (z0), then the 1180px `.shell` (z1) holding the
+ * header slot, vitals slot, the six-tab pill bar, one section per tab, and a
+ * footer. Every tab section is its own component — App carries NO mission,
+ * vitals-data, or money logic inline, so from here on each later slice edits
+ * only its own file and never this one (S24 is the sole App.tsx toucher).
  */
-function useTimeGradient() {
-  const [bg, setBg] = useState(() => {
-    const bucket = getTimeOfDay(Date.now())
-    const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-transparency: reduce)').matches
-    return reduced ? TIME_SOLID_BG[bucket] : TIME_GRADIENTS[bucket]
-  })
-
-  useEffect(() => {
-    // Refresh every 60 s so the gradient shifts across time-of-day boundaries.
-    const id = window.setInterval(() => {
-      const bucket = getTimeOfDay(Date.now())
-      const reduced = window.matchMedia('(prefers-reduced-transparency: reduce)').matches
-      setBg(reduced ? TIME_SOLID_BG[bucket] : TIME_GRADIENTS[bucket])
-    }, 60_000)
-    return () => window.clearInterval(id)
-  }, [])
-
-  return bg
-}
-
 export default function App() {
   const { tasks, loading, error, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
   const projects = distinctProjects(tasks)
-  const [tab, setTab] = useState<ViewTab>('now')
-  const [addOpen, setAddOpen] = useState(false)
-  const timeGradient = useTimeGradient()
+  const [tab, setTab] = useState<ViewTab>('home')
+  const tabMotion = useReducedMotion() ? TAB_STATIC : TAB_FADE
 
   // One-shot seed import on mount: no-ops when DB is non-empty or ?noseed is set (ADR-0006).
-  // After seeding, refresh the task list so the UI reflects the new rows.
   useEffect(() => {
     seedIfEmpty(provider).then((count) => {
       if (count > 0) refresh()
     })
   }, [refresh])
 
-  const handleAddTask = async (input: {
-    title: string
-    done_when?: string
-    priority?: 1 | 2 | 3
-    project?: string
-    domain?: string
-  }) => {
-    await addTask(input)
-    setAddOpen(false)
-  }
-
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: timeGradient,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-      }}
-    >
-      {/* Header — frosted glass */}
-      <header
-        className="sticky top-0 z-10 glass-panel border-b px-4 pt-12 pb-4"
-        style={{ borderColor: 'var(--glass-border-outer)' }}
-      >
-        <h1 className="text-3xl font-bold tracking-tight text-apple-label">Tasks</h1>
-      </header>
+    <div className="relative min-h-screen text-txt">
+      <Aurora />
 
-      {/* Tab content — pb-20 clears the fixed tab bar height */}
-      <main className="max-w-xl mx-auto pb-20">
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="w-6 h-6 border-2 border-apple-gray-3 border-t-apple-blue rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="mx-4 mt-8 p-4 rounded-ios glass-panel text-center">
-            <p className="text-base font-semibold text-apple-label">Couldn’t load your vault</p>
-            <p className="mt-1 text-sm text-apple-gray-1 break-words">{error}</p>
-            <div className="mt-4 flex justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="text-sm font-medium"
-                style={{ color: '#007AFF' }}
-              >
-                Retry
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  clearVaultPat()
-                  window.location.reload()
-                }}
-                className="text-sm font-medium"
-                style={{ color: '#007AFF' }}
-              >
-                Re-enter token
-              </button>
+      <div className="relative z-[1] mx-auto max-w-shell px-4 pt-10 pb-16 sm:px-6">
+        <Header />
+        <VitalsRow />
+        <TabBar active={tab} onTabChange={setTab} />
+
+        <main>
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-panel-brd border-t-txt" />
             </div>
-          </div>
-        ) : (
-          <AnimatePresence mode="wait">
-            {tab === 'now' && (
-              <NowView
-                key="now"
-                tasks={tasks}
-                onToggle={toggleDone}
-                onDelete={deleteTask}
-                onUpdate={updateTask}
-                projects={projects}
-              />
-            )}
-            {tab === 'domains' && (
-              <DomainsMap
-                key="domains"
-                tasks={tasks}
-              />
-            )}
-            {tab === 'pulse' && <PulseView key="pulse" tasks={tasks} />}
-          </AnimatePresence>
-        )}
-      </main>
-
-      {/* Bottom tab bar — fixed, safe-area aware */}
-      <TabBar active={tab} onTabChange={setTab} onAdd={() => setAddOpen(true)} />
-
-      {/* Add task sheet — slides up from bottom when + tab is tapped */}
-      <AnimatePresence>
-        {addOpen && (
-          <motion.div
-            key="add-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-30"
-            style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-            onClick={() => setAddOpen(false)}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="absolute bottom-0 left-0 right-0 glass-panel rounded-t-ios-lg shadow-glass-float"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Sheet drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-apple-gray-4" />
-              </div>
-              {/* Sheet header */}
-              <div className="flex items-center justify-between px-4 pb-1">
-                <span className="text-base font-semibold text-apple-label">New Task</span>
+          ) : error ? (
+            <div className="mx-auto mt-8 max-w-md rounded-card border border-panel-brd bg-panel p-4 text-center backdrop-blur-card">
+              <p className="text-base font-semibold text-txt">Couldn’t load your vault</p>
+              <p className="mt-1 break-words text-sm text-dim">{error}</p>
+              <div className="mt-4 flex justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setAddOpen(false)}
-                  className="text-sm font-medium focus:outline-none"
-                  style={{ color: '#007AFF' }}
+                  onClick={() => window.location.reload()}
+                  className="text-sm font-medium text-txt"
                 >
-                  Cancel
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearVaultPat()
+                    window.location.reload()
+                  }}
+                  className="text-sm font-medium text-txt"
+                >
+                  Re-enter token
                 </button>
               </div>
-              <CaptureSheet onAdd={handleAddTask} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.section key={tab} {...tabMotion}>
+                {tab === 'home' && (
+                  <HomeView
+                    tasks={tasks}
+                    onToggle={toggleDone}
+                    onDelete={deleteTask}
+                    onUpdate={updateTask}
+                    onAdd={addTask}
+                    projects={projects}
+                  />
+                )}
+                {tab === 'money' && <MoneyView />}
+                {tab === 'career' && <CareerView />}
+                {tab === 'agents' && <AgentsView />}
+                {tab === 'domains' && <DomainsMap tasks={tasks} />}
+                {tab === 'pulse' && <PulseView tasks={tasks} />}
+              </motion.section>
+            </AnimatePresence>
+          )}
+        </main>
+
+        <footer className="mt-10 text-center text-xs text-faint">LifeOS · your life, one cockpit</footer>
+      </div>
     </div>
   )
 }
