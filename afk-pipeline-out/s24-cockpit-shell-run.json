@@ -1,0 +1,31 @@
+{
+  "slug": "s24-cockpit-shell",
+  "slice": "S24",
+  "mode": "auto",
+  "input": "docs/slices/slice-S24-cockpit-shell.md",
+  "path": "light (ticket carried PRD-lite + DoD; P0 -> implement -> triple-green)",
+  "date": "2026-07-15",
+  "pr": 111,
+  "merge_commit": "ab597e0",
+  "dispatch": "orchestrator-inline (single pre-resolved slice; App.tsx sole-hotspot, dispatched alone)",
+  "phases": {
+    "p0_context": "config + LESSONS loaded; light-path confirmed",
+    "p5_implement": "9 files: App.tsx + TabBar.tsx rewritten, 6 new cockpit/home/money/career/agents stubs+views, cockpitShell.test.tsx",
+    "gate": "triple-green"
+  },
+  "gate": {
+    "ci": "green (bot-test, build-test, pwa-e2e all pass; run 29391727965)",
+    "review": "ponytail green (no over-engineering; net deletion of v1 gradient hook)",
+    "eval": "PASS on 2nd pass (fresh Sonnet subagent)"
+  },
+  "eval_rejects": 1,
+  "eval_reject_findings": [
+    "reduced-motion (§7): tab fade not gated — fixed with framer useReducedMotion() (app's own pattern), not the non-existent index.css reset the code comment claimed",
+    "pwa-e2e red: v1 <h1>Tasks</h1> + 'Add task' button removed by restructure — e2e smoke-checks repointed to tab-bar, capture button given aria-label='Add task'"
+  ],
+  "review_rejects": 0,
+  "flake_reruns": 0,
+  "fallbacks_fired": ["orchestrator-inline implement (single pre-resolved slice)"],
+  "tests": "435 -> 439 vitest green; pwa-e2e green",
+  "unblocks": "Wave 3 (S25, S26, S30, S33, S36, S39, S43, S47) once stub mount points exist"
+}
