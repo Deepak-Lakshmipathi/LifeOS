@@ -1,0 +1,8 @@
+{
+  "agent": "calendar-sync",
+  "last_run": "2026-07-14T06:00:00Z",
+  "ok": true,
+  "note": "3 events synced",
+  "duration_ms": 4100,
+  "expected_cadence_min": 60
+}

@@ -1,0 +1,8 @@
+{
+  "agent": "job-scout",
+  "last_run": "2026-07-14T09:00:00Z",
+  "ok": false,
+  "note": "LinkedIn auth expired — 0 roles fetched",
+  "duration_ms": 1200,
+  "expected_cadence_min": 1440
+}
