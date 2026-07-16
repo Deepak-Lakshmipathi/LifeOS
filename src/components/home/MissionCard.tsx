@@ -111,11 +111,8 @@ function MissionTaskRow({ pick, onVeto }: MissionTaskRowProps) {
         />
         <div className="min-w-0 flex-1">
           <span className="text-[15px] leading-snug text-txt">{task.title}</span>{' '}
-          {domain && (
-            <Chip variant="dom" dc={dc}>
-              {domain}
-            </Chip>
-          )}{' '}
+          {/* dc omitted: the row div above already sets --dc inline (Chip.tsx's own contract). */}
+          {domain && <Chip variant="dom">{domain}</Chip>}{' '}
           {task.priority === 3 && <Chip variant="p3">High</Chip>}
           {task.priority === 2 && <Chip variant="p2">Med</Chip>}{' '}
           {rescue && <Chip variant="rescue">coldest-domain rescue</Chip>}

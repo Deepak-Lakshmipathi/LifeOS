@@ -90,5 +90,6 @@ export function missionPicks(
     picks.push({ task: rescue.task, rescue: true, why: synthesizeWhy(rescue.task, true) })
   }
 
-  return { picks: picks.slice(0, MAX_PICKS) }
+  // picks.length <= mainCap + (rescue ? 1 : 0) === MAX_PICKS by construction; no extra slice needed.
+  return { picks }
 }
