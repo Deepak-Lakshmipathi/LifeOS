@@ -3,15 +3,20 @@ import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../../types'
 import { NowView } from '../NowView'
 import { CaptureSheet } from '../CaptureSheet'
+import { MissionCard } from './MissionCard'
 
 /**
  * HomeView — the Home tab.
  *
- * S24 lands the v1 NOW content here verbatim (balance-brain task list +
- * capture) so no functionality is lost in the shell restructure. Later slices
- * (S27+) grow this into Today's Mission / Needs You / calendar / habits /
- * fleet-strip per §5 — but this is the ONLY place that changes for those; App
- * mounts HomeView once and never edits it again.
+ * S24 landed the v1 NOW content here verbatim (balance-brain task list +
+ * capture) so no functionality was lost in the shell restructure. S27
+ * (this slice) replaces the top of that NOW list with Today's Mission — the
+ * same balance-brain picks, now with why + done_when always visible
+ * (§4.3, §8) — via the new MissionCard/missionPicks seam; NowView still owns
+ * the fuller Up next / Later fold sections below it. Later slices (S28+)
+ * grow this into Needs You / calendar / habits / fleet-strip per §5 — this
+ * is the ONLY place that changes for those; App mounts HomeView once and
+ * never edits it again.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -57,6 +62,10 @@ export function HomeView({ tasks, onToggle, onDelete, onUpdate, onAdd, projects 
         >
           + New task
         </button>
+      </div>
+
+      <div className="mb-3">
+        <MissionCard tasks={tasks} />
       </div>
 
       <NowView
