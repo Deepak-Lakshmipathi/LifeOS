@@ -1,0 +1,66 @@
+name: Agent — calendar-sync
+
+# S35: pulls today's Google Calendar events and writes Calendar/today.md to
+# the vault repo (LiveOS-VaultRepo), in the S33 contract format. Pure
+# API + cron placement (no browser, no long-lived process) — see
+# docs/agents/afk-pipeline.md's agent-placement rule.
+on:
+  schedule:
+    # Every 30 min, 05:00-23:00 IST (UTC+5:30) == 23:30-17:30 UTC.
+    # Cron is UTC-only; split into two ranges so the window doesn't wrap
+    # past hour 23 in a single expression.
+    - cron: '30,0 23 * * *' # 23:00 and 23:30 UTC == 04:30 and 05:00 IST
+    - cron: '*/30 0-17 * * *' # 00:00-17:59 UTC == 05:30-23:29 IST
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LifeOS (for the mapper script + its deps)
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Checkout LiveOS-VaultRepo
+        uses: actions/checkout@v4
+        with:
+          repository: Deepak-Lakshmipathi/LiveOS-VaultRepo
+          ref: main
+          path: vault-clone
+          # Own fine-grained PAT (S57 pattern): Contents R/W on
+          # LiveOS-VaultRepo only, nothing else. See docs/agents/vault-tokens.md.
+          token: ${{ secrets.AGENT_VAULT_PAT_CALENDAR }}
+
+      - name: Configure git identity for the calendar-sync commit
+        working-directory: vault-clone
+        run: |
+          git config user.name "lifeos-calendar-sync"
+          git config user.email "lifeos-calendar-sync@users.noreply.github.com"
+
+      - name: Run calendar-sync
+        env:
+          VAULT_DIR: ${{ github.workspace }}/vault-clone
+          GCAL_CLIENT_ID: ${{ secrets.GCAL_CLIENT_ID }}
+          GCAL_CLIENT_SECRET: ${{ secrets.GCAL_CLIENT_SECRET }}
+          GCAL_REFRESH_TOKEN: ${{ secrets.GCAL_REFRESH_TOKEN }}
+        run: node agents/calendar-sync/sync.mjs
+
+      # S47 status-line contract (agents/lib/runLog.mjs): writes
+      # agents/calendar-sync/{runs.jsonl,status.json} in a SEPARATE commit
+      # from the Calendar/today.md write above, so the DoD #2 "writes ONLY
+      # Calendar/today.md" constraint holds for the sync commit itself.
+      - name: Record run status (S47 contract)
+        if: always()
+        env:
+          VAULT_DIR: ${{ github.workspace }}/vault-clone
+        run: node agents/calendar-sync/record-status.mjs ${{ job.status == 'success' && 'true' || 'false' }}
