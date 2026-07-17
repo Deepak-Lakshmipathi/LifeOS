@@ -16,12 +16,17 @@ interface NowViewProps {
     patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>
   ) => Promise<void>
   projects: string[]
+  /** S27: MissionCard now owns the top LIVE_COUNT ranked tasks (rendered
+   *  above NowView in HomeView) — skip re-rendering them here so the same
+   *  task doesn't appear twice in the DOM. Up next/Later keep their original
+   *  offsets so ranking order stays continuous across both sections. */
+  hideLive?: boolean
 }
 
 const LIVE_COUNT = 3
 const UPNEXT_COUNT = 5
 
-export function NowView({ tasks, onToggle, onDelete, onUpdate, projects }: NowViewProps) {
+export function NowView({ tasks, onToggle, onDelete, onUpdate, projects, hideLive = false }: NowViewProps) {
   // Balance brain: inject warmth so rankNow stays pure (ADR-0008).
   const warmth = computeWarmth(tasks, Date.now())
   const ranked: RankedTask[] = rankNow(tasks, warmth)
@@ -93,10 +98,14 @@ export function NowView({ tasks, onToggle, onDelete, onUpdate, projects }: NowVi
           layout
           className="flex flex-col gap-3 px-3 pt-4 pb-2"
         >
-          {/* Live cards — the NOW queue */}
-          <AnimatePresence initial={false} mode="popLayout">
-            {ranked.slice(0, LIVE_COUNT).map(taskRow)}
-          </AnimatePresence>
+          {/* Live cards — the NOW queue. S27: MissionCard renders this slice
+              above HomeView's NowView now, so skip it here (hideLive) to
+              avoid rendering the same task twice. */}
+          {!hideLive && (
+            <AnimatePresence initial={false} mode="popLayout">
+              {ranked.slice(0, LIVE_COUNT).map(taskRow)}
+            </AnimatePresence>
+          )}
 
           {ranked.length > LIVE_COUNT && (
             <FoldSection label="Up next" count={Math.min(ranked.length - LIVE_COUNT, UPNEXT_COUNT)}>
