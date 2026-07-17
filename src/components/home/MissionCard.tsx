@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Task } from '../../types'
 import { isDomain } from '../../data/domains'
@@ -8,16 +8,20 @@ import { missionPicks } from '../../lib/missionPicks'
 import type { MissionPick } from '../../lib/missionPicks'
 import { Card } from '../glass/Card'
 import { Chip } from '../glass/Chip'
+import { UndoToast } from '../UndoToast'
 
 /**
- * MissionCard — "Today's Mission" (DESIGN_LANGUAGE §4.3, §8, Slice S27).
+ * MissionCard — "Today's Mission" (DESIGN_LANGUAGE §4.3, §8, Slice S27+S28).
  *
  * Composes the shipped ranking seams (rankNow + computeWarmth, via the pure
  * `missionPicks` selector) into 1–3 mission-task rows with why + done_when
  * always visible — never behind a hover or expander (§8). A veto affordance
  * lets the user dismiss a pick for the session; the next-ranked task
- * backfills. The dot toggle is visual-only here — S28 wires it to the
- * existing complete mutation.
+ * backfills. S28: the dot now taps through `onToggle` — the same
+ * SyncProvider mutation NowView/TaskItem use (no new write path); a task
+ * that completes leaves the picks once the caller's `tasks` prop refreshes
+ * (domain warmth recomputes from the same list), and an UndoToast lets the
+ * user revert within the window, mirroring NowView's own undo pattern.
  */
 
 // Canonical domain → design token CSS var (§2.1), mirrored from VitalsRow's
@@ -39,12 +43,20 @@ const NO_DONE_WHEN = 'Not set'
 export interface MissionCardProps {
   /** Full task list (open + done); passed straight through to missionPicks/rankNow. */
   tasks: Task[]
+  /**
+   * S28: complete/uncomplete a task through the existing SyncProvider
+   * mutation (same fn v1 TaskItem/NowView call — no new write path).
+   * Optional so MissionCard still renders standalone in older fixtures;
+   * the dot is inert (no onClick) when omitted.
+   */
+  onToggle?: (id: string) => Promise<void>
   /** Current time in ms — inject for deterministic tests (defaults to Date.now()). */
   now?: number
 }
 
-export function MissionCard({ tasks, now }: MissionCardProps) {
+export function MissionCard({ tasks, onToggle, now }: MissionCardProps) {
   const [vetoed, setVetoed] = useState<Set<string>>(new Set())
+  const [pendingUndo, setPendingUndo] = useState<{ id: string; title: string } | null>(null)
 
   const warmth = computeWarmth(tasks, now ?? Date.now())
   const { picks } = missionPicks(tasks, warmth, vetoed)
@@ -57,6 +69,23 @@ export function MissionCard({ tasks, now }: MissionCardProps) {
     })
   }
 
+  const handleComplete = useCallback(
+    async (id: string, title: string) => {
+      if (!onToggle) return
+      await onToggle(id)
+      setPendingUndo({ id, title })
+    },
+    [onToggle],
+  )
+
+  const handleUndo = useCallback(async () => {
+    if (pendingUndo && onToggle) {
+      await onToggle(pendingUndo.id)
+    }
+  }, [pendingUndo, onToggle])
+
+  const handleDismissUndo = useCallback(() => setPendingUndo(null), [])
+
   return (
     <Card heading="Today's Mission">
       {picks.length === 0 ? (
@@ -64,9 +93,21 @@ export function MissionCard({ tasks, now }: MissionCardProps) {
       ) : (
         <div className="flex flex-col gap-2.5">
           {picks.map((pick) => (
-            <MissionTaskRow key={pick.task.id} pick={pick} onVeto={handleVeto} />
+            <MissionTaskRow
+              key={pick.task.id}
+              pick={pick}
+              onVeto={handleVeto}
+              onComplete={onToggle ? handleComplete : undefined}
+            />
           ))}
         </div>
+      )}
+      {pendingUndo && (
+        <UndoToast
+          taskTitle={pendingUndo.title}
+          onUndo={handleUndo}
+          onDismiss={handleDismissUndo}
+        />
       )}
     </Card>
   )
@@ -75,6 +116,8 @@ export function MissionCard({ tasks, now }: MissionCardProps) {
 interface MissionTaskRowProps {
   pick: MissionPick
   onVeto: (id: string) => void
+  /** S28: tap the dot → complete via the SyncProvider seam. Undefined = inert dot. */
+  onComplete?: (id: string, title: string) => void
 }
 
 /**
@@ -83,7 +126,7 @@ interface MissionTaskRowProps {
  * 3px domain stripe is a `before:` pseudo-element (same arbitrary-value
  * technique Card.tsx uses for its cursor spotlight — no new stylesheet rule).
  */
-function MissionTaskRow({ pick, onVeto }: MissionTaskRowProps) {
+function MissionTaskRow({ pick, onVeto, onComplete }: MissionTaskRowProps) {
   const { task, rescue, why } = pick
   const domain = task.domain && isDomain(task.domain) ? (task.domain as Domain) : null
   const dc = domain ? DOMAIN_VAR[domain] : undefined
@@ -104,9 +147,14 @@ function MissionTaskRow({ pick, onVeto }: MissionTaskRowProps) {
         .join(' ')}
     >
       <div className="flex items-start gap-2">
-        <span
-          aria-hidden
-          className="dot mt-[3px] h-[18px] w-[18px] flex-shrink-0 rounded-full border-2"
+        {/* Dot: §4.3 glow-on-hover pre-complete affordance (`.dot:hover{background:var(--dc);box-shadow:0 0 12px var(--dc)}`).
+            Tailwind arbitrary hover variants mirror the CSS spec exactly. */}
+        <button
+          type="button"
+          onClick={() => onComplete?.(task.id, task.title)}
+          aria-label={task.done ? 'Mark incomplete' : 'Mark complete'}
+          disabled={!onComplete}
+          className="dot mt-[3px] h-[18px] w-[18px] flex-shrink-0 rounded-full border-2 transition hover:[background:var(--dc)] hover:[box-shadow:0_0_12px_var(--dc)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-txt disabled:cursor-default"
           style={{ borderColor: dc ?? 'var(--faint)' }}
         />
         <div className="min-w-0 flex-1">

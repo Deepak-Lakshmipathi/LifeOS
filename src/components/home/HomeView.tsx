@@ -65,7 +65,7 @@ export function HomeView({ tasks, onToggle, onDelete, onUpdate, onAdd, projects 
       </div>
 
       <div className="mb-3">
-        <MissionCard tasks={tasks} />
+        <MissionCard tasks={tasks} onToggle={onToggle} />
       </div>
 
       <NowView
