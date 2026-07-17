@@ -4,6 +4,9 @@ import type { Task } from '../../types'
 import { NowView } from '../NowView'
 import { CaptureSheet } from '../CaptureSheet'
 import { MissionCard } from './MissionCard'
+import { DayReview } from './DayReview'
+import { useTimeOfDay } from '../../hooks/useTimeOfDay'
+import type { CockpitMode } from '../../lib/timeOfDay'
 
 /**
  * HomeView — the Home tab.
@@ -13,10 +16,11 @@ import { MissionCard } from './MissionCard'
  * (this slice) replaces the top of that NOW list with Today's Mission — the
  * same balance-brain picks, now with why + done_when always visible
  * (§4.3, §8) — via the new MissionCard/missionPicks seam; NowView still owns
- * the fuller Up next / Later fold sections below it. Later slices (S28+)
- * grow this into Needs You / calendar / habits / fleet-strip per §5 — this
- * is the ONLY place that changes for those; App mounts HomeView once and
- * never edits it again.
+ * the fuller Up next / Later fold sections below it. S29 prepends the
+ * evening-only Day Review (§6) full-width, ahead of everything else, when
+ * `useTimeOfDay` resolves to `pm`. Later slices (S32+) grow this further into
+ * Needs You / calendar / habits / fleet-strip per §5 — this is the ONLY place
+ * that changes for those; App mounts HomeView once and never edits it again.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -41,10 +45,31 @@ interface HomeViewProps {
   ) => Promise<void>
   onAdd: (input: AddInput) => Promise<void>
   projects: string[]
+  /**
+   * S29: forces `useTimeOfDay`'s mode for deterministic Day Review
+   * visibility tests (same injection pattern Header's own seg-control
+   * override uses). Omitted in the app — the wall clock decides.
+   */
+  modeOverride?: CockpitMode
 }
 
-export function HomeView({ tasks, onToggle, onDelete, onUpdate, onAdd, projects }: HomeViewProps) {
+export function HomeView({
+  tasks,
+  onToggle,
+  onDelete,
+  onUpdate,
+  onAdd,
+  projects,
+  modeOverride,
+}: HomeViewProps) {
   const [addOpen, setAddOpen] = useState(false)
+  // Own useTimeOfDay instance (mirrors Header's, same wall clock — both
+  // agree under normal operation). Known gap, out of this slice's write-set
+  // to fix: Header's seg-control override is component-local state, so
+  // manually forcing "Evening" in the header won't flip Day Review into view
+  // this session; App.tsx (the only place that could lift shared mode state)
+  // is S24's exclusive hotspot.
+  const { mode } = useTimeOfDay(modeOverride)
 
   const handleAdd = async (input: AddInput) => {
     await onAdd(input)
@@ -53,6 +78,12 @@ export function HomeView({ tasks, onToggle, onDelete, onUpdate, onAdd, projects 
 
   return (
     <div>
+      {mode === 'pm' && (
+        <div className="mb-3">
+          <DayReview tasks={tasks} />
+        </div>
+      )}
+
       <div className="mb-3 flex justify-end">
         <button
           type="button"
