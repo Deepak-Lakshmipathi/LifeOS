@@ -74,6 +74,7 @@ export function HomeView({ tasks, onToggle, onDelete, onUpdate, onAdd, projects 
         onDelete={onDelete}
         onUpdate={onUpdate}
         projects={projects}
+        hideLive
       />
 
       {/* Add task sheet — slides up from bottom (v1 capture flow, unchanged behavior). */}
