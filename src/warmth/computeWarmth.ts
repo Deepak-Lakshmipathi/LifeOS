@@ -14,6 +14,12 @@ import type { Domain } from '../data/domains'
 
 export type WarmthState = 'hot' | 'warm' | 'ok' | 'stale' | 'cold'
 
+/**
+ * A warmth-relevant event outside of tasks — currently habit hits (S31).
+ * `date` is an ISO calendar date `YYYY-MM-DD`, folded in at UTC midnight.
+ */
+export type WarmthEvent = { domain: Domain; date: string }
+
 /** Milliseconds per day — used in WARMTH_THRESHOLDS. */
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -39,10 +45,19 @@ export const WARMTH_THRESHOLDS = {
  *
  * @param tasks  The full in-memory task list (from useTasks / SyncProvider.list).
  * @param now    Current time in ms (inject; never call Date.now() here).
+ * @param events Optional non-task warmth events (e.g. habit hits, S31).
+ *               Deviation from ticket prose (`computeWarmth(tasks, events?)`):
+ *               placed as the 3rd param, after `now`, so every pre-existing
+ *               `computeWarmth(tasks, now)` call site and test stays valid
+ *               unmodified (DoD #1) — `now` already shipped as the 2nd param.
  * @returns      A record mapping every Domain to its WarmthState.
  */
-export function computeWarmth(tasks: Task[], now: number): Record<Domain, WarmthState> {
-  // Find the most recent completed_at per domain (single pass).
+export function computeWarmth(
+  tasks: Task[],
+  now: number,
+  events?: WarmthEvent[],
+): Record<Domain, WarmthState> {
+  // Find the most recent completed_at per domain (single pass over tasks + events).
   const latestPerDomain: Partial<Record<Domain, number>> = {}
 
   for (const task of tasks) {
@@ -51,6 +66,15 @@ export function computeWarmth(tasks: Task[], now: number): Record<Domain, Warmth
     const prev = latestPerDomain[domain]
     if (prev === undefined || task.completed_at > prev) {
       latestPerDomain[domain] = task.completed_at
+    }
+  }
+
+  for (const evt of events ?? []) {
+    const ts = Date.parse(evt.date + 'T00:00:00Z')
+    if (Number.isNaN(ts)) continue // malformed date — skip defensively
+    const prev = latestPerDomain[evt.domain]
+    if (prev === undefined || ts > prev) {
+      latestPerDomain[evt.domain] = ts
     }
   }
 
