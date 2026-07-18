@@ -490,3 +490,151 @@ describe('handleIncomingMessage — confirm-destructive gate (S17, ADR-0013)', (
     expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, "✓ added 'Water the plants' · Inbox")
   })
 })
+
+describe('handleIncomingMessage — onAction seam (S51)', () => {
+  afterEach(() => {
+    clearConfirmPending('owner-action-2')
+    clearConfirmPending('owner-action-3')
+  })
+
+  it('a successful create fires onAction once with ok:true and note "create: <title>"', async () => {
+    const chatId = 'owner-action-1'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Buy milk', domain: 'Growth' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const onAction = vi.fn()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: 'buy milk' }, deps)
+
+    expect(onAction).toHaveBeenCalledTimes(1)
+    expect(onAction).toHaveBeenCalledWith({ ok: true, note: 'create: Buy milk' })
+  })
+
+  it('an update confirmed with "y" fires onAction on the confirming message (the commit-time message)', async () => {
+    const chatId = 'owner-action-2'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport([
+      { path: 'Finance/Inbox.md', content: '- [ ] Call the CA about GST id:: task-1\n' },
+    ])
+    const onAction = vi.fn()
+    setConfirmPending(chatId, {
+      kind: 'confirm',
+      intent: 'update',
+      match: {
+        task: { id: 'task-1', title: 'Call the CA about GST', done: false, created_at: 1000, domain: 'Finance' },
+        path: 'Finance/Inbox.md',
+        rawLine: '- [ ] Call the CA about GST id:: task-1',
+      },
+      patch: { priority: 3 },
+      promptedAt: Date.now(),
+    })
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: 'y' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    // update flows through confirm/gate.ts, not router's own dispatchIntent
+    // branch — router's onAction seam only wraps the classify+dispatch path,
+    // so the confirm-destructive gate's "y" reply does not itself fire it.
+    expect(onAction).not.toHaveBeenCalled()
+  })
+
+  it('a delete confirmed with "y" commits but does not fire router\'s onAction (gate path, not classify+dispatch)', async () => {
+    const chatId = 'owner-action-3'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport([
+      { path: 'Finance/Inbox.md', content: '- [ ] Call the CA about GST id:: task-1\n' },
+    ])
+    const onAction = vi.fn()
+    setConfirmPending(chatId, {
+      kind: 'confirm',
+      intent: 'delete',
+      match: {
+        task: { id: 'task-1', title: 'Call the CA about GST', done: false, created_at: 1000, domain: 'Finance' },
+        path: 'Finance/Inbox.md',
+        rawLine: '- [ ] Call the CA about GST id:: task-1',
+      },
+      promptedAt: Date.now(),
+    })
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: 'y' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    expect(onAction).not.toHaveBeenCalled()
+  })
+
+  it('a handled photo batch-confirm ("all") fires onAction once with note "photo: created <n>"', async () => {
+    const chatId = 'owner-action-4'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const onAction = vi.fn()
+    const visionClient = fakeClaudeClient({
+      tasks: [{ title: 'Renew passport' }, { title: 'Call plumber' }],
+    })
+    const photoDeps: RouterDeps = { claudeClient: visionClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+    await handleIncomingMessage({ chatId, text: '', photoFileId: 'file-action-1' }, photoDeps)
+    expect(onAction).not.toHaveBeenCalled() // the batch prompt itself is not a handled action yet
+
+    const nluClaudeClient = fakeClaudeClient({ intent: 'other' })
+    const confirmDeps: RouterDeps = { ...photoDeps, claudeClient: nluClaudeClient }
+    await handleIncomingMessage({ chatId, text: 'all' }, confirmDeps)
+
+    expect(onAction).toHaveBeenCalledTimes(1)
+    expect(onAction).toHaveBeenCalledWith({ ok: true, note: 'photo: created 2' })
+  })
+
+  it('a confident voice create fires onAction once with note "voice create: <title>"', async () => {
+    const chatId = 'owner-action-5'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Call the CA about GST', domain: 'Finance' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const transcriber = fakeTranscriber({ text: 'call the CA about GST', confident: true })
+    const onAction = vi.fn()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber, ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: '', voice: { fileId: 'voice-action-1' } }, deps)
+
+    expect(onAction).toHaveBeenCalledTimes(1)
+    expect(onAction).toHaveBeenCalledWith({ ok: true, note: 'voice create: Call the CA about GST' })
+  })
+
+  it('a non-confident voice message never fires onAction (retype prompt, no dispatch)', async () => {
+    const chatId = 'owner-action-6'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'should not be reached' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const transcriber = fakeTranscriber({ text: 'garbled', confident: false })
+    const onAction = vi.fn()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber, ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: '', voice: { fileId: 'voice-action-2' } }, deps)
+
+    expect(onAction).not.toHaveBeenCalled()
+  })
+
+  it('a "not yet supported" text reply never fires onAction', async () => {
+    const chatId = 'owner-action-7'
+    const claudeClient = fakeClaudeClient({ intent: 'other' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const onAction = vi.fn()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: 'good morning' }, deps)
+
+    expect(onAction).not.toHaveBeenCalled()
+  })
+
+  it('omitting onAction entirely is a no-op — no throw, message handling unaffected', async () => {
+    const chatId = 'owner-action-8'
+    const claudeClient = fakeClaudeClient({ intent: 'create', title: 'Buy eggs' })
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport()
+    const deps: RouterDeps = { claudeClient, telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId }
+
+    await expect(handleIncomingMessage({ chatId, text: 'buy eggs' }, deps)).resolves.toBeUndefined()
+    expect(telegramClient.sendMessage).toHaveBeenCalledWith(chatId, "✓ added 'Buy eggs' · Inbox")
+  })
+})
