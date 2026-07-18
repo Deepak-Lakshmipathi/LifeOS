@@ -23,8 +23,32 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parsePipeline } from '../../src/vault/career.ts'
 import { commitAndPush } from '../lib/push.mjs'
+
+/**
+ * Extract {company, role} from every existing pipeline line, for dedup only.
+ * The full S43 contract parser lives in src/vault/career.ts (TypeScript) —
+ * but this file runs under plain `node` in GitHub Actions, which cannot
+ * import a .ts module, so we do NOT import it here. This narrow reader needs
+ * only the `- <company> — <role>` prefix (split on the FIRST em dash, exactly
+ * as career.ts's parsePipeline does); the test cross-checks our APPENDED
+ * lines against the real parsePipeline to prove the two agree on the shape.
+ */
+function existingCompanyRolePairs(md) {
+  const out = []
+  for (const rawLine of (md ?? '').split('\n')) {
+    const line = rawLine.trim()
+    if (!line.startsWith('- ')) continue
+    // Strip the leading "- " and everything from the first "(field:: …)" on.
+    const title = line.slice(2).split('(')[0].trim()
+    const emDash = title.indexOf('—')
+    const company = (emDash < 0 ? title : title.slice(0, emDash)).trim()
+    const role = emDash < 0 ? '' : title.slice(emDash + 1).trim()
+    if (!company) continue
+    out.push({ company, role })
+  }
+  return out
+}
 
 export const VAULT_REPO = 'Deepak-Lakshmipathi/LiveOS-VaultRepo'
 export const VAULT_BRANCH = 'main'
@@ -217,7 +241,7 @@ export function listingToPipelineLine(listing, match) {
  */
 export function buildAppendLines(listings, existingPipelineMd, profile) {
   const existing = new Set(
-    parsePipeline(existingPipelineMd).map((e) => dedupKey(e.company, e.role)),
+    existingCompanyRolePairs(existingPipelineMd).map((e) => dedupKey(e.company, e.role)),
   )
   const lines = []
   for (const listing of listings) {
