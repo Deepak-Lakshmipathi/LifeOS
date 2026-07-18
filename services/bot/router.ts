@@ -60,6 +60,13 @@ export interface RouterDeps {
   vaultTransport: VaultTransport
   transcriber: Transcriber
   ownerChatId: string
+  /**
+   * S51 run-logging seam (optional): fired once after a handled action
+   * (create/update/delete/photo/voice) completes. index.ts subscribes the
+   * runLog adapter here; every existing caller omits it and is unaffected.
+   * `not yet supported` / no-op messages never fire it.
+   */
+  onAction?: (info: { ok: boolean; note: string }) => void
 }
 
 /** Dispatches a classified intent name to its registered handler, or the fallback reply. */
@@ -148,6 +155,23 @@ export async function handleIncomingMessage(msg: TelegramMessage, deps: RouterDe
   const extracted = await classifyAndExtract(deps.claudeClient, msg.text)
   const reply = await dispatchIntent(extracted.intent, extracted, ctx)
   await deps.telegramClient.sendMessage(msg.chatId, reply)
+  if (reply !== NOT_YET_SUPPORTED) {
+    emitAction(deps, `${extracted.intent}: ${extracted.title ?? ''}`.trim())
+  }
+}
+
+/**
+ * Fire the optional S51 run-log seam. Never throws into the message path:
+ * the callback itself swallows its errors (runLog does), but a synchronous
+ * throw here would still break handling, so guard it. `deps.onAction` absent
+ * (every pre-S51 caller) is a no-op.
+ */
+function emitAction(deps: RouterDeps, note: string): void {
+  try {
+    deps.onAction?.({ ok: true, note })
+  } catch {
+    // logging must never break message handling (S51 DoD #2)
+  }
 }
 
 async function handlePhotoMessage(
@@ -199,6 +223,9 @@ async function handleVoiceMessage(
   const extracted = await classifyAndExtract(deps.claudeClient, transcript)
   const innerReply = await dispatchIntent(extracted.intent, extracted, ctx)
   await deps.telegramClient.sendMessage(chatId, buildHeardPrefix(transcript) + innerReply)
+  if (innerReply !== NOT_YET_SUPPORTED) {
+    emitAction(deps, `voice ${extracted.intent}: ${extracted.title ?? ''}`.trim())
+  }
 }
 
 async function handleConfirmReply(
@@ -237,4 +264,7 @@ async function handleConfirmReply(
       : confirmations[0]!
 
   await deps.telegramClient.sendMessage(chatId, reply)
+  if (parsed.indices.length > 0) {
+    emitAction(deps, `photo: created ${parsed.indices.length}`)
+  }
 }
