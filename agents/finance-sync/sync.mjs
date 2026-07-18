@@ -35,10 +35,34 @@ import { mkdir, writeFile, readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { commitAndPush } from '../lib/push.mjs'
 import { tokenFilePath } from './login.mjs'
-import {
-  parseNetworthHistory,
-  parsePortfolio,
-} from '../../src/vault/finance.ts'
+
+/**
+ * Read the networth-history table back into a sorted {date, networth}[], for
+ * the append decision only. The full S39 contract parser lives in
+ * src/vault/finance.ts (TypeScript) — but this file runs under plain `node`
+ * (Task Scheduler → `node sync.mjs`), which cannot import a .ts module, so we
+ * do NOT import it here. This narrow reader mirrors parseNetworthHistory's
+ * table shape (`| date | networth |`, INR commas tolerated); the test
+ * cross-checks our WRITTEN files against the real finance.ts parsers.
+ */
+function parseNetworthHistory(content) {
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+  const points = []
+  for (const line of (content ?? '').split('\n')) {
+    const t = line.trim()
+    if (!t.startsWith('|')) continue
+    const cells = t.split('|').map((c) => c.trim())
+    const inner = cells.slice(1, -1) // drop empties from the outer pipes
+    if (inner.length < 2) continue
+    const date = inner[0]
+    if (!DATE_RE.test(date)) continue // skips the header + bad dates
+    const networth = Number(inner[1].replace(/[,\s₹]/g, ''))
+    if (!Number.isFinite(networth)) continue
+    points.push({ date, networth })
+  }
+  points.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+  return points
+}
 
 /** Vault repo this agent owns Finance/** in (path-partition, S42 Context). */
 export const VAULT_REPO = 'Deepak-Lakshmipathi/LiveOS-VaultRepo'
