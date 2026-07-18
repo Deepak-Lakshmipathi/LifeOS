@@ -209,4 +209,34 @@ describe('computeWarmth', () => {
       expect(allStates.has(s)).toBe(true)
     }
   })
+
+  // ---------------------------------------------------------------------------
+  // S31 — habit-hit events fold into the same latest-per-domain pass
+  // ---------------------------------------------------------------------------
+
+  it('back-compat: calling with no events arg matches calling with events=[]', () => {
+    const tasks = [task({ id: 't1', domain: 'Finance', completed_at: NOW - 15 * DAY_MS })]
+    expect(computeWarmth(tasks, NOW)).toEqual(computeWarmth(tasks, NOW, []))
+  })
+
+  it('a today-dated habit event raises a cold/stale domain', () => {
+    const tasks = [task({ id: 't1', domain: 'Growth', completed_at: NOW - 15 * DAY_MS })] // stale
+    const withoutEvent = computeWarmth(tasks, NOW)
+    expect(withoutEvent['Growth']).toBe('stale')
+
+    const today = new Date(NOW).toISOString().slice(0, 10)
+    const withEvent = computeWarmth(tasks, NOW, [{ domain: 'Growth', date: today }])
+    expect(withEvent['Growth']).toBe('hot')
+  })
+
+  it('raises a wholly cold (never-completed) domain via events alone', () => {
+    const today = new Date(NOW).toISOString().slice(0, 10)
+    const result = computeWarmth([], NOW, [{ domain: 'Relationship', date: today }])
+    expect(result['Relationship']).toBe('hot')
+  })
+
+  it('ignores events with a malformed date', () => {
+    const result = computeWarmth([], NOW, [{ domain: 'Career', date: 'not-a-date' }])
+    expect(result['Career']).toBe('cold')
+  })
 })
