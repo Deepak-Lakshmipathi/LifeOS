@@ -1,0 +1,56 @@
+name: Agent — job-scout
+
+# S46: fetches job listings from keyless sources (RemoteOK API, HN
+# whoishiring RSS), scores them against agents/job-scout/profile.md, and
+# appends matches to Career/pipeline.md in the vault repo (LiveOS-VaultRepo)
+# as stage:: found entries. Pure API + cron placement (no browser, no
+# long-lived process) — see docs/agents/afk-pipeline.md's agent-placement
+# rule.
+on:
+  schedule:
+    - cron: '30 20 * * *' # 20:30 UTC == 02:00 IST, nightly
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LifeOS (for the scorer script + its deps)
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Checkout LiveOS-VaultRepo
+        uses: actions/checkout@v4
+        with:
+          repository: Deepak-Lakshmipathi/LiveOS-VaultRepo
+          ref: main
+          path: vault-clone
+          # Own fine-grained PAT (S57 pattern): Contents R/W on
+          # LiveOS-VaultRepo only, nothing else. See docs/agents/vault-tokens.md.
+          token: ${{ secrets.AGENT_VAULT_PAT_CAREER }}
+
+      - name: Configure git identity for the job-scout commit
+        working-directory: vault-clone
+        run: |
+          git config user.name "lifeos-job-scout"
+          git config user.email "lifeos-job-scout@users.noreply.github.com"
+
+      - name: Run job-scout
+        env:
+          VAULT_DIR: ${{ github.workspace }}/vault-clone
+        run: node agents/job-scout/scout.mjs
+        # NOTE: no S47 runLog.mjs status write wired here (unlike
+        # calendar-sync's record-status.mjs) — that would add a second
+        # write-set to this slice's diff (agents/job-scout/{runs.jsonl,
+        # status.json}), which S46's write-set doesn't include. Left as a
+        # follow-up, same as calendar-sync's own TODO (see sync.mjs).
