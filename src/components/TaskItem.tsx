@@ -42,13 +42,18 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate, projects, rescue,
 
   /** True for ~600 ms after a completing tap — drives the ring-pulse animation. */
   const [justTapped, setJustTapped] = useState(false)
+  const tapTimerRef = useRef<number>()
+
+  // Clear a pending ring-pulse timer on unmount so setJustTapped never fires
+  // post-teardown (jsdom window gone → whole-run failure). See issue #120.
+  useEffect(() => () => window.clearTimeout(tapTimerRef.current), [])
 
   const handleDotTap = async () => {
     if (!task.done) {
       // Completing the task ──────────────────────────────────────────
       if (!prefersReducedMotion) {
         setJustTapped(true)
-        window.setTimeout(() => setJustTapped(false), 600)
+        tapTimerRef.current = window.setTimeout(() => setJustTapped(false), 600)
       }
       // Haptic fires inside useTasks.toggleDone
       await onToggle(task.id)

@@ -97,6 +97,27 @@ describe('TaskItem dot interaction', () => {
     expect(onToggle).toHaveBeenCalledOnce()
     expect(onCompleted).not.toHaveBeenCalled()
   })
+
+  // Issue #120: the ~600ms ring-pulse timer must be cleared on unmount, else
+  // setJustTapped fires post-teardown (jsdom window gone → whole-run failure).
+  it('clears the ring-pulse timer on unmount (#120)', async () => {
+    const clearSpy = vi.spyOn(window, 'clearTimeout')
+    const onToggle = vi.fn().mockResolvedValue(undefined)
+    const task = makeTask()
+
+    const { unmount } = render(
+      <TaskItem task={task} onToggle={onToggle} onDelete={noop} onUpdate={noop} projects={[]} />
+    )
+
+    // Tap the dot to schedule the 600ms timer, then unmount before it fires.
+    const dot = screen.getByRole('button', { name: 'Mark complete' })
+    await act(async () => { fireEvent.click(dot) })
+    const before = clearSpy.mock.calls.length
+    unmount()
+
+    // The unmount-cleanup effect must have called clearTimeout with the ref'd id.
+    expect(clearSpy.mock.calls.length).toBeGreaterThan(before)
+  })
 })
 
 // ─── UndoToast ───────────────────────────────────────────────────────────────
