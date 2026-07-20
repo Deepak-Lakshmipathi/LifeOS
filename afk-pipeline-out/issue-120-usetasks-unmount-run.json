@@ -1,0 +1,34 @@
+{
+  "run": "issue-120-usetasks-unmount-guard",
+  "mode": "auto",
+  "input": { "type": "bug", "size": "light", "issue": 120 },
+  "date": "2026-07-20",
+  "pr": 137,
+  "merged_commit": "ea00e0a",
+  "phases": {
+    "P0_context": "loaded handoff + afk-pipeline.md config + memory; two open bugs (#120, #136); picked #120 (merge-gate flake, root cause known, higher blast radius)",
+    "P0.5_diagnose": "confirmed 2 leak sites: useTasks.ts initial-load .then/.catch (primary) + TaskItem.tsx 600ms ring-pulse setTimeout (fingerprint sibling); syncProvider Seam-isolation timeout ruled OUT of scope (separate slow-test flake, not a teardown leak)",
+    "P1_P3_spec": "skipped separate spec — light single-slice bug, root cause pre-resolved; orchestrator implemented inline per dispatch-health fallback (small pre-resolved slice)",
+    "P5_implement": "branch fix/120-usetasks-unmount-guard off origin/master; cancelled-flag then upgraded to mountedRef guarding refresh() too; TaskItem timer ref+cleanup; new + amended tests",
+    "P5_gate": "triple-green on tip 0c70c82"
+  },
+  "attempts": {
+    "implement": 1,
+    "review_cycles": 2,
+    "review_reject": 1,
+    "ci_flake_reruns": 0
+  },
+  "gate": {
+    "ci": "green first-attempt (build-test/bot-test/pwa-e2e), headSha-matched to tip",
+    "spec_compliance": "PASS (all 3 DoD)",
+    "ponytail_review": "attempt1 died on API error (glm-5 retired, not a verdict); attempt2 FAIL (3 findings: vacuous test, refresh() unguarded, TaskItem untested); attempt3 PASS after fixes"
+  },
+  "review_findings_fixed": [
+    "unmount test was vacuous — React 18 no-ops setState on unmounted fiber, so result.current can't detect a leaked setState; rewrote to assert on console.error after the .catch guard, mutation-verified",
+    "refresh() shared the unguarded pattern — replaced effect-local cancelled flag with a mountedRef guarding refresh() (all 4 mutation callers) + both mount continuations",
+    "TaskItem ring-pulse timer had no regression test — added clearTimeout-on-unmount spy in tapDotComplete.test.tsx, mutation-verified"
+  ],
+  "verification": "window-is-not-defined signature did not recur across 5+ post-fix full-suite runs; both new tests mutation-tested (fail when guard stripped)",
+  "fallbacks_fired": ["orchestrator-inline-implement (light bug, no separate implementer agent)"],
+  "notes": "DoD #3 fingerprint honestly amended not deleted — kept the separate syncProvider Seam-isolation 5s-timeout flake as its own entry (still live). 2 pre-existing local-ahead commits (S51 flip + handoff doc) untouched; git push owner-gated."
+}
