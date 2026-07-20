@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Task } from '../types'
 import type { SyncProvider } from '../sync/SyncProvider'
 
@@ -22,34 +22,38 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // False once the component unmounts — every async setState below checks it so
+  // no state update (or window access) happens post-teardown. See issue #120.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   const refresh = useCallback(async () => {
     const all = await provider.list()
+    if (!mountedRef.current) return
     setTasks(all)
   }, [provider])
 
   useEffect(() => {
-    // Guard against the async load resolving after unmount — otherwise the
-    // setState calls fire post-teardown (jsdom window gone → ReferenceError
-    // that vitest turns into a whole-run failure). See issue #120.
-    let cancelled = false
     provider
       .list()
       .then((all) => {
-        if (cancelled) return
+        if (!mountedRef.current) return
         setTasks(all)
         setLoading(false)
       })
       .catch((e) => {
-        if (cancelled) return
+        if (!mountedRef.current) return
         // Without this, a failed vault clone/auth leaves loading=true forever
         // (infinite spinner). Surface the reason and stop loading instead.
         console.error('[LifeOS] initial task load failed:', e)
         setError(e instanceof Error ? e.message : String(e))
         setLoading(false)
       })
-    return () => {
-      cancelled = true
-    }
   }, [provider])
 
   const addTask = useCallback(
