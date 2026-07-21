@@ -51,7 +51,7 @@ Rewrite only these, in place:
 
 Update in place, else leave exactly as-is:
 
-- **`## Current state`** — bump the `tip <hash>` and the shipped-list bullets IF code shipped.
+- **`## Current state`** — this is the **v1 milestone snapshot** (tip `e6c8a62`, "S1–S19 complete + PWA deployed"). It is ARCHIVAL — do NOT bump its hash each session; v2 progress is tracked by `## Outstanding board state` + the NEXT SESSION banner instead. Leave it unless v1 itself changes.
 - **`## Outstanding board state`** — sync counts to `state.mjs`.
 - **`## v2 progress`** — bump only if a phase/wave advanced.
 - **`## Key files`** — add a row only for a notable NEW file this session created.
@@ -59,10 +59,12 @@ Update in place, else leave exactly as-is:
 
 Do NOT edit `## What LifeOS is`, `## Architecture`, `## Run it`, `## How work
 ships here`, or the standing `## Lessons / gotchas` unless the underlying fact
-genuinely moved. **Housekeeping (occasional):** when the dated `Session lessons`
+genuinely moved. **Housekeeping (defer-with-note allowed):** when the dated `Session lessons`
 blocks in the head pile up (>3–4), distill the oldest into one line each in the
 standing `## Lessons / gotchas` list and delete the dated block — the head stays
-skimmable, nothing is lost.
+skimmable, nothing is lost. This is NOT a hard gate: if the session was long,
+leave a one-line "distillation due next close" note in the new block and defer —
+but do it within one or two closes, never let it grow unbounded.
 
 ## Step 4 — Refresh the graph + hub
 
@@ -73,8 +75,9 @@ skimmable, nothing is lost.
   `.claude/`, `.github/skills/`, `.github/hooks/` (vendored plugin code — this repo
   carries the impeccable/caveman/ponytail/graphify skills under BOTH dirs),
   `node_modules/`, `cors-proxy/node_modules/`, `dist/`, `test-results/`,
-  `.worktrees/`, `graphify-out/`, `LifeOS-Vault/`, `**/.vault-clone/` (a clone of
-  the private vault lives under `services/bot/.vault-clone/` — data, not source),
+  `.worktrees/`, `graphify-out/`, `LifeOS-Vault/`, `.vault-clone/` (matches at any
+  depth — a clone of the private vault lives under `services/bot/.vault-clone/`,
+  data not source),
   `.obsidian/`, `lifeos-hub.html` + `seed_tasks*.json` + `package-lock.json`
   (generated/huge, embed base64). Sanity check after `detect_incremental`: if the
   changed-file count is in the hundreds, the ignore isn't catching something — stop
