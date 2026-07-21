@@ -1,0 +1,27 @@
+{
+  "slice": "S40",
+  "title": "Money tab — networth/burn/portfolio/bills",
+  "mode": "auto",
+  "path": "light (pre-cut ticket; P1/P2/P3/P3.5 already done at ticket-creation → resumed at P5 dispatch)",
+  "date": "2026-07-21",
+  "pr": 138,
+  "issue": null,
+  "branch": "slice/s40-money-tab",
+  "merged": "2026-07-21T13:34:05Z",
+  "implementer": { "model": "sonnet", "isolation": "worktree", "duration_ms": 1118776, "tool_uses": 69, "tests_added": 45, "local_tests": "811/811" },
+  "gate": {
+    "ci": { "build-test": "pass", "bot-test": "pass", "pwa-e2e": "pass (first attempt; offline-persistence flake did not fire)" },
+    "ponytail_review": "GREEN (nits only)",
+    "eval": "PASS (6/6 DoD; write-set deviation justified; byte-level UI conformance clean)"
+  },
+  "attempts": 1,
+  "review_rejects": 0,
+  "flake_reruns": 0,
+  "fallbacks_fired": 0,
+  "write_set_deviation": "src/test/cockpitShell.test.tsx — 2 assertions re-pointed from S24 stub placeholder text to money-networth-card testid; disclosed in PR body; eval judged legitimate (mechanical consequence of DoD #1 deleting the stub text).",
+  "followups_nonblocking": [
+    "Donut.tsx useEffect deps include freshly-computed `segments` (derived from `slices`) → forces a full canvas redraw on every one of useCountUp's ~56 ticks. Drop `segments` from the dep array or useMemo it.",
+    "BarMeter growth/body variants defined+tested but unrendered in this PR — intended for S38/S45/S46 callers; dead flexibility until then.",
+    "MoneyView delta===0 renders green ▲ 0.0% (check is `>= 0`) — cosmetic."
+  ]
+}
