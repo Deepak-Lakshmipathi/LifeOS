@@ -797,6 +797,16 @@
    "notes": "v2 Glass Cockpit · Phase 6 · Wave 4 · [UI] · ticket: docs/slices/slice-S40-money-tab.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Own dir src/components/money/: Sparkline, Donut, BarMeter, BillsList. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
   },
   {
+   "id": "bug-136",
+   "title": "Bot run-logging gap: update/delete never write runs.jsonl",
+   "column": "progress",
+   "slice": null,
+   "issue": 136,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "BUG · afk-pipeline auto (light path — issue #136 carries root-cause + Option-1 fix + acceptance). Fix: plumb deps.onAction into services/bot/confirm/gate.ts resolvePending so successful update/delete commits emit a runs.jsonl line (note: 'update: <title>'|'delete: <title>'). Hotspot: services/bot/router.ts — dispatch ALONE (no other bot slice in flight). Merge gate: triple-green (CI incl bot-test + ponytail-review + eval-vs-acceptance)."
+  },
+  {
    "id": "s41",
    "title": "S41 — Wire net-worth + burn vital tiles",
    "column": "backlog",
