@@ -45,16 +45,18 @@ describe('S24 cockpit shell', () => {
     // Home visible first.
     expect(await screen.findByText('+ New task')).toBeInTheDocument()
 
-    // → Money: stub shows, Home's capture button gone.
+    // → Money: real S40 view shows, Home's capture button gone. (S40 filled
+    // in the stub this test used to key off of — "money-networth-card" is
+    // MoneyView's own Net worth Card, present per its Definition of Done #1.)
     fireEvent.click(within(bar()).getByText('Money'))
-    expect(await screen.findByText(/Net worth, burn, portfolio/)).toBeInTheDocument()
+    expect(await screen.findByTestId('money-networth-card')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByText('+ New task')).not.toBeInTheDocument())
 
     // → Agents: stub shows, Money gone.
     fireEvent.click(within(bar()).getByText('Agents'))
     expect(await screen.findByText(/Fleet health/)).toBeInTheDocument()
     await waitFor(() =>
-      expect(screen.queryByText(/Net worth, burn, portfolio/)).not.toBeInTheDocument()
+      expect(screen.queryByTestId('money-networth-card')).not.toBeInTheDocument()
     )
   })
 
