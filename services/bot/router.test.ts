@@ -511,7 +511,7 @@ describe('handleIncomingMessage — onAction seam (S51)', () => {
     expect(onAction).toHaveBeenCalledWith({ ok: true, note: 'create: Buy milk' })
   })
 
-  it('an update confirmed with "y" fires onAction on the confirming message (the commit-time message)', async () => {
+  it('an update confirmed with "y" fires onAction on the confirming message (#136 — confirm-gate now reports through router\'s emitAction)', async () => {
     const chatId = 'owner-action-2'
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport([
@@ -534,13 +534,15 @@ describe('handleIncomingMessage — onAction seam (S51)', () => {
     await handleIncomingMessage({ chatId, text: 'y' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(1)
-    // update flows through confirm/gate.ts, not router's own dispatchIntent
-    // branch — router's onAction seam only wraps the classify+dispatch path,
-    // so the confirm-destructive gate's "y" reply does not itself fire it.
-    expect(onAction).not.toHaveBeenCalled()
+    // update flows through confirm/gate.ts's commit(), which reports back via
+    // the onCommit callback the router threads into resolvePending — that
+    // callback forwards through router's existing emitAction guard, so the
+    // confirm-destructive gate's "y" reply now fires onAction too (#136).
+    expect(onAction).toHaveBeenCalledTimes(1)
+    expect(onAction).toHaveBeenCalledWith({ ok: true, note: 'update: Call the CA about GST' })
   })
 
-  it('a delete confirmed with "y" commits but does not fire router\'s onAction (gate path, not classify+dispatch)', async () => {
+  it('a delete confirmed with "y" commits and fires router\'s onAction via the confirm-gate\'s onCommit report (#136)', async () => {
     const chatId = 'owner-action-3'
     const telegramClient = fakeTelegramClient()
     const vaultTransport = createFakeVaultTransport([
@@ -562,6 +564,56 @@ describe('handleIncomingMessage — onAction seam (S51)', () => {
     await handleIncomingMessage({ chatId, text: 'y' }, deps)
 
     expect(vaultTransport.writeFileCalls).toHaveLength(1)
+    expect(onAction).toHaveBeenCalledTimes(1)
+    expect(onAction).toHaveBeenCalledWith({ ok: true, note: 'delete: Call the CA about GST' })
+  })
+
+  it('a stale-match commit (rawLine changed) writes nothing and does not fire onAction', async () => {
+    const chatId = 'owner-action-9'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport([{ path: 'Finance/Inbox.md', content: '- [ ] A different task\n' }])
+    const onAction = vi.fn()
+    setConfirmPending(chatId, {
+      kind: 'confirm',
+      intent: 'delete',
+      match: {
+        task: { id: 'task-1', title: 'Call the CA about GST', done: false, created_at: 1000, domain: 'Finance' },
+        path: 'Finance/Inbox.md',
+        rawLine: '- [ ] Call the CA about GST id:: task-1',
+      },
+      promptedAt: Date.now(),
+    })
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: 'y' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
+    expect(onAction).not.toHaveBeenCalled()
+    clearConfirmPending(chatId)
+  })
+
+  it('an "n" reply on a pending delete cancels and does not fire onAction', async () => {
+    const chatId = 'owner-action-10'
+    const telegramClient = fakeTelegramClient()
+    const vaultTransport = createFakeVaultTransport([
+      { path: 'Finance/Inbox.md', content: '- [ ] Call the CA about GST id:: task-1\n' },
+    ])
+    const onAction = vi.fn()
+    setConfirmPending(chatId, {
+      kind: 'confirm',
+      intent: 'delete',
+      match: {
+        task: { id: 'task-1', title: 'Call the CA about GST', done: false, created_at: 1000, domain: 'Finance' },
+        path: 'Finance/Inbox.md',
+        rawLine: '- [ ] Call the CA about GST id:: task-1',
+      },
+      promptedAt: Date.now(),
+    })
+    const deps: RouterDeps = { claudeClient: fakeClaudeClient({}), telegramClient, vaultTransport, transcriber: fakeTranscriber({ text: '', confident: false }), ownerChatId: chatId, onAction }
+
+    await handleIncomingMessage({ chatId, text: 'n' }, deps)
+
+    expect(vaultTransport.writeFileCalls).toHaveLength(0)
     expect(onAction).not.toHaveBeenCalled()
   })
 

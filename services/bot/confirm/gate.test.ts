@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { resolvePending, buildConfirmPrompt, buildDisambiguatePrompt } from './gate'
 import { setPending, getPending } from './store'
 import { createFakeVaultTransport } from '../testUtils/fakeVaultTransport'
@@ -152,6 +152,102 @@ describe('confirm/gate — resolvePending', () => {
       expect(reply).toBe('That task changed since I asked — please try again.')
       expect(transport.writeFileCalls).toHaveLength(0)
       expect(getPending(chatId)).toBeUndefined()
+    })
+  })
+
+  describe('onCommit callback (#136 — bot run-log seam)', () => {
+    it('fires once with note "update: <title>" on a successful update commit', async () => {
+      const chatId = 'chat-oncommit-update'
+      const transport = seedTransport()
+      const onCommit = vi.fn()
+      setPending(chatId, {
+        kind: 'confirm',
+        intent: 'update',
+        match: makeMatch(),
+        patch: { priority: 3 },
+        promptedAt: Date.now(),
+      })
+
+      await resolvePending(chatId, 'y', ctxFor(chatId, transport), onCommit)
+
+      expect(onCommit).toHaveBeenCalledTimes(1)
+      expect(onCommit).toHaveBeenCalledWith('update: Call the CA about GST')
+    })
+
+    it('fires once with note "update: <title>" for a mark-done commit (mark-done is an update intent)', async () => {
+      const chatId = 'chat-oncommit-markdone'
+      const transport = seedTransport()
+      const onCommit = vi.fn()
+      setPending(chatId, {
+        kind: 'confirm',
+        intent: 'update',
+        match: makeMatch(),
+        patch: { mark_done: true },
+        promptedAt: Date.now(),
+      })
+
+      await resolvePending(chatId, 'yes', ctxFor(chatId, transport), onCommit)
+
+      expect(onCommit).toHaveBeenCalledTimes(1)
+      expect(onCommit).toHaveBeenCalledWith('update: Call the CA about GST')
+    })
+
+    it('fires once with note "delete: <title>" on a successful delete commit', async () => {
+      const chatId = 'chat-oncommit-delete'
+      const transport = seedTransport()
+      const onCommit = vi.fn()
+      setPending(chatId, { kind: 'confirm', intent: 'delete', match: makeMatch(), promptedAt: Date.now() })
+
+      await resolvePending(chatId, 'y', ctxFor(chatId, transport), onCommit)
+
+      expect(onCommit).toHaveBeenCalledTimes(1)
+      expect(onCommit).toHaveBeenCalledWith('delete: Call the CA about GST')
+    })
+
+    it('never fires on "n"/cancel', async () => {
+      const chatId = 'chat-oncommit-cancel'
+      const transport = seedTransport()
+      const onCommit = vi.fn()
+      setPending(chatId, { kind: 'confirm', intent: 'delete', match: makeMatch(), promptedAt: Date.now() })
+
+      await resolvePending(chatId, 'n', ctxFor(chatId, transport), onCommit)
+
+      expect(onCommit).not.toHaveBeenCalled()
+    })
+
+    it('never fires on an unrecognized reply (state left pending)', async () => {
+      const chatId = 'chat-oncommit-unrecognized'
+      const transport = seedTransport()
+      const onCommit = vi.fn()
+      setPending(chatId, { kind: 'confirm', intent: 'delete', match: makeMatch(), promptedAt: Date.now() })
+
+      await resolvePending(chatId, 'maybe later', ctxFor(chatId, transport), onCommit)
+
+      expect(onCommit).not.toHaveBeenCalled()
+    })
+
+    it('never fires on a stale commit (rawLine no longer matches — STALE_REPLY, no write)', async () => {
+      const chatId = 'chat-oncommit-stale'
+      const transport = createFakeVaultTransport([{ path: 'Finance/Inbox.md', content: '- [ ] A different task\n' }])
+      const onCommit = vi.fn()
+      setPending(chatId, { kind: 'confirm', intent: 'delete', match: makeMatch(), promptedAt: Date.now() })
+
+      const reply = await resolvePending(chatId, 'y', ctxFor(chatId, transport), onCommit)
+
+      expect(reply).toBe('That task changed since I asked — please try again.')
+      expect(transport.writeFileCalls).toHaveLength(0)
+      expect(onCommit).not.toHaveBeenCalled()
+    })
+
+    it('is safe to omit — commit proceeds and returns normally with no onCommit arg', async () => {
+      const chatId = 'chat-oncommit-omitted'
+      const transport = seedTransport()
+      setPending(chatId, { kind: 'confirm', intent: 'delete', match: makeMatch(), promptedAt: Date.now() })
+
+      const reply = await resolvePending(chatId, 'y', ctxFor(chatId, transport))
+
+      expect(reply).toBe("✓ deleted 'Call the CA about GST'")
+      expect(transport.writeFileCalls).toHaveLength(1)
     })
   })
 
