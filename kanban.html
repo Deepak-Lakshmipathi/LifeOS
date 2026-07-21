@@ -799,10 +799,10 @@
   {
    "id": "bug-136",
    "title": "Bot run-logging gap: update/delete never write runs.jsonl",
-   "column": "progress",
+   "column": "done",
    "slice": null,
    "issue": 136,
-   "pr": null,
+   "pr": 139,
    "blockedBy": [],
    "notes": "BUG · afk-pipeline auto (light path — issue #136 carries root-cause + Option-1 fix + acceptance). Fix: plumb deps.onAction into services/bot/confirm/gate.ts resolvePending so successful update/delete commits emit a runs.jsonl line (note: 'update: <title>'|'delete: <title>'). Hotspot: services/bot/router.ts — dispatch ALONE (no other bot slice in flight). Merge gate: triple-green (CI incl bot-test + ponytail-review + eval-vs-acceptance)."
   },

@@ -1,0 +1,26 @@
+{
+  "slice": "bug-136",
+  "title": "Bot run-logging gap: confirm-gate update/delete never write runs.jsonl",
+  "mode": "auto",
+  "type": "bug",
+  "path": "light (issue #136 carried root-cause + Option-1 fix sketch + acceptance; P0.5 diagnose effectively done in the issue → resumed at P5 dispatch, design pre-resolved by orchestrator)",
+  "date": "2026-07-21",
+  "pr": 139,
+  "issue": 136,
+  "branch": "fix/136-confirm-gate-runlog",
+  "merged": "2026-07-21T14:36:30Z",
+  "closes_issue": 136,
+  "fix": "Thread optional onCommit?: (note)=>void through resolvePending → handleConfirmDecision → commit in services/bot/confirm/gate.ts; fire onCommit(`${intent}: ${title}`) only after successful writeFile. Router passes (note)=>emitAction(deps, note) so emitAction stays the SINGLE never-throw logging seam — no deps/onAction leaked into the gate. Refinement of issue Option 1 (avoids leaking deps).",
+  "implementer": { "model": "sonnet", "isolation": "worktree", "duration_ms": 401011, "tool_uses": 31, "bot_tests": "166/166", "pwa_tests": "811/811" },
+  "gate": {
+    "ci": { "bot-test": "pass", "build-test": "pass", "pwa-e2e": "pass (first attempt)" },
+    "ponytail_review": "GREEN (1 nit: mark-done test duplicates update test — note construction doesn't branch on patch)",
+    "eval": "PASS (4/4 acceptance; design matches locked spec; tests non-vacuous — revert onCommit → tests fail)"
+  },
+  "attempts": 1,
+  "review_rejects": 0,
+  "flake_reruns": 0,
+  "fallbacks_fired": 0,
+  "write_set": ["services/bot/confirm/gate.ts", "services/bot/router.ts", "+ their .test.ts"],
+  "notes": "Hotspot services/bot/router.ts touched but dispatched ALONE (no other bot slice in flight) — one-line call-site change only. Worktree came up with node_modules missing in both root and services/bot; implementer ran npm install in both to make suites runnable (pre-existing env state, not part of the fix)."
+}
