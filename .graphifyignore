@@ -1,0 +1,20 @@
+# Keep the graph scoped to LifeOS project source — exclude vendored plugin code,
+# build output, worktrees, and graphify's own output/data dirs.
+.claude/
+.github/skills/
+.github/hooks/
+node_modules/
+cors-proxy/node_modules/
+dist/
+test-results/
+.worktrees/
+graphify-out/
+LifeOS-Vault/
+.vault-clone/
+.obsidian/
+.git/
+# generated artifacts (embed base64 / are build output, never source)
+lifeos-hub.html
+seed_tasks.json
+seed_tasks_detailed.json
+package-lock.json

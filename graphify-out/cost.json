@@ -23,6 +23,13 @@
       "input_tokens": 51537,
       "output_tokens": 2000,
       "files": 42
+    },
+    {
+      "date": "2026-07-21T15:17:35.024506+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 222,
+      "note": "incremental --update: v1→v2 catch-up, 4 semantic subagents"
     }
   ],
   "total_input_tokens": 249175,
