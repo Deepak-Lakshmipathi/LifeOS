@@ -119,7 +119,12 @@ function parsePick(normalized: string, max: number): number | null {
  * today); otherwise the message was consumed and the returned string is the
  * reply to send back.
  */
-export async function resolvePending(chatId: string, text: string, ctx: BotContext): Promise<string | null> {
+export async function resolvePending(
+  chatId: string,
+  text: string,
+  ctx: BotContext,
+  onCommit?: (note: string) => void,
+): Promise<string | null> {
   const action = getPending(chatId)
   if (!action) return null
 
@@ -129,7 +134,7 @@ export async function resolvePending(chatId: string, text: string, ctx: BotConte
     return handleDisambiguatePick(chatId, normalized, action)
   }
 
-  return handleConfirmDecision(chatId, normalized, action, ctx)
+  return handleConfirmDecision(chatId, normalized, action, ctx, onCommit)
 }
 
 function handleDisambiguatePick(chatId: string, normalized: string, action: DisambiguateAction): string {
@@ -159,9 +164,10 @@ async function handleConfirmDecision(
   normalized: string,
   action: ConfirmAction,
   ctx: BotContext,
+  onCommit?: (note: string) => void,
 ): Promise<string> {
   if (normalized === 'y' || normalized === 'yes') {
-    return commit(chatId, action, ctx)
+    return commit(chatId, action, ctx, onCommit)
   }
 
   if (normalized === 'n' || normalized === 'no' || normalized === 'cancel') {
@@ -173,7 +179,12 @@ async function handleConfirmDecision(
   return buildConfirmPrompt(action.intent, action.match, action.patch)
 }
 
-async function commit(chatId: string, action: ConfirmAction, ctx: BotContext): Promise<string> {
+async function commit(
+  chatId: string,
+  action: ConfirmAction,
+  ctx: BotContext,
+  onCommit?: (note: string) => void,
+): Promise<string> {
   const { match, intent, patch } = action
 
   // Re-read fresh — the file may have changed since the prompt was sent
@@ -200,6 +211,8 @@ async function commit(chatId: string, action: ConfirmAction, ctx: BotContext): P
 
   const newContent = lines.join('\n')
   await ctx.vaultTransport.writeFile(match.path, newContent, `${intent} task: ${match.task.id}`)
+
+  onCommit?.(`${intent}: ${match.task.title}`)
 
   clearPending(chatId)
   return buildResultReply(intent, match.task, patch)

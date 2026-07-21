@@ -146,7 +146,7 @@ export async function handleIncomingMessage(msg: TelegramMessage, deps: RouterDe
   // Confirm-destructive gate (S17, ADR-0013 Decisions 3-4) — an independent
   // pending-state Map from the photo batch above; null means nothing is
   // pending for this chat and the message falls through to NLU as today.
-  const pendingReply = await resolvePending(msg.chatId, msg.text, ctx)
+  const pendingReply = await resolvePending(msg.chatId, msg.text, ctx, (note) => emitAction(deps, note))
   if (pendingReply !== null) {
     await deps.telegramClient.sendMessage(msg.chatId, pendingReply)
     return
