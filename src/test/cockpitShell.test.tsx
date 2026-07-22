@@ -52,9 +52,11 @@ describe('S24 cockpit shell', () => {
     expect(await screen.findByTestId('money-networth-card')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByText('+ New task')).not.toBeInTheDocument())
 
-    // → Agents: stub shows, Money gone.
+    // → Agents: real S49 view shows, Money gone. (S49 filled in the stub this
+    // test used to key off of — "fleet-table" is AgentsView's own fleet table
+    // container, present per its Definition of Done #1.)
     fireEvent.click(within(bar()).getByText('Agents'))
-    expect(await screen.findByText(/Fleet health/)).toBeInTheDocument()
+    expect(await screen.findByTestId('fleet-table')).toBeInTheDocument()
     await waitFor(() =>
       expect(screen.queryByTestId('money-networth-card')).not.toBeInTheDocument()
     )
