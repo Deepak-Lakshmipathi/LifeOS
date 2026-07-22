@@ -145,9 +145,9 @@
     "semantic_hash": "fd8fe4eddefe9c0c622839f300667b3c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\HANDOFF.md": {
-    "mtime": 1784646224.6087854,
-    "ast_hash": "0f192d801140448665ad2e5d480e6f71",
-    "semantic_hash": "0f192d801140448665ad2e5d480e6f71"
+    "mtime": 1784693075.079094,
+    "ast_hash": "f6647ca6b6af159a02a71a3118fa1ed8",
+    "semantic_hash": "f6647ca6b6af159a02a71a3118fa1ed8"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\adr\\0001-pwa-over-native.md": {
     "mtime": 1781559973.251291,
@@ -185,9 +185,9 @@
     "semantic_hash": "90ebdeb16430156c6fb30c27dfbe8abc"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\kanban.html": {
-    "mtime": 1784644630.721604,
-    "ast_hash": "afa4a80a868927e6a11e6b3dbfcdcdef",
-    "semantic_hash": "afa4a80a868927e6a11e6b3dbfcdcdef"
+    "mtime": 1784689411.098668,
+    "ast_hash": "a72f5f305fb26ca682c50f5b1e27eba9",
+    "semantic_hash": "a72f5f305fb26ca682c50f5b1e27eba9"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\public\\icons\\icon-192.png": {
     "mtime": 1781564380.7880216,
@@ -1695,19 +1695,19 @@
     "semantic_hash": "9e7516f41793a25c35ac15c357a56fdb"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\.impeccable\\hook.cache.json": {
-    "mtime": 1784646896.6426277,
-    "ast_hash": "5ffea74e898183bd40731799d322a9a4",
-    "semantic_hash": "5ffea74e898183bd40731799d322a9a4"
+    "mtime": 1784693465.2007031,
+    "ast_hash": "8ab9b0db6926e9ec669c430e3f7f74c3",
+    "semantic_hash": "8ab9b0db6926e9ec669c430e3f7f74c3"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\afk-pipeline-out\\bug-136-confirm-gate-runlog-run.json": {
-    "mtime": 1784644647.9309924,
-    "ast_hash": "2f40b8d7eafa617fc4cf305751a91130",
-    "semantic_hash": "2f40b8d7eafa617fc4cf305751a91130"
+    "mtime": 1784686505.8551922,
+    "ast_hash": "d8abc02a91ecfdc448b274e48abefe38",
+    "semantic_hash": "d8abc02a91ecfdc448b274e48abefe38"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\afk-pipeline-out\\issue-120-usetasks-unmount-run.json": {
-    "mtime": 1784527513.2719164,
-    "ast_hash": "15d41718a9b0f62b96b1f02e208f758b",
-    "semantic_hash": "15d41718a9b0f62b96b1f02e208f758b"
+    "mtime": 1784686505.374609,
+    "ast_hash": "8178b5bc2418de53ca2cbc9a73f7a4af",
+    "semantic_hash": "8178b5bc2418de53ca2cbc9a73f7a4af"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\afk-pipeline-out\\s20-glass-tokens-run.json": {
     "mtime": 1784028035.0688207,
@@ -1720,9 +1720,9 @@
     "semantic_hash": "757245773f0cde835d8b33f1f3edda7c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\afk-pipeline-out\\s40-money-tab-run.json": {
-    "mtime": 1784640919.8548734,
-    "ast_hash": "a751ad8e28381e0a9f58aee92db2440a",
-    "semantic_hash": "a751ad8e28381e0a9f58aee92db2440a"
+    "mtime": 1784686505.6448843,
+    "ast_hash": "8b9ba99631e3821e6c486bec99a4785d",
+    "semantic_hash": "8b9ba99631e3821e6c486bec99a4785d"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\agents\\calendar-sync\\record-status.mjs": {
     "mtime": 1784263164.1725225,
@@ -1830,14 +1830,14 @@
     "semantic_hash": "1d6b14ca8d38a0df734fefeb07db51bc"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\confirm\\gate.test.ts": {
-    "mtime": 1783222106.016641,
-    "ast_hash": "7e564390fccd1d4135fbf397b2201242",
-    "semantic_hash": "7e564390fccd1d4135fbf397b2201242"
+    "mtime": 1784686505.0888834,
+    "ast_hash": "c62fcf6f8dfc45d1a5802fadc5f1d41b",
+    "semantic_hash": "c62fcf6f8dfc45d1a5802fadc5f1d41b"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\confirm\\gate.ts": {
-    "mtime": 1783222106.017644,
-    "ast_hash": "623db26261ebbf741ce0ab688db97225",
-    "semantic_hash": "623db26261ebbf741ce0ab688db97225"
+    "mtime": 1784686505.0888834,
+    "ast_hash": "6028348cc252954659be98ee94b9e26f",
+    "semantic_hash": "6028348cc252954659be98ee94b9e26f"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\confirm\\store.test.ts": {
     "mtime": 1783222106.0196452,
@@ -1945,14 +1945,14 @@
     "semantic_hash": "389fc4993e018ea3479a28012c97cc5c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\router.test.ts": {
-    "mtime": 1784527453.795179,
-    "ast_hash": "3ce2b2a347f2b4d06a47d254be5849e4",
-    "semantic_hash": "3ce2b2a347f2b4d06a47d254be5849e4"
+    "mtime": 1784686505.0888834,
+    "ast_hash": "f6e85d1f32b1be3201232f20660666a0",
+    "semantic_hash": "f6e85d1f32b1be3201232f20660666a0"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\router.ts": {
-    "mtime": 1784386497.4093585,
-    "ast_hash": "c6fdb5a863c3f0783ade86227a63db34",
-    "semantic_hash": "c6fdb5a863c3f0783ade86227a63db34"
+    "mtime": 1784686505.0888834,
+    "ast_hash": "bb7dd253342b783f9e3904cf75ef1b30",
+    "semantic_hash": "bb7dd253342b783f9e3904cf75ef1b30"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\runLog.test.ts": {
     "mtime": 1784386497.4093585,
@@ -2015,9 +2015,9 @@
     "semantic_hash": "37557e243da68a326c79da7947a3c886"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\vaultTransport.test.ts": {
-    "mtime": 1782983680.8537967,
-    "ast_hash": "d2bd24c0b956cdaacd9a0dde63d0c78f",
-    "semantic_hash": "d2bd24c0b956cdaacd9a0dde63d0c78f"
+    "mtime": 1784689410.9235668,
+    "ast_hash": "409f3650ce9325ecf4eb6f0bd0eaac91",
+    "semantic_hash": "409f3650ce9325ecf4eb6f0bd0eaac91"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\services\\bot\\vaultTransport.ts": {
     "mtime": 1782983680.8557947,
@@ -2040,14 +2040,14 @@
     "semantic_hash": "dae136dc665693ff9fdf15c29e32f764"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\agents\\AgentsView.tsx": {
-    "mtime": 1784093852.0587964,
-    "ast_hash": "fe315ab5291334c4b378548962253043",
-    "semantic_hash": "fe315ab5291334c4b378548962253043"
+    "mtime": 1784689169.242765,
+    "ast_hash": "2c9f73f005deafdb2a055b375bbffd84",
+    "semantic_hash": "2c9f73f005deafdb2a055b375bbffd84"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\career\\CareerView.tsx": {
-    "mtime": 1784093852.0628297,
-    "ast_hash": "734436d17da07597c22bb54b957068b8",
-    "semantic_hash": "734436d17da07597c22bb54b957068b8"
+    "mtime": 1784686906.8007972,
+    "ast_hash": "b21e536aa5aa5ef6b8ce664858dedda0",
+    "semantic_hash": "b21e536aa5aa5ef6b8ce664858dedda0"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\cockpit\\Header.test.tsx": {
     "mtime": 1784125497.4258397,
@@ -2150,9 +2150,9 @@
     "semantic_hash": "05097fa22289dbeee1fe5f59b2b974ab"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\MoneyView.tsx": {
-    "mtime": 1784093852.0826228,
-    "ast_hash": "b035b3e4c5662b297e20ed77703a04ae",
-    "semantic_hash": "b035b3e4c5662b297e20ed77703a04ae"
+    "mtime": 1784686505.1046965,
+    "ast_hash": "b4b7c712f1d565b96e685b393557de3e",
+    "semantic_hash": "b4b7c712f1d565b96e685b393557de3e"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\hooks\\useTimeOfDay.test.ts": {
     "mtime": 1784091945.6088953,
@@ -2185,9 +2185,9 @@
     "semantic_hash": "a1252a5ef2030e34eac08c2f1d7e9f4f"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\test\\cockpitShell.test.tsx": {
-    "mtime": 1784093852.0866482,
-    "ast_hash": "9818a8a51e2481f97aea5acb22d4b2f5",
-    "semantic_hash": "9818a8a51e2481f97aea5acb22d4b2f5"
+    "mtime": 1784689169.242765,
+    "ast_hash": "b33a190521206731ed1d1a528f0ede52",
+    "semantic_hash": "b33a190521206731ed1d1a528f0ede52"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\test\\useTasksUnmount.test.tsx": {
     "mtime": 1784527453.8047247,
@@ -2195,19 +2195,19 @@
     "semantic_hash": "bd995cc905058053110fd064da92e57b"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\agents\\failed\\status.json": {
-    "mtime": 1784125497.4404473,
-    "ast_hash": "c05a40355cd08aaccbe930fc6194aacd",
-    "semantic_hash": "c05a40355cd08aaccbe930fc6194aacd"
+    "mtime": 1784692692.1952817,
+    "ast_hash": "f7b65cf0d2f372ff11f1cd54e25d6651",
+    "semantic_hash": "f7b65cf0d2f372ff11f1cd54e25d6651"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\agents\\good\\status.json": {
-    "mtime": 1784125497.443964,
-    "ast_hash": "f85ec1035d22ad74a35775af234ea806",
-    "semantic_hash": "f85ec1035d22ad74a35775af234ea806"
+    "mtime": 1784692692.1952817,
+    "ast_hash": "5a90b1a2df0cfeb213114aaaf0148d11",
+    "semantic_hash": "5a90b1a2df0cfeb213114aaaf0148d11"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\agents\\stale\\status.json": {
-    "mtime": 1784125497.447012,
-    "ast_hash": "cbff324d8c9bfdd1a665427f01ff7b4e",
-    "semantic_hash": "cbff324d8c9bfdd1a665427f01ff7b4e"
+    "mtime": 1784692692.197291,
+    "ast_hash": "5ad98f1c10dca51bcc5f30a38884d72d",
+    "semantic_hash": "5ad98f1c10dca51bcc5f30a38884d72d"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\agentStatus.test.ts": {
     "mtime": 1784125497.468169,
@@ -2310,7 +2310,7 @@
     "semantic_hash": "24bd4579e0b3231dc2de42742501d697"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\afk-pipeline-out\\LESSONS.md": {
-    "mtime": 1784644665.610881,
+    "mtime": 1784686505.8551922,
     "ast_hash": "5ad64d8e845ce0fc30a71ac5f021d2eb",
     "semantic_hash": "5ad64d8e845ce0fc30a71ac5f021d2eb"
   },
@@ -2620,53 +2620,168 @@
     "semantic_hash": "a3beb73d0567c82fdaf550b25717453f"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\calendar-today.md": {
-    "mtime": 1784121356.4526577,
-    "ast_hash": "a7bff26acf7a6f93087c7343092600f3",
-    "semantic_hash": "a7bff26acf7a6f93087c7343092600f3"
+    "mtime": 1784692692.197291,
+    "ast_hash": "588f1f3b222801c0c5ace0f238721081",
+    "semantic_hash": "588f1f3b222801c0c5ace0f238721081"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\career-courses.md": {
-    "mtime": 1784125497.4490159,
-    "ast_hash": "8bccebdbc7444070232cf2a2b5e6b843",
-    "semantic_hash": "8bccebdbc7444070232cf2a2b5e6b843"
+    "mtime": 1784692692.1993017,
+    "ast_hash": "9f5489067e93d6848fa890ae9fe1e467",
+    "semantic_hash": "9f5489067e93d6848fa890ae9fe1e467"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\career-pipeline.md": {
-    "mtime": 1784125497.4510074,
-    "ast_hash": "d59a24c4e9f972485c3dbc3a1b0ddd96",
-    "semantic_hash": "d59a24c4e9f972485c3dbc3a1b0ddd96"
+    "mtime": 1784692692.1993017,
+    "ast_hash": "d2837cbc2cea2d20c587807c7335a1cc",
+    "semantic_hash": "d2837cbc2cea2d20c587807c7335a1cc"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\finance-bills.md": {
-    "mtime": 1784125497.4545298,
-    "ast_hash": "eae63b208b720acf8ebff0e3b3fbdf3a",
-    "semantic_hash": "eae63b208b720acf8ebff0e3b3fbdf3a"
+    "mtime": 1784692692.201313,
+    "ast_hash": "4f0bc1be3398effc769f79fb1a871880",
+    "semantic_hash": "4f0bc1be3398effc769f79fb1a871880"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\finance-burn.md": {
-    "mtime": 1784125497.4565816,
-    "ast_hash": "a5dbf14ea8f239d8ef775049e07aaf1d",
-    "semantic_hash": "a5dbf14ea8f239d8ef775049e07aaf1d"
+    "mtime": 1784692692.201313,
+    "ast_hash": "af709a0842ac78cce07ad536a88894fd",
+    "semantic_hash": "af709a0842ac78cce07ad536a88894fd"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\finance-networth.md": {
-    "mtime": 1784125497.4595668,
-    "ast_hash": "421504a7fb5c3c0f934430f280258b01",
-    "semantic_hash": "421504a7fb5c3c0f934430f280258b01"
+    "mtime": 1784692692.2033238,
+    "ast_hash": "e4a06ee72ecf8f4dcc6aae6783216f38",
+    "semantic_hash": "e4a06ee72ecf8f4dcc6aae6783216f38"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\finance-portfolio.md": {
-    "mtime": 1784125497.461568,
-    "ast_hash": "2001047e13565a7d71ea210f97278a8a",
-    "semantic_hash": "2001047e13565a7d71ea210f97278a8a"
+    "mtime": 1784692692.2033238,
+    "ast_hash": "a2bb3788a4eab2619d37f0bddf98cf6c",
+    "semantic_hash": "a2bb3788a4eab2619d37f0bddf98cf6c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\habits-log.md": {
-    "mtime": 1784125497.4641097,
-    "ast_hash": "85ca8a249f5fa4e01d3898c0dd67205e",
-    "semantic_hash": "85ca8a249f5fa4e01d3898c0dd67205e"
+    "mtime": 1784692692.2053356,
+    "ast_hash": "324919909cca8d10c5f4a1dede5e744f",
+    "semantic_hash": "324919909cca8d10c5f4a1dede5e744f"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\habits.md": {
-    "mtime": 1784125497.466148,
-    "ast_hash": "38802e083db483eae7d38e6ed0220369",
-    "semantic_hash": "38802e083db483eae7d38e6ed0220369"
+    "mtime": 1784692692.2053356,
+    "ast_hash": "9960cd59adc249c2138b849266830267",
+    "semantic_hash": "9960cd59adc249c2138b849266830267"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\mail-attention.md": {
-    "mtime": 1784121356.4556468,
-    "ast_hash": "2e1e341715ef5cf64c3470a40427ea46",
-    "semantic_hash": "2e1e341715ef5cf64c3470a40427ea46"
+    "mtime": 1784692692.2073457,
+    "ast_hash": "54e43bff3adae12145883918a20f46a4",
+    "semantic_hash": "54e43bff3adae12145883918a20f46a4"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\agents\\lib\\rotate.mjs": {
+    "mtime": 1784689410.9235668,
+    "ast_hash": "6f7d0ed8189633aecd27ffc7f86d79d7",
+    "semantic_hash": "6f7d0ed8189633aecd27ffc7f86d79d7"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\agents\\lib\\rotate.test.mjs": {
+    "mtime": 1784689410.9235668,
+    "ast_hash": "33c5229c18309c3142b6e76a42c6b224",
+    "semantic_hash": "33c5229c18309c3142b6e76a42c6b224"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\agents\\AgentsView.test.tsx": {
+    "mtime": 1784689169.242765,
+    "ast_hash": "46b3743bdcdb00ab1f85ad98b955e07d",
+    "semantic_hash": "46b3743bdcdb00ab1f85ad98b955e07d"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\career\\CareerView.test.tsx": {
+    "mtime": 1784686906.798785,
+    "ast_hash": "1caf1ebb82b01358c67ab11bf5c9059c",
+    "semantic_hash": "1caf1ebb82b01358c67ab11bf5c9059c"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\career\\CoursesCard.tsx": {
+    "mtime": 1784686906.8007972,
+    "ast_hash": "b14e2f18588c5b8bf2c8c0f7ccd84623",
+    "semantic_hash": "b14e2f18588c5b8bf2c8c0f7ccd84623"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\career\\PipelineBoard.tsx": {
+    "mtime": 1784686906.8028128,
+    "ast_hash": "4bfae1463fce5e2b4247851120928bb7",
+    "semantic_hash": "4bfae1463fce5e2b4247851120928bb7"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\BarMeter.test.tsx": {
+    "mtime": 1784686505.0888834,
+    "ast_hash": "83a22e872c23218c339639ad5f0536e6",
+    "semantic_hash": "83a22e872c23218c339639ad5f0536e6"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\BarMeter.tsx": {
+    "mtime": 1784686505.0888834,
+    "ast_hash": "44a6f614f20dc67b8e6dace49351599b",
+    "semantic_hash": "44a6f614f20dc67b8e6dace49351599b"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\BillsList.test.tsx": {
+    "mtime": 1784686505.0888834,
+    "ast_hash": "46c56790e6840f5e9c2e736292987aae",
+    "semantic_hash": "46c56790e6840f5e9c2e736292987aae"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\BillsList.tsx": {
+    "mtime": 1784686505.0888834,
+    "ast_hash": "0579d3b50f0e8871cdf7722b05a53bf9",
+    "semantic_hash": "0579d3b50f0e8871cdf7722b05a53bf9"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\Donut.test.tsx": {
+    "mtime": 1784686505.0888834,
+    "ast_hash": "2e1c5eeb093787d7673d7d6f60847876",
+    "semantic_hash": "2e1c5eeb093787d7673d7d6f60847876"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\Donut.tsx": {
+    "mtime": 1784686505.1046965,
+    "ast_hash": "417a88f6a5c64bf98fc9b6852ccabc8b",
+    "semantic_hash": "417a88f6a5c64bf98fc9b6852ccabc8b"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\MoneyView.test.tsx": {
+    "mtime": 1784686505.1046965,
+    "ast_hash": "c7ccf305a11c62e2629cbb98e7d0027c",
+    "semantic_hash": "c7ccf305a11c62e2629cbb98e7d0027c"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\Sparkline.test.tsx": {
+    "mtime": 1784686505.1046965,
+    "ast_hash": "b2a1c24136dd23393eafea27314170e4",
+    "semantic_hash": "b2a1c24136dd23393eafea27314170e4"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\money\\Sparkline.tsx": {
+    "mtime": 1784686505.1046965,
+    "ast_hash": "4098ee0dccdca60db8a5a084d08df64a",
+    "semantic_hash": "4098ee0dccdca60db8a5a084d08df64a"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\data\\agentManifest.ts": {
+    "mtime": 1784689169.242765,
+    "ast_hash": "e712cfb5edbc09e7d42cfc5397051904",
+    "semantic_hash": "e712cfb5edbc09e7d42cfc5397051904"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\supervisor.test.ts": {
+    "mtime": 1784686906.8088453,
+    "ast_hash": "d6afce0e80d6e894f4ef82b1d9f7ae6b",
+    "semantic_hash": "d6afce0e80d6e894f4ef82b1d9f7ae6b"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\supervisor.ts": {
+    "mtime": 1784686906.8108592,
+    "ast_hash": "d4e598f8b82ba63cd2639d3b904ea0c3",
+    "semantic_hash": "d4e598f8b82ba63cd2639d3b904ea0c3"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\transport.test.ts": {
+    "mtime": 1784689410.9235668,
+    "ast_hash": "279f0b1f49d3735e790e602bfac27adb",
+    "semantic_hash": "279f0b1f49d3735e790e602bfac27adb"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\.github\\workflows\\agent-rotate.yml": {
+    "mtime": 1784689410.9077175,
+    "ast_hash": "8cce64d3a0d1984a14d7ad231d742169",
+    "semantic_hash": "8cce64d3a0d1984a14d7ad231d742169"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\proposal-approved.md": {
+    "mtime": 1784692692.2090964,
+    "ast_hash": "0bc2819ba97d25996d00ef1406d2404a",
+    "semantic_hash": "0bc2819ba97d25996d00ef1406d2404a"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\proposal-pending.md": {
+    "mtime": 1784692692.2090964,
+    "ast_hash": "7b8dc92e36d8a5207fcbd37ecfd18249",
+    "semantic_hash": "7b8dc92e36d8a5207fcbd37ecfd18249"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\__fixtures__\\supervisor-report.md": {
+    "mtime": 1784692692.2090964,
+    "ast_hash": "9327c66ac58fc5642b913742375e93dc",
+    "semantic_hash": "9327c66ac58fc5642b913742375e93dc"
   }
 }

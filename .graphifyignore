@@ -1,6 +1,7 @@
 # Keep the graph scoped to LifeOS project source — exclude vendored plugin code,
 # build output, worktrees, and graphify's own output/data dirs.
 .claude/
+.impeccable/
 .github/skills/
 .github/hooks/
 node_modules/
