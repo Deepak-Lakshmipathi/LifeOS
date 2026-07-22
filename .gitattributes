@@ -1,0 +1,5 @@
+# Vault test fixtures are byte-compared in tests (e.g. supervisor.test.ts's
+# CRLF guard, the parsers' byte-exact assertions). Pin them to LF so a Windows
+# `core.autocrlf=true` checkout can't rewrite them to CRLF and fail locally
+# while CI (Linux/LF) stays green. See afk-pipeline flake notes.
+src/vault/__fixtures__/** text eol=lf
