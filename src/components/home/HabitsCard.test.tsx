@@ -119,7 +119,7 @@ describe('HabitsCard — tap today (DoD 2)', () => {
 
     await waitFor(() => expect(transport.written).toHaveLength(1))
     expect(transport.written[0]!.path).toBe('Habits/log.md')
-    expect(transport.written[0]!.content.trim().split('\n').at(-1)).toBe(
+    expect(transport.written[0]!.content.trim().split('\n').slice(-1)[0]).toBe(
       serializeHabitHit({ habit: 'Gym session', date: TODAY, source: 'pwa' }),
     )
     expect(transport.written[0]!.content).toContain('(source:: pwa)')
