@@ -15,14 +15,11 @@
  * is how the caller can hand this a fake transport in tests and a real
  * GitTransport live.
  *
- * Known gap (out of this slice's write-set to fix): GitTransport.readFiles()
- * (src/vault/transport.ts) only walks the 7 canonical domain folders plus
- * Inbox — `Habits` is not one of them, so the live git transport never
- * actually surfaces Habits/log.md's existing content today. appendHabitHit
- * degrades gracefully (treats the file as empty, so the write still lands
- * as valid content — it just doesn't yet see prior hits) rather than
- * throwing; wiring `Habits` into that read loop belongs to transport.ts's
- * own hotspot, not this one.
+ * Fixed gap (#148): GitTransport.readFiles() (src/vault/transport.ts) now
+ * also walks `Habits`, alongside the 7 canonical domain folders + Inbox, so
+ * the live git transport surfaces Habits/log.md's existing content and this
+ * read-modify-write actually sees prior hits instead of degrading to an
+ * overwrite on every live tap.
  */
 
 import type { VaultTransport } from './transport'

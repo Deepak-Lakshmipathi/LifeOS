@@ -8,7 +8,9 @@
  *   Clones or pulls the vault repo into an IndexedDB-backed virtual FS
  *   via isomorphic-git + @isomorphic-git/lightning-fs, then reads all
  *   *.md files under the 7 canonical domain folders plus the top-level
- *   Inbox/ folder (S15b — home for domain-less/project-less writes).
+ *   Inbox/ folder (S15b — home for domain-less/project-less writes) and
+ *   Habits/ folder (S32/#148 — habits.md + log.md, the append-only hit
+ *   log appendHabitHit does read-modify-write against).
  *
  * All isomorphic-git / lightning-fs imports are deferred to readFiles()
  * so that importing this module in tests never triggers browser-only side
@@ -184,11 +186,14 @@ export class GitTransport implements VaultTransport {
       })
     }
 
-    // ── Read *.md files under each canonical domain folder + top-level Inbox ─
+    // ── Read *.md files under each canonical domain folder + top-level
+    //    Inbox + Habits (S32/#148 — Habits/log.md must round-trip through
+    //    the snapshot so appendHabitHit's read-modify-write sees prior hits
+    //    instead of degrading to an overwrite) ────────────────────────────
     const result: { path: string; content: string }[] = []
     const pfs = this.fs.promises
 
-    for (const folder of [...DOMAINS, 'Inbox']) {
+    for (const folder of [...DOMAINS, 'Inbox', 'Habits']) {
       let entries: string[]
       try {
         entries = await pfs.readdir(`${DIR}/${folder}`)
