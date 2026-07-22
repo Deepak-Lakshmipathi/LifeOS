@@ -47,3 +47,16 @@ describe('HomeView — Day Review visibility (§6)', () => {
     expect(firstChild.textContent).toContain('Day Review')
   })
 })
+
+describe('HomeView — right stack mounts HabitsCard (S32)', () => {
+  it('renders the Habits card', () => {
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    expect(screen.getByTestId('habits-card')).toBeInTheDocument()
+  })
+
+  it('does not break existing HomeView mount points (add-task button, mission card)', () => {
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    expect(screen.getByLabelText('Add task')).toBeInTheDocument()
+    expect(screen.getByText("Today's Mission")).toBeInTheDocument()
+  })
+})

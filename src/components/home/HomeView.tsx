@@ -5,6 +5,7 @@ import { NowView } from '../NowView'
 import { CaptureSheet } from '../CaptureSheet'
 import { MissionCard } from './MissionCard'
 import { DayReview } from './DayReview'
+import { HabitsCard } from './HabitsCard'
 import { useTimeOfDay } from '../../hooks/useTimeOfDay'
 import type { CockpitMode } from '../../lib/timeOfDay'
 
@@ -18,9 +19,15 @@ import type { CockpitMode } from '../../lib/timeOfDay'
  * (§4.3, §8) — via the new MissionCard/missionPicks seam; NowView still owns
  * the fuller Up next / Later fold sections below it. S29 prepends the
  * evening-only Day Review (§6) full-width, ahead of everything else, when
- * `useTimeOfDay` resolves to `pm`. Later slices (S32+) grow this further into
- * Needs You / calendar / habits / fleet-strip per §5 — this is the ONLY place
- * that changes for those; App mounts HomeView once and never edits it again.
+ * `useTimeOfDay` resolves to `pm`. S32 (this slice) is the head of the
+ * right-stack chain: it introduces the §5 two-column Home body
+ * (`1.5fr 1fr`, 1 col ≤840px — same breakpoint idiom MoneyView already
+ * uses) and mounts the first right-stack card, HabitsCard, with no data
+ * props (it self-loads via the transport seam — see HabitsCard's own
+ * "head of chain" comment, mirroring VitalsRow). Later slices (S34+) grow
+ * the right stack further (Today/calendar, Fleet mini-strip per §5) and the
+ * left stack (Needs You) — this is the ONLY place that changes for those;
+ * App mounts HomeView once and never edits it again.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -84,29 +91,39 @@ export function HomeView({
         </div>
       )}
 
-      <div className="mb-3 flex justify-end">
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          aria-label="Add task"
-          className="rounded-[999px] border border-panel-brd bg-panel px-4 py-[7px] text-[13px] text-txt backdrop-blur-seg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-txt"
-        >
-          + New task
-        </button>
-      </div>
+      <div className="grid grid-cols-1 gap-3.5 [@media(min-width:841px)]:grid-cols-[1.5fr_1fr]">
+        <div>
+          <div className="mb-3 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              aria-label="Add task"
+              className="rounded-[999px] border border-panel-brd bg-panel px-4 py-[7px] text-[13px] text-txt backdrop-blur-seg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-txt"
+            >
+              + New task
+            </button>
+          </div>
 
-      <div className="mb-3">
-        <MissionCard tasks={tasks} onToggle={onToggle} />
-      </div>
+          <div className="mb-3">
+            <MissionCard tasks={tasks} onToggle={onToggle} />
+          </div>
 
-      <NowView
-        tasks={tasks}
-        onToggle={onToggle}
-        onDelete={onDelete}
-        onUpdate={onUpdate}
-        projects={projects}
-        hideLive
-      />
+          <NowView
+            tasks={tasks}
+            onToggle={onToggle}
+            onDelete={onDelete}
+            onUpdate={onUpdate}
+            projects={projects}
+            hideLive
+          />
+        </div>
+
+        {/* Right stack (§5): Habits today; Today/calendar + Fleet mini-strip
+            join this column in later slices (S34+). */}
+        <div className="flex flex-col gap-3">
+          <HabitsCard />
+        </div>
+      </div>
 
       {/* Add task sheet — slides up from bottom (v1 capture flow, unchanged behavior). */}
       <AnimatePresence>
