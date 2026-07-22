@@ -8,6 +8,9 @@ import type { Domain } from '../../data/domains'
 import { computeWarmth } from '../../warmth/computeWarmth'
 import type { WarmthState } from '../../warmth/computeWarmth'
 import { Vital } from '../glass/Vital'
+import { formatINR } from '../../vault/finance'
+import type { NetworthPoint, BurnMonth } from '../../vault/finance'
+import { netWorthVital, burnVital } from '../../lib/vitalsData'
 
 /**
  * VitalsRow — the Glass Cockpit Life Vitals strip (DESIGN_LANGUAGE §4.2 / §5):
@@ -25,6 +28,13 @@ import { Vital } from '../glass/Vital'
  * point again), so the component sources its own task list through the same
  * provider seam App uses. Tests inject `tasks` + `now` directly, which short-
  * circuits the load — the provider is never touched under test.
+ *
+ * S41 fills the Net worth + Burn/income tiles from S39 finance-parser
+ * output, passed in as the `networth`/`burn` props. VitalsRow does no
+ * fetching/parsing of its own for money data (mirrors MoneyView's S40
+ * precedent) — both default to `[]`, which the `vitalsData` selectors read
+ * as "no data" and render as the same honest `—` stub S26 shipped. S42's
+ * finance-sync agent wires the live vault reads through later.
  */
 
 // Mirrors App.tsx's provider selection (ADR-0002 seam). LocalOnly and VaultSync
@@ -65,6 +75,10 @@ export interface VitalsRowProps {
   tasks?: Task[]
   /** Current time in ms — inject for deterministic tests. */
   now?: number
+  /** Net-worth series, ascending by date (`parseNetworthHistory` output). */
+  networth?: NetworthPoint[]
+  /** Income/spend per month, ascending (`parseBurn` output). */
+  burn?: BurnMonth[]
 }
 
 /**
@@ -102,7 +116,12 @@ function WarmthTile({ warmth }: { warmth: Record<Domain, WarmthState> }) {
   )
 }
 
-export function VitalsRow({ tasks: tasksProp, now }: VitalsRowProps = {}) {
+export function VitalsRow({
+  tasks: tasksProp,
+  now,
+  networth = [],
+  burn = [],
+}: VitalsRowProps = {}) {
   const [loaded, setLoaded] = useState<Task[]>([])
   const tasks = tasksProp ?? loaded
 
@@ -126,6 +145,8 @@ export function VitalsRow({ tasks: tasksProp, now }: VitalsRowProps = {}) {
   }, [tasksProp])
 
   const warmth = computeWarmth(tasks, now ?? Date.now())
+  const netWorth = netWorthVital(networth)
+  const burnTile = burnVital(burn)
 
   return (
     <div
@@ -133,11 +154,34 @@ export function VitalsRow({ tasks: tasksProp, now }: VitalsRowProps = {}) {
       className="vitals mb-[14px] grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]"
     >
       <WarmthTile warmth={warmth} />
+      {/* Net worth / Burn (S41): real values once `networth`/`burn` fixtures
+          are injected; `value === null` (no data) falls back to the same
+          honest `—` placeholder S26 shipped (§8: no fake-real data). */}
+      {netWorth.value != null ? (
+        <Vital
+          k="Net worth"
+          value={netWorth.value}
+          format={formatINR}
+          sub={netWorth.sub}
+          subDirection={netWorth.dir}
+        />
+      ) : (
+        <Vital k="Net worth" value={0} format={() => '—'} sub={netWorth.sub} />
+      )}
+      {burnTile.value != null ? (
+        <Vital
+          k="Burn / income"
+          value={burnTile.value}
+          format={formatINR}
+          sub={burnTile.sub}
+          subDirection={burnTile.dir}
+        />
+      ) : (
+        <Vital k="Burn / income" value={0} format={() => '—'} sub={burnTile.sub} />
+      )}
       {/* Stub tiles — honest placeholders (§8: no fake-real data). value `—`
           via the glass Vital so the count-up + reduced-motion path stays live;
           sub names the slice that will wire it. */}
-      <Vital k="Net worth" value={0} format={() => '—'} sub="wires in S41" />
-      <Vital k="Burn / income" value={0} format={() => '—'} sub="wires in S41" />
       <Vital k="Pipeline" value={0} format={() => '—'} sub="wires in S45" />
       <Vital k="Streak" value={0} format={() => '—'} sub="wires in S30" />
     </div>

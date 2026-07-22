@@ -8,6 +8,12 @@
  *     computeWarmth — a hot domain lands in the high-opacity band, a cold
  *     domain in the low band — tinted by domain token.
  *  3. Stub tiles are honest placeholders (`—`), no fake-real numbers.
+ *
+ * S41 extends this file for the Net worth + Burn/income tiles:
+ *  1. Net worth tile: last series value + signed % delta, `.up`/`.dn` per
+ *     sign, both directions.
+ *  2. Burn tile: spend vs income for the latest month, sub names both.
+ *  3. Missing/empty `networth`/`burn` props → stub `—` fallback, no crash.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '@testing-library/jest-dom/vitest'
@@ -15,6 +21,7 @@ import { render, screen } from '@testing-library/react'
 import { VitalsRow, WARMTH_OPACITY } from './VitalsRow'
 import { DOMAINS } from '../../data/domains'
 import type { Task } from '../../types'
+import type { NetworthPoint, BurnMonth } from '../../vault/finance'
 
 function mockMatchMedia(matches: boolean) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
@@ -114,5 +121,77 @@ describe('VitalsRow', () => {
     // Four stub `.v` values, all the em-dash placeholder.
     const dashes = screen.getAllByText('—')
     expect(dashes).toHaveLength(4)
+  })
+
+  // ── S41: Net worth + Burn/income tiles ──────────────────────────────────
+
+  it('missing/empty networth + burn props → both tiles fall back to the — stub (no crash)', () => {
+    mockMatchMedia(true)
+    render(<VitalsRow tasks={[]} now={NOW} />)
+
+    // Net worth, Burn/income, Pipeline, Streak — still 4 dashes total.
+    expect(screen.getAllByText('—')).toHaveLength(4)
+  })
+
+  it('net worth tile: gain vs previous point renders the value with .up direction', () => {
+    mockMatchMedia(true)
+    const networth: NetworthPoint[] = [
+      { date: '2026-06-01', networth: 1_800_000 },
+      { date: '2026-07-01', networth: 1_840_000 },
+    ]
+    const { container } = render(<VitalsRow tasks={[]} now={NOW} networth={networth} />)
+
+    expect(screen.getByText('₹18.4L')).toBeInTheDocument()
+    const sub = container.querySelector('.s.up')
+    expect(sub).toBeInTheDocument()
+    expect(sub).toHaveTextContent('▲')
+  })
+
+  it('net worth tile: loss vs previous point renders the value with .dn direction', () => {
+    mockMatchMedia(true)
+    const networth: NetworthPoint[] = [
+      { date: '2026-06-01', networth: 1_800_000 },
+      { date: '2026-07-01', networth: 1_710_000 },
+    ]
+    const { container } = render(<VitalsRow tasks={[]} now={NOW} networth={networth} />)
+
+    expect(screen.getByText('₹17.1L')).toBeInTheDocument()
+    const sub = container.querySelector('.s.dn')
+    expect(sub).toBeInTheDocument()
+    expect(sub).toHaveTextContent('▼')
+  })
+
+  it('burn tile: names both spend and income for the latest month', () => {
+    mockMatchMedia(true)
+    const burn: BurnMonth[] = [{ month: '2026-07', income: 210_000, spend: 96_000 }]
+    const { container } = render(<VitalsRow tasks={[]} now={NOW} burn={burn} />)
+
+    expect(screen.getByText('₹96k')).toBeInTheDocument()
+    const subText = Array.from(container.querySelectorAll('.s')).map((el) => el.textContent)
+    expect(subText.some((t) => t?.includes('spend') && t?.includes('income'))).toBe(true)
+  })
+
+  it('burn tile: overspending (spend > income) renders .dn direction', () => {
+    mockMatchMedia(true)
+    const burn: BurnMonth[] = [{ month: '2026-07', income: 80_000, spend: 96_000 }]
+    const { container } = render(<VitalsRow tasks={[]} now={NOW} burn={burn} />)
+
+    const sub = container.querySelector('.s.dn')
+    expect(sub).toBeInTheDocument()
+  })
+
+  it('count-up preserved: reduced motion still applies to the wired money tiles', () => {
+    mockMatchMedia(false) // motion NOT reduced → count-up starts at 0
+    const networth: NetworthPoint[] = [
+      { date: '2026-06-01', networth: 1_800_000 },
+      { date: '2026-07-01', networth: 1_840_000 },
+    ]
+    render(<VitalsRow tasks={[]} now={NOW} networth={networth} />)
+
+    // Before the count-up timer fires, the Net worth tile has not yet
+    // reached its target — the animated `.v` starts at the formatted 0,
+    // proving the tile still goes through Vital's count-up, not a static
+    // render straight to the final value.
+    expect(screen.queryByText('₹18.4L')).not.toBeInTheDocument()
   })
 })
