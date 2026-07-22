@@ -1,5 +1,6 @@
 import { formatINR, networthDelta } from '../vault/finance'
 import type { NetworthPoint, BurnMonth } from '../vault/finance'
+import type { JobEntry } from '../vault/career'
 
 /**
  * vitalsData — pure selectors (S41) that turn S39 finance-parser output into
@@ -12,6 +13,9 @@ import type { NetworthPoint, BurnMonth } from '../vault/finance'
  * data existed. Mirrors MoneyView's (S40) precedent of props defaulting to
  * `[]` rather than fetching/parsing — S42's finance-sync agent wires the
  * live vault reads later.
+ *
+ * S45 extends this file with `pipelineVital`, same idiom, over S43's
+ * `parsePipeline` (`Career/pipeline.md`) output.
  */
 
 /** One vital tile's derived value/sub/direction. */
@@ -74,4 +78,42 @@ export function burnVital(burn: BurnMonth[]): VitalDatum {
     sub: `${formatINR(latest.spend)} spend / ${formatINR(latest.income)} income`,
     dir,
   }
+}
+
+/**
+ * Best "next" line to surface on the Pipeline tile when there's no interview
+ * to lead with: the hottest (`hot:: true`) active entry's `next::` step, or
+ * failing that the first active entry that has one at all.
+ */
+function hottestNext(active: JobEntry[]): string | null {
+  const hot = active.find((e) => e.hot && e.next)
+  if (hot) return hot.next!
+  const withNext = active.find((e) => e.next)
+  return withNext ? withNext.next! : null
+}
+
+/**
+ * Pipeline tile: count of active roles (found + applied + interview — closed
+ * excluded) as the count-up target, with the sub line leading with the
+ * interview count when there's one in flight, else the hottest `next::` step.
+ *
+ * `entries` empty (no file / nothing parsed) → `NO_DATA` stub. A non-empty
+ * file with zero active roles (everything closed) is real data, not a stub —
+ * it renders `0` with an honest "no active roles" sub.
+ */
+export function pipelineVital(entries: JobEntry[]): VitalDatum {
+  if (!entries || entries.length === 0) return NO_DATA
+
+  const active = entries.filter((e) => e.stage !== 'closed')
+  if (active.length === 0) {
+    return { value: 0, sub: 'no active roles' }
+  }
+
+  const interviewCount = active.filter((e) => e.stage === 'interview').length
+  const sub =
+    interviewCount > 0
+      ? `${interviewCount} interview${interviewCount === 1 ? '' : 's'}`
+      : (hottestNext(active) ?? 'no interviews yet')
+
+  return { value: active.length, sub }
 }
