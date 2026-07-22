@@ -1,24 +1,31 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { Card } from '../glass/Card'
+import { SupervisorCard } from './SupervisorCard'
 import { agentManifest, type AgentSpec, type Infra } from '../../data/agentManifest'
 import { healthOf, type AgentStatus, type Health } from '../../vault/agentStatus'
 
 /**
- * AgentsView — Agents tab: the fleet table (DESIGN_LANGUAGE §4.8, LED §4.7).
+ * AgentsView — Agents tab: fleet table + supervisor report card
+ * (DESIGN_LANGUAGE §4.8, LED §4.7, §5 "Agents: fleet table card, then
+ * supervisor report card").
  *
- * Head of the AgentsView chain (S49 → S53/S54). S49 fills the stub with the
- * fleet table only; the supervisor report card (§4.8 bottom) lands downstream.
+ * Head of the AgentsView chain (S49 → S53/S54). S49 filled the stub with the
+ * fleet table; S53 mounts `SupervisorCard` below it. Approve/reject UI for
+ * proposals is S54, not here.
  *
  * Purely presentational, like MoneyView (S40): it takes already-parsed S47
  * `AgentStatus` shapes keyed by agent name and does no fetching/parsing itself.
  * App.tsx mounts `<AgentsView />` with no props, so `statuses` defaults to `{}`
  * → every agent renders idle (honest "never run" rather than fabricated green)
- * until a later slice wires live status through.
+ * until a later slice wires live status through. `reportMd` similarly defaults
+ * to `null` → SupervisorCard's honest "No supervisor report yet" empty state.
  */
 
 export interface AgentsViewProps {
   /** Live run status per agent name (S47 `parseStatus` output); missing → idle. */
   statuses?: Record<string, AgentStatus | null>
+  /** Raw weekly supervisor report markdown (S52 file contract); missing → empty state. */
+  reportMd?: string | null
   /** Injected "now" (ms since epoch) for deterministic health in tests. */
   now?: number
 }
@@ -28,27 +35,31 @@ const ROW_GRID =
   'grid grid-cols-[14px_1.4fr_1fr_1fr_1.6fr] items-center gap-3 px-1.5 py-3 ' +
   'border-b border-white/5 last:border-b-0'
 
-export function AgentsView({ statuses = {}, now = Date.now() }: AgentsViewProps) {
+export function AgentsView({ statuses = {}, reportMd = null, now = Date.now() }: AgentsViewProps) {
   const prefersReducedMotion = useReducedMotion() ?? false
 
   return (
-    <Card heading="Fleet" count={agentManifest.length}>
-      <div data-testid="fleet-table" role="table">
-        {agentManifest.map((agent) => {
-          const status = statuses[agent.name] ?? null
-          const health = healthOf(status, now)
-          return (
-            <AgentRow
-              key={agent.name}
-              agent={agent}
-              status={status}
-              health={health}
-              reducedMotion={prefersReducedMotion}
-            />
-          )
-        })}
-      </div>
-    </Card>
+    <div className="flex flex-col gap-3.5">
+      <Card heading="Fleet" count={agentManifest.length}>
+        <div data-testid="fleet-table" role="table">
+          {agentManifest.map((agent) => {
+            const status = statuses[agent.name] ?? null
+            const health = healthOf(status, now)
+            return (
+              <AgentRow
+                key={agent.name}
+                agent={agent}
+                status={status}
+                health={health}
+                reducedMotion={prefersReducedMotion}
+              />
+            )
+          })}
+        </div>
+      </Card>
+
+      <SupervisorCard reportMd={reportMd} />
+    </div>
   )
 }
 
