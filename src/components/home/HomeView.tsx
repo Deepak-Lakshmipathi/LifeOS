@@ -6,6 +6,7 @@ import { CaptureSheet } from '../CaptureSheet'
 import { MissionCard } from './MissionCard'
 import { DayReview } from './DayReview'
 import { HabitsCard } from './HabitsCard'
+import { TodayCard } from './TodayCard'
 import { useTimeOfDay } from '../../hooks/useTimeOfDay'
 import type { CockpitMode } from '../../lib/timeOfDay'
 
@@ -24,10 +25,14 @@ import type { CockpitMode } from '../../lib/timeOfDay'
  * (`1.5fr 1fr`, 1 col ≤840px — same breakpoint idiom MoneyView already
  * uses) and mounts the first right-stack card, HabitsCard, with no data
  * props (it self-loads via the transport seam — see HabitsCard's own
- * "head of chain" comment, mirroring VitalsRow). Later slices (S34+) grow
- * the right stack further (Today/calendar, Fleet mini-strip per §5) and the
- * left stack (Needs You) — this is the ONLY place that changes for those;
- * App mounts HomeView once and never edits it again.
+ * "head of chain" comment, mirroring VitalsRow). S34 prepends TodayCard
+ * ahead of HabitsCard in that same stack, per §5's documented order (Today,
+ * then Habits, then a Fleet mini-strip in a later slice) — it takes `tasks`
+ * (already in scope here for MissionCard/NowView) and self-loads calendar
+ * events the same way HabitsCard self-loads habits. Later slices grow the
+ * right stack further (Fleet mini-strip per §5) and the left stack (Needs
+ * You) — this is the ONLY place that changes for those; App mounts
+ * HomeView once and never edits it again.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -118,9 +123,10 @@ export function HomeView({
           />
         </div>
 
-        {/* Right stack (§5): Habits today; Today/calendar + Fleet mini-strip
-            join this column in later slices (S34+). */}
+        {/* Right stack (§5): Today (calendar) + Habits; Fleet mini-strip
+            joins this column in a later slice (S37+). */}
         <div className="flex flex-col gap-3">
+          <TodayCard tasks={tasks} />
           <HabitsCard />
         </div>
       </div>
