@@ -1,0 +1,85 @@
+name: Agent — log rotation
+
+# S56: monthly git-history guard. Agents commit constantly (agents/<name>/
+# runs.jsonl grows forever; Finance/networth-history.md is append-only), so the
+# vault's history — and the PWA's in-browser shallow clone — grow unbounded.
+# Once a month this job:
+#   - month-splits every agents/*/runs.jsonl, keeping the 3 most-recent months
+#     in place and archiving older months to agents/<name>/archive/<YYYY-MM>.jsonl
+#   - prunes Finance/networth-history.md to its header + last 24 data rows
+# and commits the result to the vault repo in ONE commit. Both operations are
+# idempotent, so a quiet month produces an empty diff and no commit.
+on:
+  schedule:
+    - cron: '0 3 1 * *' # 03:00 UTC on the 1st of every month
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LifeOS (for agents/lib/rotate.mjs + S39 parser)
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Checkout LiveOS-VaultRepo
+        uses: actions/checkout@v4
+        with:
+          repository: Deepak-Lakshmipathi/LiveOS-VaultRepo
+          ref: main
+          path: vault-clone
+          # Own fine-grained PAT (S57 pattern): Contents R/W on
+          # LiveOS-VaultRepo only, nothing else. See docs/agents/vault-tokens.md.
+          token: ${{ secrets.AGENT_VAULT_PAT_ROTATE }}
+
+      - name: Configure git identity for the rotation commit
+        working-directory: vault-clone
+        run: |
+          git config user.name "lifeos-agent-rotate"
+          git config user.email "lifeos-agent-rotate@users.noreply.github.com"
+
+      - name: Rotate agent run-logs + networth history
+        working-directory: vault-clone
+        run: |
+          node --input-type=module <<'EOF'
+          import { readdirSync, existsSync } from 'node:fs'
+          import { join } from 'node:path'
+          import { rotateJsonl, pruneNetworth } from '${{ github.workspace }}/agents/lib/rotate.mjs'
+
+          // Rotate every agent's runs.jsonl (cwd is the vault working copy).
+          const agentsDir = 'agents'
+          if (existsSync(agentsDir)) {
+            for (const name of readdirSync(agentsDir, { withFileTypes: true })) {
+              if (!name.isDirectory()) continue
+              const runs = join(agentsDir, name.name, 'runs.jsonl')
+              if (existsSync(runs)) {
+                const r = rotateJsonl(runs, 3)
+                console.log(`rotate ${runs}: ${JSON.stringify(r)}`)
+              }
+            }
+          }
+
+          // Prune the append-only networth history to header + last 24 points.
+          const networth = join('Finance', 'networth-history.md')
+          if (existsSync(networth)) {
+            const r = pruneNetworth(networth, 24)
+            console.log(`prune ${networth}: ${JSON.stringify(r)}`)
+          }
+          EOF
+
+      - name: Commit rotation (one commit; no-op on a quiet month)
+        working-directory: vault-clone
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to rotate this month — no commit."
+          else
+            git commit -m "chore(rotate): monthly log rotation (agents/*/runs.jsonl + networth-history)"
+            git push
+          fi
