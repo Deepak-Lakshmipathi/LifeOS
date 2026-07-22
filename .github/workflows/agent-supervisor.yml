@@ -1,0 +1,66 @@
+name: Agent — supervisor
+
+# S55: weekly fleet audit. Reads every OTHER agent's agents/<name>/runs.jsonl
+# + status.json (the S47 contract), computes per-agent metrics (run count,
+# failure count, duration percentiles, staleness incidents), optionally
+# samples a bounded number of runs for output-accuracy via Claude, and writes
+# the S52 weekly report (agents/supervisor/<date>.md) plus zero or more
+# proposals (proposals/<agent>-<date>.md), ALWAYS status: pending -- the
+# supervisor never edits another agent's prompt/config directly, and never
+# sets a proposal's status to approved; the owner approves in the PWA (S54).
+# Pure API + cron placement (no browser, no long-lived process) -- see
+# docs/agents/afk-pipeline.md's agent-placement rule.
+on:
+  schedule:
+    - cron: '30 0 * * 0' # 00:30 UTC Sunday == 06:00 IST Sunday (UTC+5:30)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LifeOS (for the audit script + its deps)
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Checkout LiveOS-VaultRepo
+        uses: actions/checkout@v4
+        with:
+          repository: Deepak-Lakshmipathi/LiveOS-VaultRepo
+          ref: main
+          path: vault-clone
+          # Own fine-grained PAT (S57 pattern): Contents R/W on
+          # LiveOS-VaultRepo only, writing only agents/supervisor/** and
+          # proposals/**. See docs/agents/vault-tokens.md.
+          token: ${{ secrets.AGENT_VAULT_PAT_SUPERVISOR }}
+
+      - name: Configure git identity for the supervisor commit
+        working-directory: vault-clone
+        run: |
+          git config user.name "lifeos-supervisor"
+          git config user.email "lifeos-supervisor@users.noreply.github.com"
+
+      - name: Run supervisor audit
+        env:
+          VAULT_DIR: ${{ github.workspace }}/vault-clone
+          # Optional: accuracy sampling is skipped cleanly (not an error)
+          # when this secret is absent. Capped at 15 samples/agent/run
+          # regardless (agents/supervisor/audit.mjs's MAX_ACCURACY_SAMPLES).
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node agents/supervisor/audit.mjs
+        # NOTE: unlike calendar-sync's split sync/record-status commits, this
+        # agent's own S47 run-log write (agents/supervisor/{runs.jsonl,
+        # status.json}) is already inside its own Write-set
+        # (agents/supervisor/**), so audit.mjs's run() logs + commits +
+        # pushes it in the SAME commit as the report/proposals -- no
+        # separate record-status step needed here.
