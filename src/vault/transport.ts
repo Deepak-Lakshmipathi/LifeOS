@@ -103,16 +103,29 @@ export class GitTransport implements VaultTransport {
         import('@isomorphic-git/lightning-fs'),
       ])
 
-    // ── Initialise FS on first call ──────────────────────────────────────────
-    if (this.fs === null) {
-      this.fs = new LightningFS(FS_NAME)
-    }
-
+    // ── Validate config BEFORE touching the FS backend ───────────────────────
+    // Constructing LightningFS kicks off its own internal async _init() that
+    // the constructor never awaits (a real fire-and-forget promise chain
+    // reaching into DefaultBackend, which references `navigator`). If this
+    // transport is unconfigured (VITE_VAULT_REPO_URL unset — the default in
+    // any environment/test that never stubs it), throwing here first means
+    // that dangling init promise is never created in the first place, rather
+    // than being created and then abandoned when the `!url` throw below
+    // unwound the caller. A caller that swallows this error (e.g.
+    // HabitsCard's self-load try/catch) would otherwise leave that promise
+    // to settle later — potentially after its test's environment has torn
+    // down — surfacing as an unhandled-rejection "navigator is not defined"
+    // with no connection to the actual failing assertion.
     const url = import.meta.env.VITE_VAULT_REPO_URL as string | undefined
     const corsProxy = import.meta.env.VITE_VAULT_CORS_PROXY as string | undefined
     const pat = getVaultPat()
 
     if (!url) throw new Error('VITE_VAULT_REPO_URL is not configured')
+
+    // ── Initialise FS on first call (only once we know we're configured) ────
+    if (this.fs === null) {
+      this.fs = new LightningFS(FS_NAME)
+    }
 
     // Auth callback — PAT is never written to logs or console
     const onAuth = pat ? () => ({ username: 'x-access-token', password: pat }) : undefined
