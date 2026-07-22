@@ -146,6 +146,15 @@ export class VaultSync implements SyncProvider {
       const folderName = parts[0]!
       const fileName = parts[parts.length - 1]!
 
+      // Habits/*.md (#148: now included in the transport snapshot so
+      // appendHabitHit's read-modify-write sees prior hits) is a distinct
+      // contract, not a task source — Habits/log.md's `- [x] <habit>
+      // (date:: ...) (source:: ...)` hit lines match parseTaskLine's plain
+      // checkbox syntax and, lacking any id::/done_when::/priority::
+      // marker, would otherwise be swallowed whole as spurious "done" tasks
+      // titled with the raw date/source suffix. Skip the folder entirely.
+      if (folderName === 'Habits') continue
+
       const domain = isDomain(folderName) ? folderName : undefined
       const project = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName
 

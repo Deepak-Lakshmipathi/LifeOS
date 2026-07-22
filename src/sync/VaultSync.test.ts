@@ -59,6 +59,29 @@ class FakeTransport implements VaultTransport {
   }
 }
 
+// ─── list — Habits/ exclusion (#148) ─────────────────────────────────────────
+
+describe('VaultSync.list — Habits/ is not a task source', () => {
+  it('does not turn Habits/log.md hit lines into spurious tasks', async () => {
+    // Habits/log.md hit lines are plain `- [x] <name> (date:: ...) (source:: ...)`
+    // checkbox syntax — the exact shape parseTaskLine treats as a real task
+    // when no id::/done_when::/priority:: marker is present. Now that #148
+    // wires `Habits` into GitTransport's read loop, the snapshot list() reads
+    // includes Habits/log.md, so list() must explicitly skip that folder or
+    // every hit would resurface as a bogus "done" task.
+    const transport = new FakeTransport([
+      { path: 'Habits/log.md', content: '- [x] Gym session (date:: 2026-07-20) (source:: pwa)\n' },
+      { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+    ])
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.title).toBe('Real task')
+  })
+})
+
 // ─── (a) add — path resolution + content ─────────────────────────────────────
 
 describe('VaultSync.add — path resolution and line append', () => {

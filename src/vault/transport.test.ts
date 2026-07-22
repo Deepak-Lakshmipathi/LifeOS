@@ -18,27 +18,56 @@ const h = vi.hoisted(() => {
   const pull = vi.fn().mockRejectedValue(new Error('no pull'))
   const push = vi.fn().mockRejectedValue(new Error('no push'))
   const log = vi.fn().mockRejectedValue(new Error('no local repo'))
-  // Minimal lightning-fs stand-in: every domain dir is absent, so readFiles()
-  // returns [] after the clone (the read loop swallows readdir failures).
+  const add = vi.fn().mockResolvedValue(undefined)
+  const commit = vi.fn().mockResolvedValue(undefined)
+  // Minimal lightning-fs stand-in, backed by a real in-memory Map per
+  // instance: readdir/readFile/writeFile derive their answers from whatever
+  // has actually been "written" so far. With an empty map every domain dir
+  // is absent (readFiles() returns [] after the clone — the read loop
+  // swallows readdir failures), matching the old dumb-reject-always mock's
+  // behaviour for every test that never writes anything. Tests that DO
+  // write (the #148 regression below) need readdir/readFile to reflect
+  // those writes on a later read — a static "always reject" mock can't do
+  // that, so this fake is stateful instead.
   class FakeFS {
+    private files = new Map<string, string>()
     promises = {
-      readdir: vi.fn().mockRejectedValue(new Error('absent')),
-      readFile: vi.fn(),
-      writeFile: vi.fn(),
-      mkdir: vi.fn(),
+      readdir: async (dirPath: string): Promise<string[]> => {
+        const prefix = dirPath.endsWith('/') ? dirPath : `${dirPath}/`
+        const entries = new Set<string>()
+        for (const p of this.files.keys()) {
+          if (p.startsWith(prefix)) {
+            const rest = p.slice(prefix.length)
+            if (rest && !rest.includes('/')) entries.add(rest)
+          }
+        }
+        if (entries.size === 0) throw new Error('ENOENT: no such directory')
+        return [...entries]
+      },
+      readFile: async (filePath: string): Promise<string> => {
+        const content = this.files.get(filePath)
+        if (content === undefined) throw new Error('ENOENT: no such file')
+        return content
+      },
+      writeFile: async (filePath: string, content: string): Promise<void> => {
+        this.files.set(filePath, content)
+      },
+      mkdir: async (): Promise<void> => {},
     }
   }
-  return { clone, pull, push, log, FakeFS }
+  return { clone, pull, push, log, add, commit, FakeFS }
 })
 
 vi.mock('isomorphic-git', () => ({
-  default: { clone: h.clone, pull: h.pull, push: h.push, log: h.log },
+  default: { clone: h.clone, pull: h.pull, push: h.push, log: h.log, add: h.add, commit: h.commit },
 }))
 vi.mock('isomorphic-git/http/web', () => ({ default: {} }))
 vi.mock('@isomorphic-git/lightning-fs', () => ({ default: h.FakeFS }))
 vi.mock('./pat', () => ({ getVaultPat: () => undefined, clearVaultPat: () => {} }))
 
 import { GitTransport } from './transport'
+import { appendHabitHit } from './habitsWrite'
+import type { HabitHit } from './habits'
 
 describe('GitTransport — shallow, single-branch clone (S56 DoD #1)', () => {
   beforeEach(() => {
@@ -63,5 +92,39 @@ describe('GitTransport — shallow, single-branch clone (S56 DoD #1)', () => {
       singleBranch: true,
       url: 'https://example.invalid/vault.git',
     })
+  })
+})
+
+describe('GitTransport + appendHabitHit — Habits/log.md read-modify-write (#148 regression)', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_VAULT_REPO_URL', 'https://example.invalid/vault.git')
+    // This scenario needs `pull` to succeed (no wipe-reclone) so the FakeFS's
+    // in-memory file map survives across both appendHabitHit calls on the
+    // SAME GitTransport instance — exactly what a running PWA session does
+    // across two live taps (GitTransport.fs is only replaced on a
+    // wipe-reclone, never between ordinary readFiles() calls).
+    h.pull.mockResolvedValue(undefined)
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    // Restore the reject-by-default `pull` the sibling describe block above
+    // (and any future test in this file) relies on.
+    h.pull.mockRejectedValue(new Error('no pull'))
+  })
+
+  it('two hits on different days both survive a second live tap (fails pre-fix: only the 2nd hit survives, the 1st is clobbered)', async () => {
+    const transport = new GitTransport()
+
+    const hit1: HabitHit = { habit: 'Gym session', date: '2026-07-20', source: 'pwa' }
+    const hit2: HabitHit = { habit: 'Gym session', date: '2026-07-21', source: 'pwa' }
+
+    await appendHabitHit(transport, hit1)
+    await appendHabitHit(transport, hit2)
+
+    const files = await transport.readFiles()
+    const log = files.find((f) => f.path === 'Habits/log.md')?.content ?? ''
+
+    expect(log).toContain('(date:: 2026-07-20)')
+    expect(log).toContain('(date:: 2026-07-21)')
   })
 })
