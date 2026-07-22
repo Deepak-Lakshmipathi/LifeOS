@@ -10,7 +10,8 @@ import type { WarmthState } from '../../warmth/computeWarmth'
 import { Vital } from '../glass/Vital'
 import { formatINR } from '../../vault/finance'
 import type { NetworthPoint, BurnMonth } from '../../vault/finance'
-import { netWorthVital, burnVital } from '../../lib/vitalsData'
+import type { JobEntry } from '../../vault/career'
+import { netWorthVital, burnVital, pipelineVital } from '../../lib/vitalsData'
 
 /**
  * VitalsRow — the Glass Cockpit Life Vitals strip (DESIGN_LANGUAGE §4.2 / §5):
@@ -35,6 +36,10 @@ import { netWorthVital, burnVital } from '../../lib/vitalsData'
  * precedent) — both default to `[]`, which the `vitalsData` selectors read
  * as "no data" and render as the same honest `—` stub S26 shipped. S42's
  * finance-sync agent wires the live vault reads through later.
+ *
+ * S45 fills the Pipeline tile the same way, from S43's `parsePipeline`
+ * (`Career/pipeline.md`) output passed in as the `pipeline` prop — default
+ * `[]`, read by `pipelineVital` as "no data" → the same `—` stub.
  */
 
 // Mirrors App.tsx's provider selection (ADR-0002 seam). LocalOnly and VaultSync
@@ -79,6 +84,8 @@ export interface VitalsRowProps {
   networth?: NetworthPoint[]
   /** Income/spend per month, ascending (`parseBurn` output). */
   burn?: BurnMonth[]
+  /** Job-pipeline entries (`parsePipeline` output). */
+  pipeline?: JobEntry[]
 }
 
 /**
@@ -121,6 +128,7 @@ export function VitalsRow({
   now,
   networth = [],
   burn = [],
+  pipeline = [],
 }: VitalsRowProps = {}) {
   const [loaded, setLoaded] = useState<Task[]>([])
   const tasks = tasksProp ?? loaded
@@ -147,6 +155,7 @@ export function VitalsRow({
   const warmth = computeWarmth(tasks, now ?? Date.now())
   const netWorth = netWorthVital(networth)
   const burnTile = burnVital(burn)
+  const pipelineTile = pipelineVital(pipeline)
 
   return (
     <div
@@ -179,10 +188,22 @@ export function VitalsRow({
       ) : (
         <Vital k="Burn / income" value={0} format={() => '—'} sub={burnTile.sub} />
       )}
-      {/* Stub tiles — honest placeholders (§8: no fake-real data). value `—`
+      {/* Pipeline (S45): real value once `pipeline` fixture is injected;
+          `value === null` (no data) falls back to the same honest `—`
+          placeholder S26 shipped (§8: no fake-real data). */}
+      {pipelineTile.value != null ? (
+        <Vital
+          k="Pipeline"
+          value={pipelineTile.value}
+          format={(v) => String(Math.round(v))}
+          sub={pipelineTile.sub}
+        />
+      ) : (
+        <Vital k="Pipeline" value={0} format={() => '—'} sub={pipelineTile.sub} />
+      )}
+      {/* Stub tile — honest placeholder (§8: no fake-real data). value `—`
           via the glass Vital so the count-up + reduced-motion path stays live;
           sub names the slice that will wire it. */}
-      <Vital k="Pipeline" value={0} format={() => '—'} sub="wires in S45" />
       <Vital k="Streak" value={0} format={() => '—'} sub="wires in S30" />
     </div>
   )

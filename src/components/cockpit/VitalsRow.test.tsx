@@ -14,6 +14,10 @@
  *     sign, both directions.
  *  2. Burn tile: spend vs income for the latest month, sub names both.
  *  3. Missing/empty `networth`/`burn` props → stub `—` fallback, no crash.
+ *
+ * S45 extends this file for the Pipeline tile:
+ *  1. Active-role count (closed excluded) renders as the tile's value.
+ *  2. Missing/empty `pipeline` prop → stub `—` fallback, no crash.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '@testing-library/jest-dom/vitest'
@@ -22,6 +26,7 @@ import { VitalsRow, WARMTH_OPACITY } from './VitalsRow'
 import { DOMAINS } from '../../data/domains'
 import type { Task } from '../../types'
 import type { NetworthPoint, BurnMonth } from '../../vault/finance'
+import type { JobEntry } from '../../vault/career'
 
 function mockMatchMedia(matches: boolean) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
@@ -193,5 +198,40 @@ describe('VitalsRow', () => {
     // proving the tile still goes through Vital's count-up, not a static
     // render straight to the final value.
     expect(screen.queryByText('₹18.4L')).not.toBeInTheDocument()
+  })
+
+  // ── S45: Pipeline tile ───────────────────────────────────────────────────
+
+  it('missing/empty pipeline prop → Pipeline tile falls back to the — stub (no crash)', () => {
+    mockMatchMedia(true)
+    render(<VitalsRow tasks={[]} now={NOW} />)
+
+    // Net worth, Burn/income, Pipeline, Streak — still 4 dashes total.
+    expect(screen.getAllByText('—')).toHaveLength(4)
+  })
+
+  it('pipeline tile: active count (closed excluded) renders as the value', () => {
+    mockMatchMedia(true)
+    const pipeline: JobEntry[] = [
+      { company: 'InstaCo', role: 'Senior Frontend', stage: 'applied', hot: false },
+      { company: 'NorthStar', role: 'Founding Eng', stage: 'interview', hot: true },
+      { company: 'OldCorp', role: 'Staff', stage: 'closed', hot: false },
+    ]
+    render(<VitalsRow tasks={[]} now={NOW} pipeline={pipeline} />)
+
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('1 interview')).toBeInTheDocument()
+  })
+
+  it('pipeline tile: no dash once real pipeline data is present', () => {
+    mockMatchMedia(true)
+    const pipeline: JobEntry[] = [
+      { company: 'Acme', role: 'SWE II', stage: 'found', hot: false },
+    ]
+    render(<VitalsRow tasks={[]} now={NOW} pipeline={pipeline} />)
+
+    // Net worth + Burn/income + Streak still stub (no props) → 3 dashes,
+    // not 4 — Pipeline itself is no longer one of them.
+    expect(screen.getAllByText('—')).toHaveLength(3)
   })
 })

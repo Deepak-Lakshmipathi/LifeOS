@@ -7,10 +7,16 @@
  *  2. Burn: spend vs income for the latest month, sub names both.
  *  3. Missing/empty finance data → stub fallback (`value: null`), no throw.
  *  4. Selectors are pure (same input → same output, no mutation).
+ *
+ * S45 extends this file for `pipelineVital`:
+ *  1. Active count (found + applied + interview) — closed excluded.
+ *  2. Empty entries → stub fallback (`value: null`), no throw.
+ *  3. Sub line: interview count when present, else the hottest `next::` step.
  */
 import { describe, it, expect } from 'vitest'
-import { netWorthVital, burnVital } from './vitalsData'
+import { netWorthVital, burnVital, pipelineVital } from './vitalsData'
 import type { NetworthPoint, BurnMonth } from '../vault/finance'
+import type { JobEntry } from '../vault/career'
 
 describe('netWorthVital', () => {
   it('empty series → stub fallback (no throw)', () => {
@@ -108,5 +114,87 @@ describe('burnVital', () => {
     const copy = JSON.parse(JSON.stringify(burn))
     burnVital(burn)
     expect(burn).toEqual(copy)
+  })
+})
+
+describe('pipelineVital', () => {
+  /** Minimal JobEntry factory — only the fields pipelineVital reads matter. */
+  function entry(over: Partial<JobEntry> & Pick<JobEntry, 'company' | 'stage'>): JobEntry {
+    return {
+      role: '',
+      hot: false,
+      ...over,
+    }
+  }
+
+  it('empty entries → stub fallback (no throw)', () => {
+    expect(pipelineVital([])).toEqual({ value: null, sub: 'no data' })
+  })
+
+  it('counts active roles (found + applied + interview), closed excluded', () => {
+    const entries: JobEntry[] = [
+      entry({ company: 'InstaCo', stage: 'applied' }),
+      entry({ company: 'NorthStar', stage: 'interview' }),
+      entry({ company: 'Acme', stage: 'found' }),
+      entry({ company: 'OldCorp', stage: 'closed' }),
+    ]
+    const result = pipelineVital(entries)
+    expect(result.value).toBe(3)
+  })
+
+  it('non-empty entries with everything closed → 0 active, not the no-data stub', () => {
+    const entries: JobEntry[] = [entry({ company: 'OldCorp', stage: 'closed' })]
+    const result = pipelineVital(entries)
+    expect(result.value).toBe(0)
+    expect(result.sub).toBe('no active roles')
+  })
+
+  it('sub leads with the interview count when at least one interview is active', () => {
+    const entries: JobEntry[] = [
+      entry({ company: 'InstaCo', stage: 'applied' }),
+      entry({ company: 'NorthStar', stage: 'interview', hot: true, next: 'prep system design' }),
+    ]
+    const result = pipelineVital(entries)
+    expect(result.sub).toBe('1 interview')
+  })
+
+  it('pluralizes the interview count', () => {
+    const entries: JobEntry[] = [
+      entry({ company: 'NorthStar', stage: 'interview' }),
+      entry({ company: 'Globex', stage: 'interview' }),
+    ]
+    const result = pipelineVital(entries)
+    expect(result.sub).toBe('2 interviews')
+  })
+
+  it('no interview in flight → sub falls back to the hottest active next:: step', () => {
+    const entries: JobEntry[] = [
+      entry({ company: 'Acme', stage: 'found', next: 'wait for reply' }),
+      entry({ company: 'Globex', stage: 'applied', hot: true, next: 'follow up urgently' }),
+    ]
+    const result = pipelineVital(entries)
+    expect(result.sub).toBe('follow up urgently')
+  })
+
+  it('no hot entry → falls back to the first active entry with a next:: step', () => {
+    const entries: JobEntry[] = [
+      entry({ company: 'Acme', stage: 'found' }),
+      entry({ company: 'Globex', stage: 'applied', next: 'follow up with recruiter' }),
+    ]
+    const result = pipelineVital(entries)
+    expect(result.sub).toBe('follow up with recruiter')
+  })
+
+  it('no interview and no next:: anywhere → honest fallback sub', () => {
+    const entries: JobEntry[] = [entry({ company: 'Acme', stage: 'found' })]
+    const result = pipelineVital(entries)
+    expect(result.sub).toBe('no interviews yet')
+  })
+
+  it('is pure — does not mutate the input array', () => {
+    const entries: JobEntry[] = [entry({ company: 'InstaCo', stage: 'applied' })]
+    const copy = JSON.parse(JSON.stringify(entries))
+    pipelineVital(entries)
+    expect(entries).toEqual(copy)
   })
 })
