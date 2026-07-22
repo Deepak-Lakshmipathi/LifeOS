@@ -176,3 +176,46 @@ describe('AgentsView — idle default (App mounts with no props)', () => {
     expect(leds.every((l) => l.getAttribute('data-health') === 'idle')).toBe(true)
   })
 })
+
+// ── S54: ProposalList mounts under SupervisorCard ────────────────────────────
+
+const PENDING_PROPOSAL_MD = `---
+agent: email-triage
+date: 2026-07-13
+status: pending # pending | approved | rejected
+---
+## Change
+Lower draft threshold.
+## Diff
+\`\`\`
+- x
++ y
+\`\`\`
+## Why
+Testing.
+`
+
+describe('AgentsView — S54: mounts ProposalList under SupervisorCard', () => {
+  it('renders the empty proposal state when no proposals are supplied (App default)', () => {
+    render(<AgentsView now={NOW} />)
+    expect(screen.getByTestId('proposal-list')).toBeInTheDocument()
+    expect(screen.getByTestId('proposal-empty')).toBeInTheDocument()
+  })
+
+  it('lists a pending proposal passed through the `proposals` prop', () => {
+    render(
+      <AgentsView
+        now={NOW}
+        proposals={[{ path: 'proposals/email-triage-2026-07-13.md', content: PENDING_PROPOSAL_MD }]}
+      />,
+    )
+    expect(screen.getByTestId('proposal-item')).toHaveAttribute('data-agent', 'email-triage')
+  })
+
+  it('does not disturb the fleet-table or supervisor-card test-ids', () => {
+    render(<AgentsView now={NOW} />)
+    expect(screen.getByTestId('fleet-table')).toBeInTheDocument()
+    expect(screen.getByTestId('supervisor-card')).toBeInTheDocument()
+    expect(screen.getByTestId('proposal-list')).toBeInTheDocument()
+  })
+})
