@@ -43,7 +43,7 @@ Last updated: 2026-07-21. Two ships this session, both afk-pipeline `auto` → t
 | S25 Cockpit header | #119 | `src/components/cockpit/Header.tsx` — greeting + time seg + note (CSS reduced-motion) |
 | S26 Vitals row | #116 | `src/components/cockpit/VitalsRow.tsx` — 5 tiles, live warmth, 4 stubs |
 
-**Concurrency ceiling stays 4 and fan-out is now mostly spent** — remaining depth is the serial chains in the banner above. `src/App.tsx` (S24, done) and `HomeView.tsx` are the irreducible hotspots; never batch a hotspot-sharing slice (`afk-pipeline-out/LESSONS.md`). Full slice map: `docs/slices/README.md`.
+**Concurrency ceiling is 2 (owner-set 2026-07-22, was 4) and fan-out is now mostly spent** — dispatch at most two disjoint slices at a time; remaining depth is the serial chains in the banner above. `src/App.tsx` (S24, done) and `HomeView.tsx` are the irreducible hotspots; never batch a hotspot-sharing slice (`afk-pipeline-out/LESSONS.md`). Full slice map: `docs/slices/README.md`.
 
 **Session lessons (2026-07-15) — read before the next fan-out:**
 - **Background subagents survive full-environment outages.** This wave ate a cert/connection blip and TWO session-limit walls (2:40pm + 7:40pm resets). Transcript-resume (`SendMessage` to the agent id) continues from each agent's own worktree with zero work lost — the PRs are the durable checkpoints. When rate-limited, **do NOT churn resumes**; wait for the reset (a scheduled wakeup or the user's ping), then resume all at once.
