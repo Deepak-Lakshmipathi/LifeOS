@@ -15,7 +15,7 @@
  * used as a deterministic stand-in for "unreachable remote" regardless of
  * whether the CI runner actually has internet access.
  */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import nodeFs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -131,6 +131,37 @@ describe('NodeVaultTransport.readFiles — wipe-reclone data-loss guard (S15b ha
     const transport = new NodeVaultTransport({ repoUrl: UNREACHABLE_URL, dir: repoDir })
 
     await expect(transport.readFiles()).rejects.toBeTruthy()
+  })
+})
+
+describe('NodeVaultTransport.readFiles — shallow, single-branch clone (S56 DoD #1)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('clones with depth:1 and singleBranch:true when a fresh clone is needed', async () => {
+    // Spy on the shared isomorphic-git singleton (the transport dynamic-imports
+    // the SAME module object). Force the clone path: pull fails → needs clone;
+    // push fails (swallowed); log fails → ahead-count 0 → safe to clone.
+    const cloneSpy = vi.spyOn(git, 'clone').mockResolvedValue(undefined as never)
+    vi.spyOn(git, 'pull').mockRejectedValue(new Error('no pull'))
+    vi.spyOn(git, 'push').mockRejectedValue(new Error('no push'))
+    vi.spyOn(git, 'log').mockRejectedValue(new Error('no local repo'))
+
+    // Fresh, empty repoDir → scanVaultFiles returns [] after the (mocked) clone.
+    const transport = new NodeVaultTransport({ repoUrl: UNREACHABLE_URL, dir: repoDir })
+    const files = await transport.readFiles()
+
+    expect(files).toEqual([])
+    expect(cloneSpy).toHaveBeenCalledTimes(1)
+
+    const opts = cloneSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(opts).toMatchObject({
+      depth: 1,
+      singleBranch: true,
+      dir: repoDir,
+      url: UNREACHABLE_URL,
+    })
   })
 })
 
