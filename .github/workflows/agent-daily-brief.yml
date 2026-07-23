@@ -1,0 +1,63 @@
+name: Agent — daily-brief
+
+# S50 (the final v2 card): reads the WHOLE vault (tasks, habits, calendar,
+# attention, finance, career), composes a 5-line morning brief with Claude
+# (structured output), and writes it to Briefs/<date>.md in the vault repo
+# (LiveOS-VaultRepo). Home shows it as a dim intro line, morning mode only.
+# Owns Briefs/** + its own agents/daily-brief/** status. See
+# docs/agents/afk-pipeline.md for agent-placement rules.
+on:
+  schedule:
+    # 00:00 UTC == 05:30 IST (UTC+5:30) — ready before the owner wakes up.
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LifeOS (for the brief script + its deps)
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Checkout LiveOS-VaultRepo
+        uses: actions/checkout@v4
+        with:
+          repository: Deepak-Lakshmipathi/LiveOS-VaultRepo
+          ref: main
+          path: vault-clone
+          # Own fine-grained PAT (S57 pattern): Contents R/W on
+          # LiveOS-VaultRepo only, writing only Briefs/** and
+          # agents/daily-brief/**. See docs/agents/vault-tokens.md.
+          token: ${{ secrets.AGENT_VAULT_PAT_BRIEFS }}
+
+      - name: Configure git identity for the daily-brief commit
+        working-directory: vault-clone
+        run: |
+          git config user.name "lifeos-daily-brief"
+          git config user.email "lifeos-daily-brief@users.noreply.github.com"
+
+      - name: Run daily-brief
+        env:
+          VAULT_DIR: ${{ github.workspace }}/vault-clone
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node agents/daily-brief/brief.mjs
+        # NOTE: unlike calendar-sync's split sync/record-status commits, this
+        # agent's own S47 run-log write (agents/daily-brief/{runs.jsonl,
+        # status.json}) is already inside its own Write-set
+        # (agents/daily-brief/**), so brief.mjs's run() logs + commits +
+        # pushes it in the SAME commit as Briefs/<date>.md on success -- no
+        # separate record-status step needed here. On a compose failure the
+        # script pushes the ok:false run-log record on its own and exits
+        # non-zero (brief.mjs's own catch path), so this job shows red loudly
+        # rather than silently skipping a day.

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../../types'
 import { NowView } from '../NowView'
@@ -11,6 +11,8 @@ import { AttentionCard } from './AttentionCard'
 import { FleetStrip } from './FleetStrip'
 import { useTimeOfDay } from '../../hooks/useTimeOfDay'
 import type { CockpitMode } from '../../lib/timeOfDay'
+import { parseBrief, latestBriefPath } from '../../vault/briefs'
+import { GitTransport, type VaultTransport } from '../../vault/transport'
 
 /**
  * HomeView — the Home tab.
@@ -38,6 +40,18 @@ import type { CockpitMode } from '../../lib/timeOfDay'
  * stack, below HabitsCard — same self-load convention, no data props from
  * here. This is the ONLY place that changes for new right-stack cards; App
  * mounts HomeView once and never edits it again.
+ *
+ * S50 (the final v2 card) prepends the daily-brief agent's 5-line morning
+ * brief (`Briefs/<date>.md`, src/vault/briefs.ts's `parseBrief`) as one
+ * small dim block, morning mode ONLY — visually the first thing under the
+ * cockpit shell's header greeting, since HomeView's own root is the first
+ * thing rendered below that header. Same "head of chain" self-load
+ * convention as AttentionCard/FleetStrip: `briefLines` short-circuits the
+ * fetch under test. A missing or malformed brief renders nothing (§8: no
+ * fake-real data, no error UI) — the block simply doesn't mount rather than
+ * showing a placeholder or error. `mode === 'am'` reuses the exact same
+ * `useTimeOfDay`/`modeOverride` seam Day Review already uses for its own
+ * pm-only gating, so the am-only behavior is testable the same way.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -68,6 +82,16 @@ interface HomeViewProps {
    * override uses). Omitted in the app — the wall clock decides.
    */
   modeOverride?: CockpitMode
+  /**
+   * S50: today's brief lines (morning-only dim block). Omit in-app
+   * (self-loads `Briefs/<date>.md` via `briefTransport`); inject a fixture
+   * array (including `[]`) in tests to skip the fetch entirely — same
+   * "head of chain" convention as AttentionCard's `items`/FleetStrip's
+   * `statuses`.
+   */
+  briefLines?: string[]
+  /** Read seam for the brief self-load. Defaults to a fresh GitTransport. */
+  briefTransport?: VaultTransport
 }
 
 export function HomeView({
@@ -78,8 +102,11 @@ export function HomeView({
   onAdd,
   projects,
   modeOverride,
+  briefLines: briefLinesProp,
+  briefTransport,
 }: HomeViewProps) {
   const [addOpen, setAddOpen] = useState(false)
+  const [loadedBriefLines, setLoadedBriefLines] = useState<string[]>([])
   // Own useTimeOfDay instance (mirrors Header's, same wall clock — both
   // agree under normal operation). Known gap, out of this slice's write-set
   // to fix: Header's seg-control override is component-local state, so
@@ -88,6 +115,37 @@ export function HomeView({
   // is S24's exclusive hotspot.
   const { mode } = useTimeOfDay(modeOverride)
 
+  // Self-load today's brief from the vault when the caller didn't inject
+  // fixture data — the AttentionCard/FleetStrip "head of chain" convention.
+  // Note: GitTransport.readFiles() does not yet walk a `Briefs/` folder (it
+  // only walks the 7 domain folders + Inbox/Habits/Calendar/Mail) — the same
+  // class of gap FleetStrip documented for `agents/` before its own
+  // transport extension, so the live self-load always resolves to "no
+  // brief" (renders nothing) until a later slice extends the transport.
+  // Out of this slice's write-set to fix.
+  useEffect(() => {
+    if (briefLinesProp !== undefined) return
+    if (!briefTransport && !import.meta.env.VITE_VAULT_REPO_URL) return
+    let live = true
+    ;(async () => {
+      try {
+        const t = briefTransport ?? new GitTransport()
+        const files = await t.readFiles()
+        if (!live) return
+        const path = latestBriefPath(new Date())
+        const md = files.find((f) => f.path === path)?.content ?? null
+        setLoadedBriefLines(parseBrief(md))
+      } catch {
+        // No vault configured / offline / no brief yet — render nothing (§8: no fake-real data, no error UI).
+      }
+    })()
+    return () => {
+      live = false
+    }
+  }, [briefLinesProp, briefTransport])
+
+  const briefLines = briefLinesProp ?? loadedBriefLines
+
   const handleAdd = async (input: AddInput) => {
     await onAdd(input)
     setAddOpen(false)
@@ -95,6 +153,14 @@ export function HomeView({
 
   return (
     <div>
+      {mode === 'am' && briefLines.length > 0 && (
+        <div data-testid="home-brief" className="mb-3 flex flex-col gap-0.5 text-[13px] text-dim">
+          {briefLines.map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
+        </div>
+      )}
+
       {mode === 'pm' && (
         <div className="mb-3">
           <DayReview tasks={tasks} />
