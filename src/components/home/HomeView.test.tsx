@@ -60,3 +60,54 @@ describe('HomeView — right stack mounts HabitsCard (S32)', () => {
     expect(screen.getByText("Today's Mission")).toBeInTheDocument()
   })
 })
+
+// ─── S50 — daily-brief morning-only surface ─────────────────────────────────
+
+const FIVE_BRIEF_LINES = [
+  'Win: ship the S50 daily brief agent.',
+  '10:00 Client call — NorthStar handoff.',
+  'Meera (NorthStar) is waiting 26h on a quote.',
+  'Course study block is on a 6-day streak — keep it alive.',
+  'Net worth is ₹18.4L, up 2.1% this month.',
+]
+
+describe('HomeView — daily-brief morning-only surface (S50)', () => {
+  it('shows the brief block in am mode when brief lines are present', () => {
+    render(<HomeView {...baseProps} modeOverride="am" briefLines={FIVE_BRIEF_LINES} />)
+    const block = screen.getByTestId('home-brief')
+    expect(block).toBeInTheDocument()
+    for (const line of FIVE_BRIEF_LINES) {
+      expect(screen.getByText(line)).toBeInTheDocument()
+    }
+  })
+
+  it('hides the brief block in mid mode even when brief lines are present (am ONLY)', () => {
+    render(<HomeView {...baseProps} modeOverride="mid" briefLines={FIVE_BRIEF_LINES} />)
+    expect(screen.queryByTestId('home-brief')).not.toBeInTheDocument()
+  })
+
+  it('hides the brief block in pm mode even when brief lines are present (am ONLY)', () => {
+    render(<HomeView {...baseProps} modeOverride="pm" briefLines={FIVE_BRIEF_LINES} />)
+    expect(screen.queryByTestId('home-brief')).not.toBeInTheDocument()
+  })
+
+  it('renders nothing (no error UI) in am mode when the brief is missing ([])', () => {
+    render(<HomeView {...baseProps} modeOverride="am" briefLines={[]} />)
+    expect(screen.queryByTestId('home-brief')).not.toBeInTheDocument()
+  })
+
+  it('the brief block is the first child on Home in am mode', () => {
+    const { container } = render(
+      <HomeView {...baseProps} modeOverride="am" briefLines={FIVE_BRIEF_LINES} />,
+    )
+    const root = container.firstElementChild as HTMLElement
+    const firstChild = root.firstElementChild as HTMLElement
+    expect(firstChild.getAttribute('data-testid')).toBe('home-brief')
+  })
+
+  it('does not break existing mount points when the brief is present', () => {
+    render(<HomeView {...baseProps} modeOverride="am" briefLines={FIVE_BRIEF_LINES} />)
+    expect(screen.getByLabelText('Add task')).toBeInTheDocument()
+    expect(screen.getByTestId('habits-card')).toBeInTheDocument()
+  })
+})
