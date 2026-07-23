@@ -7,6 +7,7 @@ import { MissionCard } from './MissionCard'
 import { DayReview } from './DayReview'
 import { HabitsCard } from './HabitsCard'
 import { TodayCard } from './TodayCard'
+import { AttentionCard } from './AttentionCard'
 import { useTimeOfDay } from '../../hooks/useTimeOfDay'
 import type { CockpitMode } from '../../lib/timeOfDay'
 
@@ -29,10 +30,12 @@ import type { CockpitMode } from '../../lib/timeOfDay'
  * ahead of HabitsCard in that same stack, per §5's documented order (Today,
  * then Habits, then a Fleet mini-strip in a later slice) — it takes `tasks`
  * (already in scope here for MissionCard/NowView) and self-loads calendar
- * events the same way HabitsCard self-loads habits. Later slices grow the
- * right stack further (Fleet mini-strip per §5) and the left stack (Needs
- * You) — this is the ONLY place that changes for those; App mounts
- * HomeView once and never edits it again.
+ * events the same way HabitsCard self-loads habits. S37 mounts AttentionCard
+ * ("Needs you", §4.4) in the left stack below MissionCard — same "head of
+ * chain" self-load convention, no data props from here. Later slices grow
+ * the right stack further (Fleet mini-strip per §5) — this is the ONLY
+ * place that changes for those; App mounts HomeView once and never edits it
+ * again.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -111,6 +114,10 @@ export function HomeView({
 
           <div className="mb-3">
             <MissionCard tasks={tasks} onToggle={onToggle} />
+          </div>
+
+          <div className="mb-3">
+            <AttentionCard />
           </div>
 
           <NowView
