@@ -162,3 +162,37 @@ describe('GitTransport — Calendar/today.md surfaced in the snapshot (#151 regr
     expect(entry?.content).toBe(todayMd)
   })
 })
+
+describe('GitTransport — Mail/attention.md surfaced in the snapshot (#154 regression)', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_VAULT_REPO_URL', 'https://example.invalid/vault.git')
+    // Same reasoning as the #148/#151 blocks above: `pull` must succeed so
+    // the FakeFS's in-memory file map survives between the seed write and
+    // the later read on this same GitTransport instance, instead of being
+    // wiped by a needs-clone reclone.
+    h.pull.mockResolvedValue(undefined)
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    h.pull.mockRejectedValue(new Error('no pull'))
+  })
+
+  it("readFiles() surfaces Mail/attention.md (fails pre-fix: AttentionCard's find() is always undefined)", async () => {
+    const transport = new GitTransport()
+
+    const attentionMd = [
+      '# attention — written by email-triage',
+      '- [ ] Meera (NorthStar) asked for a revised quote (label:: client-money) (from:: meera@northstar.io) (waiting:: 26h)',
+      '- [x] Recruiter reply — InstaCo (label:: job) (from:: t@instaco.dev) (waiting:: 0h)',
+      '',
+    ].join('\n')
+
+    await transport.writeFile('Mail/attention.md', attentionMd, 'seed attention')
+
+    const files = await transport.readFiles()
+    const entry = files.find((f) => f.path === 'Mail/attention.md')
+
+    expect(entry).toBeDefined()
+    expect(entry?.content).toBe(attentionMd)
+  })
+})
