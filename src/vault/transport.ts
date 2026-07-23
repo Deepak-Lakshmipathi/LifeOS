@@ -10,9 +10,11 @@
  *   *.md files under the 7 canonical domain folders plus the top-level
  *   Inbox/ folder (S15b — home for domain-less/project-less writes),
  *   Habits/ folder (S32/#148 — habits.md + log.md, the append-only hit
- *   log appendHabitHit does read-modify-write against), and Calendar/
+ *   log appendHabitHit does read-modify-write against), Calendar/
  *   folder (S34/#151 — today.md, which TodayCard's live self-load reads
- *   via `files.find(f => f.path === 'Calendar/today.md')`).
+ *   via `files.find(f => f.path === 'Calendar/today.md')`), and Mail/
+ *   folder (S37/#154 — attention.md, which AttentionCard's live self-load
+ *   reads via `files.find(f => f.path === 'Mail/attention.md')`).
  *
  * All isomorphic-git / lightning-fs imports are deferred to readFiles()
  * so that importing this module in tests never triggers browser-only side
@@ -206,11 +208,14 @@ export class GitTransport implements VaultTransport {
     //    the snapshot so appendHabitHit's read-modify-write sees prior hits
     //    instead of degrading to an overwrite) + Calendar (S34/#151 —
     //    today.md must round-trip so TodayCard's live self-load finds it
-    //    instead of permanently rendering "No calendar data yet") ─────────
+    //    instead of permanently rendering "No calendar data yet") + Mail
+    //    (S37/#154 — attention.md must round-trip so AttentionCard's live
+    //    self-load finds it instead of permanently rendering "Nothing needs
+    //    you right now") ────────────────────────────────────────────────
     const result: { path: string; content: string }[] = []
     const pfs = this.fs.promises
 
-    for (const folder of [...DOMAINS, 'Inbox', 'Habits', 'Calendar']) {
+    for (const folder of [...DOMAINS, 'Inbox', 'Habits', 'Calendar', 'Mail']) {
       let entries: string[]
       try {
         entries = await pfs.readdir(`${DIR}/${folder}`)

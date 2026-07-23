@@ -82,6 +82,37 @@ describe('VaultSync.list — Habits/ is not a task source', () => {
   })
 })
 
+// ─── list — Mail/ exclusion (#154) ────────────────────────────────────────────
+
+describe('VaultSync.list — Mail/ is not a task source', () => {
+  it('does not turn Mail/attention.md lines into spurious tasks', async () => {
+    // Mail/attention.md lines are `- [ ] <title> (label:: ...) (from:: ...)
+    // (waiting:: ...) (draft:: ...)` checkbox syntax (src/vault/mail.ts's
+    // parseAttentionLine) — the exact shape parseTaskLine treats as a real
+    // task when no id::/done_when::/priority:: marker is present. Now that
+    // #154 wires `Mail` into GitTransport's read loop, the snapshot list()
+    // reads includes Mail/attention.md, so list() must explicitly skip that
+    // folder or every attention line (handled or not) would resurface as a
+    // bogus task titled with the whole line including its parenthesised
+    // fields.
+    const transport = new FakeTransport([
+      {
+        path: 'Mail/attention.md',
+        content:
+          '- [ ] Meera (NorthStar) asked for a revised quote (label:: client-money) (from:: meera@northstar.io) (waiting:: 26h)\n' +
+          '- [x] Recruiter reply — InstaCo (label:: job) (from:: t@instaco.dev) (waiting:: 0h)\n',
+      },
+      { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+    ])
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.title).toBe('Real task')
+  })
+})
+
 // ─── (a) add — path resolution + content ─────────────────────────────────────
 
 describe('VaultSync.add — path resolution and line append', () => {

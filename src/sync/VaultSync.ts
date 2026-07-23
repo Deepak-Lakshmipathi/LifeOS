@@ -165,6 +165,22 @@ export class VaultSync implements SyncProvider {
       // Habits/log.md's checkbox-shaped hit lines, which needed an explicit
       // folder-level guard.
 
+      // Mail/*.md (#154: now also included in the transport snapshot so
+      // AttentionCard's live self-load finds `Mail/attention.md`) DOES need
+      // the same guard as Habits: attention.md's lines are `- [ ] <title>
+      // (label:: ...) (from:: ...) (waiting:: ...) (draft:: ...)` — see
+      // src/vault/mail.ts's own `parseAttentionLine`, which uses the
+      // identical checkbox prefix `/^- \[([ xX])\]\s+(.*)$/` as
+      // parseTaskLine. None of attention.md's field keys (label/from/
+      // waiting/draft) match parseTaskLine's field regex
+      // (id|done_when|priority), so parseTaskLine finds zero markers and
+      // treats the ENTIRE remainder — title plus every parenthesised field
+      // — as one verbatim task title. Left unguarded, every attention line
+      // (handled or not) would resurface in VaultSync.list() as a spurious
+      // task with a garbage title. Skip the folder entirely, as #148 did
+      // for Habits.
+      if (folderName === 'Mail') continue
+
       const domain = isDomain(folderName) ? folderName : undefined
       const project = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName
 
