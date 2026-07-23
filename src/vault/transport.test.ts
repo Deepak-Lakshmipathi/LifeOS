@@ -128,3 +128,37 @@ describe('GitTransport + appendHabitHit — Habits/log.md read-modify-write (#14
     expect(log).toContain('(date:: 2026-07-21)')
   })
 })
+
+describe('GitTransport — Calendar/today.md surfaced in the snapshot (#151 regression)', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_VAULT_REPO_URL', 'https://example.invalid/vault.git')
+    // Same reasoning as the #148 block above: `pull` must succeed so the
+    // FakeFS's in-memory file map survives between the seed write and the
+    // later read on this same GitTransport instance, instead of being
+    // wiped by a needs-clone reclone.
+    h.pull.mockResolvedValue(undefined)
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    h.pull.mockRejectedValue(new Error('no pull'))
+  })
+
+  it("readFiles() surfaces Calendar/today.md (fails pre-fix: TodayCard's find() is always undefined)", async () => {
+    const transport = new GitTransport()
+
+    const todayMd = [
+      '# 2026-07-22',
+      '- 08:00-09:00 Gym — legs (type:: gym)',
+      '- 10:00-11:00 Client call — NorthStar handoff (type:: call)',
+      '',
+    ].join('\n')
+
+    await transport.writeFile('Calendar/today.md', todayMd, 'seed calendar')
+
+    const files = await transport.readFiles()
+    const entry = files.find((f) => f.path === 'Calendar/today.md')
+
+    expect(entry).toBeDefined()
+    expect(entry?.content).toBe(todayMd)
+  })
+})
