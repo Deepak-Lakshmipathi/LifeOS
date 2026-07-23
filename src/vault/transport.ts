@@ -8,9 +8,11 @@
  *   Clones or pulls the vault repo into an IndexedDB-backed virtual FS
  *   via isomorphic-git + @isomorphic-git/lightning-fs, then reads all
  *   *.md files under the 7 canonical domain folders plus the top-level
- *   Inbox/ folder (S15b — home for domain-less/project-less writes) and
+ *   Inbox/ folder (S15b — home for domain-less/project-less writes),
  *   Habits/ folder (S32/#148 — habits.md + log.md, the append-only hit
- *   log appendHabitHit does read-modify-write against).
+ *   log appendHabitHit does read-modify-write against), and Calendar/
+ *   folder (S34/#151 — today.md, which TodayCard's live self-load reads
+ *   via `files.find(f => f.path === 'Calendar/today.md')`).
  *
  * All isomorphic-git / lightning-fs imports are deferred to readFiles()
  * so that importing this module in tests never triggers browser-only side
@@ -202,11 +204,13 @@ export class GitTransport implements VaultTransport {
     // ── Read *.md files under each canonical domain folder + top-level
     //    Inbox + Habits (S32/#148 — Habits/log.md must round-trip through
     //    the snapshot so appendHabitHit's read-modify-write sees prior hits
-    //    instead of degrading to an overwrite) ────────────────────────────
+    //    instead of degrading to an overwrite) + Calendar (S34/#151 —
+    //    today.md must round-trip so TodayCard's live self-load finds it
+    //    instead of permanently rendering "No calendar data yet") ─────────
     const result: { path: string; content: string }[] = []
     const pfs = this.fs.promises
 
-    for (const folder of [...DOMAINS, 'Inbox', 'Habits']) {
+    for (const folder of [...DOMAINS, 'Inbox', 'Habits', 'Calendar']) {
       let entries: string[]
       try {
         entries = await pfs.readdir(`${DIR}/${folder}`)

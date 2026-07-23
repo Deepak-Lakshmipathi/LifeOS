@@ -155,6 +155,16 @@ export class VaultSync implements SyncProvider {
       // titled with the raw date/source suffix. Skip the folder entirely.
       if (folderName === 'Habits') continue
 
+      // Calendar/*.md (#151: now also included in the transport snapshot
+      // so TodayCard's live self-load finds `Calendar/today.md`) needs NO
+      // equivalent skip here: its lines (`# YYYY-MM-DD` date header,
+      // `- HH:MM-HH:MM <title> (type:: ...)` event rows — see
+      // src/vault/calendar.ts) never start with a checkbox `- [ ]`/`- [x]`
+      // prefix, so parseTaskLine's `checkboxMatch` regex never matches them
+      // and they're silently skipped as non-task lines already — unlike
+      // Habits/log.md's checkbox-shaped hit lines, which needed an explicit
+      // folder-level guard.
+
       const domain = isDomain(folderName) ? folderName : undefined
       const project = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName
 

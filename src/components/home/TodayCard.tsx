@@ -24,10 +24,9 @@ import { GitTransport, type VaultTransport } from '../../vault/transport'
  * fetch under test, so fixture rendering never touches GitTransport (or its
  * IndexedDB/network side effects), same as HabitsCard's `habits`/`hits`.
  *
- * Known gap shared with HabitsCard (out of this slice's write-set to fix):
- * GitTransport.readFiles() currently only walks the 7 domain folders +
- * Inbox/ (src/vault/transport.ts), not Calendar/ — so the live self-load
- * finds nothing until a later slice teaches the transport that folder.
+ * GitTransport.readFiles() (src/vault/transport.ts) walks the 7 domain
+ * folders + Inbox/ + Habits/ + Calendar/ (S34/#151 fixed the gap where
+ * Calendar/ was missing, leaving the live self-load permanently empty).
  * Under test this is moot: `events`/`date` short-circuit the fetch entirely.
  */
 
