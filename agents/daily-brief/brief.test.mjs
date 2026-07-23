@@ -20,6 +20,7 @@ import {
   buildContextPack,
   validateBriefLines,
   composeBrief,
+  callClaudeForBrief,
   briefFilePath,
   renderBriefMarkdown,
   readVaultFiles,
@@ -127,6 +128,116 @@ describe('validateBriefLines — exactly-5-non-empty-lines invariant', () => {
     expect(validateBriefLines(null)).toBeNull()
     expect(validateBriefLines({})).toBeNull()
     expect(validateBriefLines({ lines: 'not an array' })).toBeNull()
+  })
+})
+
+// ─── callClaudeForBrief — the real HTTP request builder + response parser ──
+// (highest-risk surface: it's the only thing in this file that actually
+// touches the Anthropic API shape. Every other test bypasses it via the
+// `callClaude` injection seam, so a regression in the request headers,
+// model id, body shape, or the text-block-extraction/JSON-parse logic here
+// would otherwise fail nothing. `fetchImpl` is injected — NO network call.)
+
+describe('callClaudeForBrief — request shape + response parsing (mocked fetchImpl, no network)', () => {
+  it('POSTs the correct request: URL, headers, model, max_tokens, and json_schema output_config', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'text', text: JSON.stringify({ lines: VALID_LINES }) }] }),
+    })
+
+    await callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'some vault digest', fetchImpl })
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    const [url, options] = fetchImpl.mock.calls[0]
+    expect(url).toBe('https://api.anthropic.com/v1/messages')
+    expect(options.method).toBe('POST')
+    expect(options.headers['x-api-key']).toBe('fake-key')
+    expect(options.headers['anthropic-version']).toBe('2023-06-01')
+    expect(options.headers['content-type']).toBe('application/json')
+
+    const body = JSON.parse(options.body)
+    expect(body.model).toBe('claude-sonnet-5')
+    expect(body.model).toBe(CLAUDE_MODEL) // pinned constant, not a hardcoded literal drift
+    expect(typeof body.max_tokens).toBe('number')
+    expect(body.max_tokens).toBeGreaterThan(0)
+    expect(body.messages).toEqual([{ role: 'user', content: 'some vault digest' }])
+    expect(body.output_config.format.type).toBe('json_schema')
+    expect(body.output_config.format.schema.type).toBe('object')
+    expect(body.output_config.format.schema.properties.lines.type).toBe('array')
+    expect(body.output_config.format.schema.required).toEqual(['lines'])
+  })
+
+  it('falls back to a placeholder user message when contextPack is empty (never sends a blank message)', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'text', text: JSON.stringify({ lines: VALID_LINES }) }] }),
+    })
+    await callClaudeForBrief({ apiKey: 'fake-key', contextPack: '', fetchImpl })
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body)
+    expect(body.messages[0].content).toBe('(vault is empty)')
+  })
+
+  it('parses a well-formed response into the expected {lines: [...]} object', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'text', text: JSON.stringify({ lines: VALID_LINES }) }] }),
+    })
+    const result = await callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl })
+    expect(result).toEqual({ lines: VALID_LINES })
+  })
+
+  it('throws (fail-loud) on a non-2xx response, e.g. 429', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 429, text: async () => 'rate limited' })
+    await expect(callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl })).rejects.toThrow(/429/)
+  })
+
+  it('throws (fail-loud) on a non-2xx response, e.g. 500', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 500, text: async () => 'server error' })
+    await expect(callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl })).rejects.toThrow(/500/)
+  })
+
+  it('requires an apiKey (throws before ever calling fetchImpl)', async () => {
+    const fetchImpl = vi.fn()
+    await expect(callClaudeForBrief({ contextPack: 'ctx', fetchImpl })).rejects.toThrow(/apiKey is required/)
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('returns null (not a throw) when the response has no text content block', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'tool_use', input: {} }] }), // no 'text' block
+    })
+    const result = await callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl })
+    expect(result).toBeNull()
+  })
+
+  it('returns null (not a throw) when content is empty', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ content: [] }) })
+    const result = await callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl })
+    expect(result).toBeNull()
+  })
+
+  it('returns null (not a throw) when the text block is not valid JSON', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'text', text: 'not json at all {' }] }),
+    })
+    const result = await callClaudeForBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl })
+    expect(result).toBeNull()
+  })
+
+  it('null-return feeds composeBrief\'s retry-then-fail path end-to-end (integration of the two seams)', async () => {
+    // callClaudeForBrief itself returns null on malformed text — verify that
+    // composeBrief (which defaults callClaude to callClaudeForBrief) retries
+    // once against the real parsing function, then fails loudly.
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'text', text: 'garbage' }] }),
+    })
+    await expect(
+      composeBrief({ apiKey: 'fake-key', contextPack: 'ctx', fetchImpl, callClaude: callClaudeForBrief }),
+    ).rejects.toThrow(/malformed after retry/)
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
   })
 })
 
