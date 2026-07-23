@@ -8,6 +8,7 @@ import { DayReview } from './DayReview'
 import { HabitsCard } from './HabitsCard'
 import { TodayCard } from './TodayCard'
 import { AttentionCard } from './AttentionCard'
+import { FleetStrip } from './FleetStrip'
 import { useTimeOfDay } from '../../hooks/useTimeOfDay'
 import type { CockpitMode } from '../../lib/timeOfDay'
 
@@ -32,10 +33,11 @@ import type { CockpitMode } from '../../lib/timeOfDay'
  * (already in scope here for MissionCard/NowView) and self-loads calendar
  * events the same way HabitsCard self-loads habits. S37 mounts AttentionCard
  * ("Needs you", §4.4) in the left stack below MissionCard — same "head of
- * chain" self-load convention, no data props from here. Later slices grow
- * the right stack further (Fleet mini-strip per §5) — this is the ONLY
- * place that changes for those; App mounts HomeView once and never edits it
- * again.
+ * chain" self-load convention, no data props from here. S48 mounts
+ * FleetStrip ("Fleet mini strip", §4.7/§5) at the bottom of the right
+ * stack, below HabitsCard — same self-load convention, no data props from
+ * here. This is the ONLY place that changes for new right-stack cards; App
+ * mounts HomeView once and never edits it again.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -130,11 +132,11 @@ export function HomeView({
           />
         </div>
 
-        {/* Right stack (§5): Today (calendar) + Habits; Fleet mini-strip
-            joins this column in a later slice (S37+). */}
+        {/* Right stack (§5): Today (calendar), Habits, Fleet mini-strip. */}
         <div className="flex flex-col gap-3">
           <TodayCard tasks={tasks} />
           <HabitsCard />
+          <FleetStrip />
         </div>
       </div>
 
