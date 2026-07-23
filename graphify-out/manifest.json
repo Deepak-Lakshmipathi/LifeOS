@@ -145,9 +145,9 @@
     "semantic_hash": "fd8fe4eddefe9c0c622839f300667b3c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\HANDOFF.md": {
-    "mtime": 1784724239.8264585,
-    "ast_hash": "0564243641ea1660e19349f058a8d3f8",
-    "semantic_hash": "0564243641ea1660e19349f058a8d3f8"
+    "mtime": 1784794440.753826,
+    "ast_hash": "7269622eb06029b78c11cc10752a6f97",
+    "semantic_hash": "7269622eb06029b78c11cc10752a6f97"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\adr\\0001-pwa-over-native.md": {
     "mtime": 1781559973.251291,
@@ -185,9 +185,9 @@
     "semantic_hash": "90ebdeb16430156c6fb30c27dfbe8abc"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\kanban.html": {
-    "mtime": 1784723641.6073806,
-    "ast_hash": "e2d7ac4e6d7551d252c263e31e458105",
-    "semantic_hash": "e2d7ac4e6d7551d252c263e31e458105"
+    "mtime": 1784786357.8819566,
+    "ast_hash": "4c62a65753094467891afb519c2b50df",
+    "semantic_hash": "4c62a65753094467891afb519c2b50df"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\public\\icons\\icon-192.png": {
     "mtime": 1781564380.7880216,
@@ -1625,14 +1625,14 @@
     "semantic_hash": "28a4233dcd8e6bb501b1dd15d5c79766"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\sync\\VaultSync.test.ts": {
-    "mtime": 1782977359.5047684,
-    "ast_hash": "4354e37c4afcc0f444c0c442a37d413e",
-    "semantic_hash": "4354e37c4afcc0f444c0c442a37d413e"
+    "mtime": 1784784144.9799,
+    "ast_hash": "486ab44c45d3ed773671a8fbe12c9079",
+    "semantic_hash": "486ab44c45d3ed773671a8fbe12c9079"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\sync\\VaultSync.ts": {
-    "mtime": 1782895937.929108,
-    "ast_hash": "87b39dd9ef2132d882b9044fedbf25f2",
-    "semantic_hash": "87b39dd9ef2132d882b9044fedbf25f2"
+    "mtime": 1784784144.9799,
+    "ast_hash": "da0b5d4ebc2c3c9f3391cdabcf68098d",
+    "semantic_hash": "da0b5d4ebc2c3c9f3391cdabcf68098d"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\test\\tapDotComplete.test.tsx": {
     "mtime": 1784527453.8037174,
@@ -1660,9 +1660,9 @@
     "semantic_hash": "5177a198c1ee21a5f1234bcb328993a8"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\transport.ts": {
-    "mtime": 1783495008.6431975,
-    "ast_hash": "9d5e12577df1fb32ac70ecec7e77b183",
-    "semantic_hash": "9d5e12577df1fb32ac70ecec7e77b183"
+    "mtime": 1784784144.9880774,
+    "ast_hash": "2fe213116b71c7e0afb172741d55ecc2",
+    "semantic_hash": "2fe213116b71c7e0afb172741d55ecc2"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vite-env.d.ts": {
     "mtime": 1782886007.6497855,
@@ -2130,14 +2130,14 @@
     "semantic_hash": "1e88a339f1c96126808562f4b9142004"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\HomeView.test.tsx": {
-    "mtime": 1784723624.5998547,
-    "ast_hash": "19f4b3761c897f687351c710c35a86af",
-    "semantic_hash": "19f4b3761c897f687351c710c35a86af"
+    "mtime": 1784786348.6187673,
+    "ast_hash": "bf48e7bf2d87726b8559de8000a311b6",
+    "semantic_hash": "bf48e7bf2d87726b8559de8000a311b6"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\HomeView.tsx": {
-    "mtime": 1784723624.5998547,
-    "ast_hash": "b17cccad1460dc323fa4e85609103ae1",
-    "semantic_hash": "b17cccad1460dc323fa4e85609103ae1"
+    "mtime": 1784786348.620776,
+    "ast_hash": "84be54fa8fd8143525c08745aa684e49",
+    "semantic_hash": "84be54fa8fd8143525c08745aa684e49"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\MissionCard.test.tsx": {
     "mtime": 1784296010.0639474,
@@ -2760,9 +2760,9 @@
     "semantic_hash": "d4e598f8b82ba63cd2639d3b904ea0c3"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\transport.test.ts": {
-    "mtime": 1784689410.9235668,
-    "ast_hash": "279f0b1f49d3735e790e602bfac27adb",
-    "semantic_hash": "279f0b1f49d3735e790e602bfac27adb"
+    "mtime": 1784784144.9880774,
+    "ast_hash": "4470174368776be1d16168f3e2b482d4",
+    "semantic_hash": "4470174368776be1d16168f3e2b482d4"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\.github\\workflows\\agent-rotate.yml": {
     "mtime": 1784689410.9077175,
@@ -2835,9 +2835,9 @@
     "semantic_hash": "3e25f7a340e5f697cd91113358fe09e3"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\habitsWrite.ts": {
-    "mtime": 1784723624.5998547,
-    "ast_hash": "e9c4c7c9cded7e5e1a19e405e35a439a",
-    "semantic_hash": "e9c4c7c9cded7e5e1a19e405e35a439a"
+    "mtime": 1784734285.399351,
+    "ast_hash": "b57e2e4658dd835e27daecb1d1da4c1c",
+    "semantic_hash": "b57e2e4658dd835e27daecb1d1da4c1c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\proposalWrite.test.ts": {
     "mtime": 1784723624.5998547,
@@ -2858,5 +2858,75 @@
     "mtime": 1784706621.625044,
     "ast_hash": "f935d850c67291d256d979f832916c0f",
     "semantic_hash": "f935d850c67291d256d979f832916c0f"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\agents\\daily-brief\\brief.mjs": {
+    "mtime": 1784786348.6167576,
+    "ast_hash": "2c96e885fba835e5598e392fa5918d30",
+    "semantic_hash": "2c96e885fba835e5598e392fa5918d30"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\agents\\daily-brief\\brief.test.mjs": {
+    "mtime": 1784786348.6167576,
+    "ast_hash": "b0f47be857d1e8e2b3ed4ee7bceaca73",
+    "semantic_hash": "b0f47be857d1e8e2b3ed4ee7bceaca73"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\AttentionCard.test.tsx": {
+    "mtime": 1784781983.7842119,
+    "ast_hash": "4951d9e6c1ff3c993c45406a5b7d1b49",
+    "semantic_hash": "4951d9e6c1ff3c993c45406a5b7d1b49"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\AttentionCard.tsx": {
+    "mtime": 1784781983.7842119,
+    "ast_hash": "82ea278fd232e5696f9569248886295c",
+    "semantic_hash": "82ea278fd232e5696f9569248886295c"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\FleetStrip.test.tsx": {
+    "mtime": 1784784144.9721165,
+    "ast_hash": "b656602e3ab62a207ad99237dd3ba8f7",
+    "semantic_hash": "b656602e3ab62a207ad99237dd3ba8f7"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\FleetStrip.tsx": {
+    "mtime": 1784784144.9741194,
+    "ast_hash": "4c12bd7df792ebcfa532acc92d2394eb",
+    "semantic_hash": "4c12bd7df792ebcfa532acc92d2394eb"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\TodayCard.test.tsx": {
+    "mtime": 1784734285.3857517,
+    "ast_hash": "482c09203df32c960119e9881677d660",
+    "semantic_hash": "482c09203df32c960119e9881677d660"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\TodayCard.tsx": {
+    "mtime": 1784781983.7842119,
+    "ast_hash": "78d5965b24e2b83e49d06a6b37f90f80",
+    "semantic_hash": "78d5965b24e2b83e49d06a6b37f90f80"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\lib\\gapFit.test.ts": {
+    "mtime": 1784734285.3901587,
+    "ast_hash": "d773e62fda948f46792b36e47f6f218c",
+    "semantic_hash": "d773e62fda948f46792b36e47f6f218c"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\lib\\gapFit.ts": {
+    "mtime": 1784734285.3919435,
+    "ast_hash": "8eeb56abfe2df6e085f4430a442a4465",
+    "semantic_hash": "8eeb56abfe2df6e085f4430a442a4465"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\briefs.test.ts": {
+    "mtime": 1784786348.620776,
+    "ast_hash": "b063c3f4ae246533f1783de2d51ae4d1",
+    "semantic_hash": "b063c3f4ae246533f1783de2d51ae4d1"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\briefs.ts": {
+    "mtime": 1784786348.6227844,
+    "ast_hash": "b801c5bd7e09d479ff830ebd77ae7616",
+    "semantic_hash": "b801c5bd7e09d479ff830ebd77ae7616"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\.github\\workflows\\agent-daily-brief.yml": {
+    "mtime": 1784786348.6147482,
+    "ast_hash": "11d4cb4bfdbddb600a9c78bbe1f9997d",
+    "semantic_hash": "11d4cb4bfdbddb600a9c78bbe1f9997d"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\agents\\daily-brief\\README.md": {
+    "mtime": 1784786348.6147482,
+    "ast_hash": "910d33f6f2d63c404d4567224d734fb2",
+    "semantic_hash": "910d33f6f2d63c404d4567224d734fb2"
   }
 }
