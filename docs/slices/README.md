@@ -70,5 +70,36 @@ Done** (numbered, testable — the eval gate checks the PR against these) ·
 ## Numbering
 
 S1–S19 = v1 (archived, `docs/archive/V1_ARCHIVE.md`). S20–S57 = v2, per
-`docs/LIFEOS_V2_ROADMAP.md`. Kanban cards `s20…s57` in `kanban.html` mirror
-these tickets; `blockedBy` encodes the true dep graph + hotspot serialization.
+`docs/LIFEOS_V2_ROADMAP.md`. S58+ = post-v2 (below). Kanban cards `s20…s62` in
+`kanban.html` mirror these tickets; `blockedBy` encodes the true dep graph +
+hotspot serialization.
+
+## Post-v2 wave (S58–S62)
+
+v2 closed at 69/69. This wave is **owner feedback from real usage** (`Post V2
+User FeedBack, Features, Updates, Fixes.md`, items 1–4) plus the two live-data
+follow-ups v2 left open (#158, #155). Same anatomy, same triple-green gate.
+
+| Wave | Slices | Gate |
+|---|---|---|
+| 12 | S58 · S60 · S61 | — (fully parallel, disjoint write-sets) |
+| 13 | S59 · S62 | S59←S58 (TabBar.tsx) · S62←S61 (transport.ts) |
+
+- **S58** Tasks tab — Home slims to the check-in surface; Up next/Later +
+  Domains + Pulse fold into one new Tasks tab. Tabs 6 → 5.
+- **S59** responsive tab bar — every tab visible at 320px.
+- **S60** warmth → background tint, Completion vital takes its slot.
+- **S61** `GitTransport` recursive + non-`.md` reads (#158) — the highest live
+  value card: FleetStrip and the daily brief render empty in production until
+  it lands.
+- **S62** config-check before the dynamic import (#155) — perf/architecture.
+
+**Hotspot rules for this wave** (v2's "only S24 touches App.tsx" transfers):
+- `src/App.tsx` + `src/components/TabBar.tsx` — S58 only; S59 rebases on it.
+- `src/vault/transport.ts` — S61 then S62; never together.
+- `src/components/glass/Aurora.tsx` + `src/components/cockpit/VitalsRow.tsx` — S60 only.
+
+**Design doc:** `docs/DESIGN_LANGUAGE.md` is LOCKED, but owner feedback
+overrides it. S58 (§5 IA) and S60 (§4.2 + §5 vitals) each edit their own
+section in their own PR — the eval checks conformance against the doc, so the
+doc must move with the product.

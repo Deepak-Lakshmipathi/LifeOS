@@ -40,10 +40,12 @@ const unblocked = cards
 
 // hotspot conflict flags among currently-unblocked cards (from docs/slices/README chains)
 const CHAINS = {
-  'App.tsx': ['s24'],
-  'HomeView.tsx': ['s27', 's28', 's29', 's32', 's34', 's37', 's48', 's50'],
-  'VitalsRow.tsx': ['s26', 's41', 's45'],
+  'App.tsx': ['s24', 's58'],
+  'HomeView.tsx': ['s27', 's28', 's29', 's32', 's34', 's37', 's48', 's50', 's58', 's62'],
+  'TabBar.tsx': ['s58', 's59'],
+  'VitalsRow.tsx': ['s26', 's41', 's45', 's60'],
   'AgentsView.tsx': ['s49', 's53', 's54'],
+  'vault/transport.ts': ['s61', 's62'],
 };
 const unblockedIds = new Set(unblocked.map(u => u.id));
 const hotspotConflicts = Object.entries(CHAINS)

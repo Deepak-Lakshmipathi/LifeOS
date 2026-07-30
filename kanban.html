@@ -194,8 +194,8 @@
 {
  "meta": {
   "project": "LifeOS",
-  "updated": "2026-07-14",
-  "note": "v1 (S1-S19) DONE — 30 cards in done. v2 (S20-S57) loaded: 38 cards, tickets in docs/slices/, waves+deps via blockedBy. DISPATCH RULES: s24 alone (App.tsx). HomeView chain serial: s27>s28>s29>s32>s34>s37>s48>s50. VitalsRow chain: s26>s41>s45. AgentsView chain: s49>s53>s54. Parsers (s30/33/36/39/43/47) + agents (s35/38/42/46/51/55) + tab views (s40/44) fully parallel. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
+  "updated": "2026-07-30",
+  "note": "v1 (S1-S19) + v2 (S20-S57) DONE — 69 cards in done. POST-V2 wave loaded: 5 cards (S58-S62) from owner feedback (Post V2 User FeedBack, Features, Updates, Fixes.md) + issues #158/#155; tickets in docs/slices/. DISPATCH RULES: Wave 12 = S58 · S60 · S61 fully parallel (disjoint write-sets). Wave 13 = S59 (TabBar.tsx, after S58) · S62 (transport.ts, after S61). Hotspots: App.tsx+TabBar.tsx = S58 only; transport.ts = S61 then S62; Aurora.tsx+VitalsRow.tsx = S60. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
  },
  "columns": [
   {
@@ -1014,6 +1014,60 @@
    "pr": 110,
    "blockedBy": [],
    "notes": "v2 Glass Cockpit · Phase 10 · Wave 5 · [HARD] · ticket: docs/slices/slice-S57-scoped-tokens-push.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). agents/lib/push.mjs pull-rebase-retry; docs/agents/vault-tokens.md inventory. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s58",
+   "title": "S58 — Tasks tab: slim Home, fold Up next/Later + Domains + Pulse",
+   "column": "ready",
+   "slice": "S58",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Post-v2 · Wave 12 · [UI] · ticket: docs/slices/slice-S58-tasks-tab.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owner feedback #1. Tabs 6→5 (Home·Tasks·Money·Career·Agents); Domains/Pulse become Segmented sub-nav inside Tasks. SOLE post-v2 App.tsx + TabBar.tsx toucher — S59 rebases on it. Edits DESIGN_LANGUAGE §5. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s59",
+   "title": "S59 — Tab bar fits every screen (phone: all tabs visible)",
+   "column": "ready",
+   "slice": "S59",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [
+    "s58"
+   ],
+   "notes": "Post-v2 · Wave 13 · [UI] · ticket: docs/slices/slice-S59-responsive-tab-bar.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owner feedback #2. Fluid metrics, same labels at 320px; keep data-testid=tab-bar. TabBar.tsx hotspot: after S58. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s60",
+   "title": "S60 — Warmth → background tint; Completion vital in its slot",
+   "column": "ready",
+   "slice": "S60",
+   "issue": null,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Post-v2 · Wave 12 · [UI] · ticket: docs/slices/slice-S60-warmth-tint-completion-vital.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Owner feedback #3+#4 (one swap). Tint lives in Aurora.tsx NOT App.tsx (S58 owns App this wave). Edits DESIGN_LANGUAGE §4.2+§5. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s61",
+   "title": "S61 — GitTransport recursive + non-.md vault reads (#158)",
+   "column": "ready",
+   "slice": "S61",
+   "issue": 158,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Post-v2 · Wave 12 · [HARD] · ticket: docs/slices/slice-S61-transport-recursive-read.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Highest live value: FleetStrip + daily brief resolve EMPTY until it lands. Fix the class, not the 5th string patch. SOLE transport.ts toucher — S62 rebases on it. Watch VaultSync.list() pollution. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s62",
+   "title": "S62 — Config-check before dynamic import; drop card short-circuits (#155)",
+   "column": "ready",
+   "slice": "S62",
+   "issue": 155,
+   "pr": null,
+   "blockedBy": [
+    "s61"
+   ],
+   "notes": "Post-v2 · Wave 13 · ticket: docs/slices/slice-S62-transport-config-seam.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Perf/architecture. Zero VITE_VAULT_REPO_URL reads left under src/components/. transport.ts hotspot: after S61. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
   }
  ]
 }
