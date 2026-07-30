@@ -146,40 +146,28 @@ export class VaultSync implements SyncProvider {
       const folderName = parts[0]!
       const fileName = parts[parts.length - 1]!
 
-      // Habits/*.md (#148: now included in the transport snapshot so
-      // appendHabitHit's read-modify-write sees prior hits) is a distinct
-      // contract, not a task source — Habits/log.md's `- [x] <habit>
-      // (date:: ...) (source:: ...)` hit lines match parseTaskLine's plain
-      // checkbox syntax and, lacking any id::/done_when::/priority::
-      // marker, would otherwise be swallowed whole as spurious "done" tasks
-      // titled with the raw date/source suffix. Skip the folder entirely.
-      if (folderName === 'Habits') continue
-
-      // Calendar/*.md (#151: now also included in the transport snapshot
-      // so TodayCard's live self-load finds `Calendar/today.md`) needs NO
-      // equivalent skip here: its lines (`# YYYY-MM-DD` date header,
-      // `- HH:MM-HH:MM <title> (type:: ...)` event rows — see
-      // src/vault/calendar.ts) never start with a checkbox `- [ ]`/`- [x]`
-      // prefix, so parseTaskLine's `checkboxMatch` regex never matches them
-      // and they're silently skipped as non-task lines already — unlike
-      // Habits/log.md's checkbox-shaped hit lines, which needed an explicit
-      // folder-level guard.
-
-      // Mail/*.md (#154: now also included in the transport snapshot so
-      // AttentionCard's live self-load finds `Mail/attention.md`) DOES need
-      // the same guard as Habits: attention.md's lines are `- [ ] <title>
-      // (label:: ...) (from:: ...) (waiting:: ...) (draft:: ...)` — see
-      // src/vault/mail.ts's own `parseAttentionLine`, which uses the
-      // identical checkbox prefix `/^- \[([ xX])\]\s+(.*)$/` as
-      // parseTaskLine. None of attention.md's field keys (label/from/
-      // waiting/draft) match parseTaskLine's field regex
-      // (id|done_when|priority), so parseTaskLine finds zero markers and
-      // treats the ENTIRE remainder — title plus every parenthesised field
-      // — as one verbatim task title. Left unguarded, every attention line
-      // (handled or not) would resurface in VaultSync.list() as a spurious
-      // task with a garbage title. Skip the folder entirely, as #148 did
-      // for Habits.
-      if (folderName === 'Mail') continue
+      // Task-source allowlist (S61/#158): the only paths this class ever
+      // writes tasks to are `<domain>/*.md` and `Inbox/*.md` (see
+      // `resolveFilePath` below — a domain, `Inbox/<project>.md`, or
+      // `Inbox/Inbox.md`). Every other top-level folder (Habits #148,
+      // Mail #154, Calendar #151, and now Briefs/agents — S61/#158) is a
+      // different contract, not a task source, and gets excluded here
+      // structurally rather than by a per-folder denylist string. A
+      // per-folder skip (the previous shape of this check) is exactly the
+      // one-string-per-new-folder pattern #158 exists to kill in
+      // `_readFiles()` — the same smell here would just reopen it: Habits
+      // and Mail needed an explicit skip because their checkbox-shaped
+      // lines (`- [x] <habit> (date:: ...) ...`, `- [ ] <title> (label::
+      // ...) ...`) match parseTaskLine's plain checkbox syntax with no
+      // id::/done_when::/priority:: marker; Briefs/<date>.md's bullets are
+      // raw LLM output (`agents/daily-brief/brief.mjs`'s `renderBriefMarkdown`)
+      // with the "no leading `[ ]`" rule enforced only in the system prompt,
+      // not in code — so an off-contract line CAN render as `- [ ] <text>`
+      // and would need its own denylist entry next. The allowlist below
+      // rules out Habits/Mail/Calendar/Briefs/agents/anything-added-later
+      // in one check, with no dependency on what any of their lines
+      // happen to look like.
+      if (!isDomain(folderName) && folderName !== 'Inbox') continue
 
       const domain = isDomain(folderName) ? folderName : undefined
       const project = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName
