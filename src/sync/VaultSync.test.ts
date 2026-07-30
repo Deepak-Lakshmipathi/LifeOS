@@ -59,16 +59,28 @@ class FakeTransport implements VaultTransport {
   }
 }
 
-// ─── list — Habits/ exclusion (#148) ─────────────────────────────────────────
+// ─── list — task-source allowlist (S61/#158) ─────────────────────────────────
+//
+// list() only treats `<domain>/*.md` and `Inbox/*.md` as task sources — every
+// other top-level folder is excluded by `!isDomain(folderName) &&
+// folderName !== 'Inbox'`, not by a per-folder denylist string. That allowlist
+// replaced two separate `if (folderName === 'Habits') continue` / `=== 'Mail'`
+// skips (#148, #154): a denylist needs a new entry for every new non-task
+// folder GitTransport's reader learns to surface, which is the exact
+// one-string-per-folder pattern #158 killed in `_readFiles()` itself — the
+// same smell here would just reopen the hole one folder later (as it in fact
+// did: S61 originally shipped a no-guard-needed claim for `Briefs/` based on
+// its *documented* bullet shape, which turned out false — see the adversarial
+// test below). These tests exercise Habits/Mail/agents/Briefs together so a
+// regression in the allowlist (e.g. someone reverting to per-folder skips and
+// forgetting one) fails loudly.
 
-describe('VaultSync.list — Habits/ is not a task source', () => {
+describe('VaultSync.list — Habits/ is not a task source (allowlist, #148)', () => {
   it('does not turn Habits/log.md hit lines into spurious tasks', async () => {
     // Habits/log.md hit lines are plain `- [x] <name> (date:: ...) (source:: ...)`
     // checkbox syntax — the exact shape parseTaskLine treats as a real task
-    // when no id::/done_when::/priority:: marker is present. Now that #148
-    // wires `Habits` into GitTransport's read loop, the snapshot list() reads
-    // includes Habits/log.md, so list() must explicitly skip that folder or
-    // every hit would resurface as a bogus "done" task.
+    // when no id::/done_when::/priority:: marker is present. Excluded because
+    // 'Habits' is neither a domain nor 'Inbox'.
     const transport = new FakeTransport([
       { path: 'Habits/log.md', content: '- [x] Gym session (date:: 2026-07-20) (source:: pwa)\n' },
       { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
@@ -82,25 +94,106 @@ describe('VaultSync.list — Habits/ is not a task source', () => {
   })
 })
 
-// ─── list — Mail/ exclusion (#154) ────────────────────────────────────────────
-
-describe('VaultSync.list — Mail/ is not a task source', () => {
+describe('VaultSync.list — Mail/ is not a task source (allowlist, #154)', () => {
   it('does not turn Mail/attention.md lines into spurious tasks', async () => {
     // Mail/attention.md lines are `- [ ] <title> (label:: ...) (from:: ...)
     // (waiting:: ...) (draft:: ...)` checkbox syntax (src/vault/mail.ts's
     // parseAttentionLine) — the exact shape parseTaskLine treats as a real
-    // task when no id::/done_when::/priority:: marker is present. Now that
-    // #154 wires `Mail` into GitTransport's read loop, the snapshot list()
-    // reads includes Mail/attention.md, so list() must explicitly skip that
-    // folder or every attention line (handled or not) would resurface as a
-    // bogus task titled with the whole line including its parenthesised
-    // fields.
+    // task when no id::/done_when::/priority:: marker is present. Excluded
+    // because 'Mail' is neither a domain nor 'Inbox'.
     const transport = new FakeTransport([
       {
         path: 'Mail/attention.md',
         content:
           '- [ ] Meera (NorthStar) asked for a revised quote (label:: client-money) (from:: meera@northstar.io) (waiting:: 26h)\n' +
           '- [x] Recruiter reply — InstaCo (label:: job) (from:: t@instaco.dev) (waiting:: 0h)\n',
+      },
+      { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+    ])
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.title).toBe('Real task')
+  })
+})
+
+describe('VaultSync.list — agents/ is not a task source (allowlist, S61/#158)', () => {
+  it('does not turn agents/<name>/status.json content into spurious tasks', async () => {
+    // status.json is JSON — every line of a JSON.stringify body starts with
+    // a structural character (`{`, `"`, `}`), never parseTaskLine's `- [ ]`/
+    // `- [x]` checkbox prefix, even when a string field's *value* contains
+    // that literal text (it stays inside the quotes). This folder would be
+    // safe even WITHOUT the allowlist purely on regex-shape grounds — but
+    // it's still covered here, and by the allowlist, for defense in depth
+    // and because 'agents' is neither a domain nor 'Inbox' either way.
+    const transport = new FakeTransport([
+      {
+        path: 'agents/daily-brief/status.json',
+        content: JSON.stringify(
+          { agent: 'daily-brief', last_run: '2026-07-30T06:00:00.000Z', ok: true, note: '- [ ] not a task' },
+          null,
+          2,
+        ),
+      },
+      { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+    ])
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.title).toBe('Real task')
+  })
+})
+
+describe('VaultSync.list — Briefs/ is not a task source, including adversarial LLM output (allowlist, S61/#158)', () => {
+  it('does not turn a compliant Briefs/<date>.md bullet into a spurious task', async () => {
+    const transport = new FakeTransport([
+      {
+        path: 'Briefs/2026-07-30.md',
+        content: ['# Briefs/2026-07-30.md', '', '- Win: ship S61.', '- 10:00 Client call.', ''].join('\n'),
+      },
+      { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+    ])
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.title).toBe('Real task')
+  })
+
+  it('does not turn an ADVERSARIAL Briefs/<date>.md bullet into a spurious task (mutation-proof for the allowlist)', async () => {
+    // The daily-brief agent (agents/daily-brief/brief.mjs's
+    // renderBriefMarkdown) renders `- ${l}` where `l` is raw LLM output. The
+    // "no leading [ ]/number" rule lives ONLY in the system prompt
+    // (brief.mjs:223-226) — validateBriefLines (brief.mjs:277-283) checks
+    // only length===5 and non-empty, never line shape. A model that ignores
+    // the prompt and emits a line starting `[ ] ` renders as
+    // `- [ ] Ship the thing`, which DOES match parseTaskLine's checkbox
+    // regex. Unlike Calendar/today.md's machine-templated
+    // `- ${start}-${end} ${title} (...)` (a fixed non-`[`-prefix guaranteed
+    // by the template regardless of title content), Briefs/ has no such
+    // structural guarantee — this folder needs the allowlist, not just luck
+    // about its typical content.
+    //
+    // This is the mutation-proof: if the allowlist check
+    // (`!isDomain(folderName) && folderName !== 'Inbox'`) were deleted (or
+    // narrowed back to a Habits/Mail-only denylist that forgot Briefs/),
+    // this line WOULD parse as a real task, and this assertion fails.
+    const transport = new FakeTransport([
+      {
+        path: 'Briefs/2026-07-30.md',
+        content: [
+          '# Briefs/2026-07-30.md',
+          '',
+          '- Win: ship S61.',
+          '- [ ] Ship the thing',
+          '- 10:00 Client call.',
+          '',
+        ].join('\n'),
       },
       { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
     ])

@@ -18,12 +18,12 @@ import { GitTransport, type VaultTransport } from '../../vault/transport'
  * circuit that fetch under test, so fixture rendering never touches
  * GitTransport (or its IndexedDB/network side effects). Reads
  * `agents/<name>/status.json` per manifest entry — the same file contract
- * S47's `parseStatus`/AgentsView's live wiring already reads. Note:
- * `GitTransport.readFiles()` does not yet walk an `agents/` folder (it only
- * walks the 7 domain folders + Inbox/Habits/Calendar), so the live self-load
- * always resolves to idle for now until a later slice extends the transport
- * — the same class of gap Calendar/ had before S34/#151. Out of this
- * slice's write-set to fix.
+ * S47's `parseStatus`/AgentsView's live wiring already reads.
+ * `GitTransport.readFiles()` walks `agents/<name>/status.json` recursively
+ * (S61/#158 — the transport's flat, .md-only scan couldn't reach a nested
+ * .json file; it now does a depth-bounded recursive descent with a `.json`
+ * allowlist scoped to `agents/`), so the live self-load resolves real
+ * agent health instead of always idle.
  *
  * AttentionCard's self-load has a fast honest-empty short-circuit for the
  * unconfigured-vault case (skip straight to empty rather than paying for
