@@ -35,9 +35,12 @@ export const WARMTH_TINT_ALPHA_CAP = 0.1
  * `src/styles/tokens.css`). Blend math needs literal RGB, not a `var()`
  * string, so this is the one place those 7 hex values are duplicated as
  * numbers rather than CSS custom properties — still tokens-only, no
- * invented color.
+ * invented color. Exported so `src/test/tokens.test.tsx` can diff it against
+ * the parsed `--d-*` values (issue #164) — edit a token in tokens.css
+ * without updating this map, and that test fails instead of the tint
+ * silently drifting from the LOCKED palette.
  */
-const DOMAIN_HEX: Record<Domain, string> = {
+export const DOMAIN_HEX: Record<Domain, string> = {
   'Building Things': '#f59e0b',
   Career: '#38bdf8',
   Growth: '#a78bfa',

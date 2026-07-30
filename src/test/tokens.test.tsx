@@ -11,6 +11,7 @@ import postcss from 'postcss'
 import tailwindcss from 'tailwindcss'
 // @ts-expect-error — tailwind.config.js is plain JS with no type declarations
 import tailwindConfig from '../../tailwind.config.js'
+import { DOMAIN_HEX } from '../lib/warmthTint'
 
 const tokensCss = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8')
 
@@ -74,6 +75,28 @@ describe('tailwind mapping (DESIGN_LANGUAGE §2.4)', () => {
     const css = await compile('<div class="bg-apple-blue rounded-ios shadow-glass-md"></div>')
     expect(css).toContain('rgb(0 122 255') // #007AFF
     expect(css).toContain('border-radius: 12px')
+  })
+})
+
+describe('warmthTint DOMAIN_HEX drift guard (S60, issue #164)', () => {
+  // warmthTint.ts needs literal RGB (not `var()`) for its blend math, so it
+  // keeps its own DOMAIN_HEX copy of the 7 --d-* values. This test is the
+  // tripwire: edit a domain token in tokens.css without updating DOMAIN_HEX
+  // and the tint silently drifts from the LOCKED palette — fail loudly here
+  // instead.
+  const DOMAIN_TOKEN: Record<string, string> = {
+    'Building Things': '--d-build',
+    Career: '--d-career',
+    Growth: '--d-growth',
+    'Life Admin': '--d-admin',
+    'Body & Mind': '--d-body',
+    Finance: '--d-fin',
+    Relationship: '--d-rel',
+  }
+
+  it.each(Object.entries(DOMAIN_TOKEN))('%s: DOMAIN_HEX matches --d-* in tokens.css', (domain, token) => {
+    const hex = DOMAIN_HEX[domain as keyof typeof DOMAIN_HEX]
+    expect(tokensCss).toContain(`${token}: ${hex};`)
   })
 })
 

@@ -15,18 +15,19 @@
  *
  * S60 (owner feedback items 3+4): Warmth's vital tile is gone — warmth now
  * tints THIS background instead, so the whole app is colored by how hot the
- * owner's domains are. Aurora self-loads the task list through the same
- * `LocalOnly`/`VaultSync` provider seam `VitalsRow` uses (copied verbatim,
- * including the tests-inject-`tasks` short-circuit so no test ever touches
- * the provider), runs `computeWarmth`, and derives `{ color, alpha }` via the
- * pure `warmthTint` module. The tint renders as one extra `fixed inset-0`
- * layer, static — no new `requestAnimationFrame` scheduling, no
- * reduced-motion branch needed (§7): it never animates in the first place.
+ * owner's domains are. Aurora self-loads the task list via `selfLoadTasks`
+ * (`src/sync/selfLoadTasks.ts`) — the same provider seam `VitalsRow` uses,
+ * with the load itself memoized so the two components share one `.list()`
+ * call instead of firing two concurrent reads (issue #165). Tests inject
+ * `tasks` directly, which short-circuits the load entirely so no test ever
+ * touches the provider. Aurora runs `computeWarmth` over the loaded tasks
+ * and derives `{ color, alpha }` via the pure `warmthTint` module. The tint
+ * renders as one extra `fixed inset-0` layer, static — no new
+ * `requestAnimationFrame` scheduling, no reduced-motion branch needed (§7):
+ * it never animates in the first place.
  */
 import { useEffect, useRef, useState } from 'react'
-import { LocalOnly } from '../../sync/LocalOnly'
-import { VaultSync } from '../../sync/VaultSync'
-import type { SyncProvider } from '../../sync/SyncProvider'
+import { selfLoadTasks } from '../../sync/selfLoadTasks'
 import type { Task } from '../../types'
 import { computeWarmth } from '../../warmth/computeWarmth'
 import { warmthTint } from '../../lib/warmthTint'
@@ -53,12 +54,6 @@ const BLOB_LAYOUT: ReadonlyArray<{ x: number; y: number; r: number }> = [
   { x: 0.1, y: 0.8, r: 280 },
 ]
 
-// Mirrors VitalsRow's provider selection (ADR-0002 seam). LocalOnly and
-// VaultSync both read the same store App does, so the tint here matches the
-// rest of the app's view of warmth.
-const provider: SyncProvider =
-  import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
-
 export function Aurora({ palette = MORNING_PALETTE, tasks: tasksProp, now }: AuroraProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [loaded, setLoaded] = useState<Task[]>([])
@@ -69,8 +64,7 @@ export function Aurora({ palette = MORNING_PALETTE, tasks: tasksProp, now }: Aur
     // its Dexie/vault I/O) is never reached under test.
     if (tasksProp) return
     let live = true
-    provider
-      .list()
+    selfLoadTasks()
       .then((all) => {
         if (live) setLoaded(all)
       })

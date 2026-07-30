@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LocalOnly } from '../../sync/LocalOnly'
-import { VaultSync } from '../../sync/VaultSync'
-import type { SyncProvider } from '../../sync/SyncProvider'
+import { selfLoadTasks } from '../../sync/selfLoadTasks'
 import type { Task } from '../../types'
 import { Vital } from '../glass/Vital'
 import { formatINR } from '../../vault/finance'
@@ -22,10 +20,13 @@ import { netWorthVital, burnVital, pipelineVital, completionVital } from '../../
  * Pipeline are unchanged by this move.
  *
  * App.tsx mounts `<VitalsRow />` with no props (it never edits this mount
- * point again), so the component sources its own task list through the same
- * provider seam App uses — Completion needs the same loaded task list
- * Warmth used to. Tests inject `tasks` directly, which short-circuits the
- * load — the provider is never touched under test.
+ * point again), so the component sources its own task list via
+ * `selfLoadTasks` (`src/sync/selfLoadTasks.ts`) — the same provider seam
+ * App uses, with the load itself memoized so VitalsRow and Aurora (which
+ * self-loads the same list for the warmth tint) share one `.list()` call
+ * instead of firing two concurrent reads (issue #165). Tests inject `tasks`
+ * directly, which short-circuits the load — the provider is never touched
+ * under test.
  *
  * S41 fills the Net worth + Burn/income tiles from S39 finance-parser
  * output, passed in as the `networth`/`burn` props. VitalsRow does no
@@ -38,12 +39,6 @@ import { netWorthVital, burnVital, pipelineVital, completionVital } from '../../
  * (`Career/pipeline.md`) output passed in as the `pipeline` prop — default
  * `[]`, read by `pipelineVital` as "no data" → the same `—` stub.
  */
-
-// Mirrors App.tsx's provider selection (ADR-0002 seam). LocalOnly and VaultSync
-// both read the same store App does, so Completion here matches the rest of
-// the app.
-const provider: SyncProvider =
-  import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
 
 export interface VitalsRowProps {
   /** Loaded task list. Omit in-app (component self-loads); inject in tests. */
@@ -70,8 +65,7 @@ export function VitalsRow({
     // its Dexie/vault I/O) is never reached under test.
     if (tasksProp) return
     let live = true
-    provider
-      .list()
+    selfLoadTasks()
       .then((all) => {
         if (live) setLoaded(all)
       })
