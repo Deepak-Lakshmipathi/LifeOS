@@ -155,7 +155,9 @@ Tab panels: `.tab{display:none}` / `.tab.on{display:block;animation:fade .3s eas
 
 Tile: panel fill, `border-radius:14px`, `padding:12px 14px`, `blur(14px)`. Vitals row: `display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px`.
 
-Warmth strip variant (first vital): 7 flex bars `height:6px; border-radius:3px; gap:4px`, one per domain in canonical order (Building · Career · Growth · Life Admin · Body & Mind · Finance · Relationship), each `background:` its domain token with `opacity` = warmth (hot ≈ .9 → cold ≈ .2).
+Completion variant (first vital, owner feedback S60): value = percent of tasks done (`Math.round(done/total*100)`); sub = `"<done> done · <open> to do"`. An empty task list renders the same honest `—` every stub tile uses rather than a fake `0%`/`100%` (§8).
+
+Warmth no longer occupies a vital tile (owner feedback S60) — it tints the page background instead: a static `fixed inset-0` layer sitting between the aurora canvas and `.shell` (§2.3 Z), color = the 7 `--d-*` domain tokens blended and weighted by each domain's warmth (hot ≈ .9 → cold ≈ .2, same scale the old strip used), alpha scaled off that same weighting and capped ≈0.10 so panel text contrast holds under frosted glass (§7, §8). See `src/lib/warmthTint.ts`.
 
 ### 4.3 Mission task
 
@@ -255,7 +257,7 @@ Pipeline: `grid-template-columns:repeat(4,1fr); gap:10px` (→ 2 cols ≤840px).
 <canvas aurora (fixed, z0)>
 <div .shell (1180px, z1)>
   header            greeting (H1 shine) + date/mission-note | seg control (Morning/Midday/Evening)
-  .vitals           auto-fit grid ≥150px: Warmth · Net worth · Burn/income · Pipeline · Streak
+  .vitals           auto-fit grid ≥150px: Completion · Net worth · Burn/income · Pipeline · Streak
   nav.tabs          Home · Money · Career · Agents · Domains · Pulse   (centered pill)
   section.tab       one per tab
   footer            12px --faint, centered

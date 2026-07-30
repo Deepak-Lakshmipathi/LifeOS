@@ -12,11 +12,16 @@
  *  1. Active count (found + applied + interview) — closed excluded.
  *  2. Empty entries → stub fallback (`value: null`), no throw.
  *  3. Sub line: interview count when present, else the hottest `next::` step.
+ *
+ * S60 extends this file for `completionVital`:
+ *  1. Percent done + raw counts in the sub line.
+ *  2. Empty task list → the honest `—` stub (`value: null`), never `0%`/`100%`.
  */
 import { describe, it, expect } from 'vitest'
-import { netWorthVital, burnVital, pipelineVital } from './vitalsData'
+import { netWorthVital, burnVital, pipelineVital, completionVital } from './vitalsData'
 import type { NetworthPoint, BurnMonth } from '../vault/finance'
 import type { JobEntry } from '../vault/career'
+import type { Task } from '../types'
 
 describe('netWorthVital', () => {
   it('empty series → stub fallback (no throw)', () => {
@@ -196,5 +201,45 @@ describe('pipelineVital', () => {
     const copy = JSON.parse(JSON.stringify(entries))
     pipelineVital(entries)
     expect(entries).toEqual(copy)
+  })
+})
+
+describe('completionVital', () => {
+  /** Minimal Task factory — only `done` matters to completionVital. */
+  function task(done: boolean, id = Math.random().toString(36)): Task {
+    return { id, title: `t-${id}`, done, created_at: 0 }
+  }
+
+  it('empty task list → stub fallback (no throw), not 0%/100%', () => {
+    expect(completionVital([])).toEqual({ value: null, sub: 'no data' })
+  })
+
+  it('percent done + raw counts, all done', () => {
+    const tasks = [task(true, 'a'), task(true, 'b')]
+    const result = completionVital(tasks)
+    expect(result.value).toBe(100)
+    expect(result.sub).toBe('2 done · 0 to do')
+  })
+
+  it('percent done + raw counts, all open', () => {
+    const tasks = [task(false, 'a'), task(false, 'b'), task(false, 'c')]
+    const result = completionVital(tasks)
+    expect(result.value).toBe(0)
+    expect(result.sub).toBe('0 done · 3 to do')
+  })
+
+  it('percent done rounds a partial mix', () => {
+    // 1 of 3 done = 33.33...% → rounds to 33.
+    const tasks = [task(true, 'a'), task(false, 'b'), task(false, 'c')]
+    const result = completionVital(tasks)
+    expect(result.value).toBe(33)
+    expect(result.sub).toBe('1 done · 2 to do')
+  })
+
+  it('is pure — does not mutate the input array', () => {
+    const tasks = [task(true, 'a'), task(false, 'b')]
+    const copy = JSON.parse(JSON.stringify(tasks))
+    completionVital(tasks)
+    expect(tasks).toEqual(copy)
   })
 })
