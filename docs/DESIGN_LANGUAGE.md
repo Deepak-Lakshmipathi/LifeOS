@@ -264,10 +264,10 @@ Pipeline: `grid-template-columns:repeat(4,1fr); gap:10px` (→ 2 cols ≤840px).
 ```
 
 - Home body: `grid-template-columns:1.5fr 1fr; gap:14px` → 1 column ≤840px. Left stack: Today's Mission, Needs You. Right stack: Today (calendar), Habits, Fleet mini-strip. Evening prepends full-width Day Review.
+- Tasks: `Segmented` sub-nav (§4.1's small `.seg` size) — Tasks · Domains · Pulse, default Tasks. The Tasks segment re-parents the Up next/Later folds (hideLive off); the Domains and Pulse segments embed the already-shipped warmth map and trends views unchanged — they are sub-nav segments here, not top-level tabs.
 - Money: `1.2fr 1fr` top row (Net worth · Burn), then `1fr 1fr` (Portfolio · Bills radar); both → 1 col ≤840px.
 - Career: full-width pipeline card, then Courses card.
 - Agents: fleet table card, then supervisor report card.
-- Domains and Pulse embed the already-shipped warmth map and trends views unchanged.
 - Five tabs, no more; new surfaces earn a tab only by demoting nothing.
 
 ## 6. Time-of-day system
