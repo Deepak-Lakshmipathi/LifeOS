@@ -18,10 +18,7 @@ function noopAsync() {
 const baseProps = {
   tasks: [] as Task[],
   onToggle: noopAsync(),
-  onDelete: noopAsync(),
-  onUpdate: noopAsync(),
   onAdd: noopAsync(),
-  projects: [] as string[],
 }
 
 describe('HomeView — Day Review visibility (§6)', () => {
@@ -58,6 +55,42 @@ describe('HomeView — right stack mounts HabitsCard (S32)', () => {
     render(<HomeView {...baseProps} modeOverride="am" />)
     expect(screen.getByLabelText('Add task')).toBeInTheDocument()
     expect(screen.getByText("Today's Mission")).toBeInTheDocument()
+  })
+})
+
+// ─── S58 — Home slims down to the check-in surface only ────────────────────
+
+// Domain-less (inbox) tasks so rankNow admits all of them uncapped and never
+// triggers a rescue pick (no domain-tagged task exists to serve as one) —
+// deterministic ranking: priority desc, then created_at asc. 4 tasks clears
+// NowView's LIVE_COUNT (3), so if NowView were still mounted here it would
+// render an "Up next (1)" fold — this fixture makes that observable, unlike
+// an empty task list (which can never produce a fold whether or not NowView
+// is present, so the assertion below couldn't fail).
+const UP_NEXT_FIXTURE: Task[] = [
+  { id: 'un-1', title: 'Up-next fixture 1', done: false, created_at: 1000, priority: 3 },
+  { id: 'un-2', title: 'Up-next fixture 2', done: false, created_at: 2000, priority: 2 },
+  { id: 'un-3', title: 'Up-next fixture 3', done: false, created_at: 3000, priority: 1 },
+  { id: 'un-4', title: 'Up-next fixture 4', done: false, created_at: 4000 },
+]
+
+describe('HomeView — slims to the check-in surface, no Up next/Later (S58)', () => {
+  it('renders Mission, Needs You, Today, Habits and the Fleet strip', () => {
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    expect(screen.getByText("Today's Mission")).toBeInTheDocument()
+    expect(screen.getByTestId('attention-card')).toBeInTheDocument()
+    expect(screen.getByTestId('today-card')).toBeInTheDocument()
+    expect(screen.getByTestId('habits-card')).toBeInTheDocument()
+    expect(screen.getByTestId('fleet-strip')).toBeInTheDocument()
+  })
+
+  it('does not render the Up next / Later folds (moved to the Tasks tab)', () => {
+    render(<HomeView {...baseProps} tasks={UP_NEXT_FIXTURE} modeOverride="am" />)
+    // Sanity: the fixture actually reached MissionCard (proves this isn't
+    // checking an empty, never-can-fold task list).
+    expect(screen.getByText('Up-next fixture 1')).toBeInTheDocument()
+    expect(screen.queryByText(/Up next/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Later/)).not.toBeInTheDocument()
   })
 })
 

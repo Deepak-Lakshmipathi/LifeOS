@@ -114,17 +114,20 @@ test('tasks added online persist after going offline and reloading', async ({ pa
 })
 
 // ---------------------------------------------------------------------------
-// 5. Domains tab shows warmth tiles (Slice S9, replaces grouped task list)
+// 5. Domains sub-nav (inside Tasks tab) shows warmth tiles (Slice S9, replaces
+//    grouped task list; S58 re-parented Domains from a top-level tab into
+//    Tasks's Segmented sub-nav — see docs/slices/slice-S58-tasks-tab.md)
 // ---------------------------------------------------------------------------
-test('Domains tab renders one warmth tile per domain after seed import', async ({ page }) => {
+test('Domains sub-nav renders one warmth tile per domain after seed import', async ({ page }) => {
   // Load WITHOUT ?noseed so seedIfEmpty fires on an empty DB
   await page.goto('/')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
-  // S7: navigate to the Domains tab via the tab bar.
-  await page.getByRole('button', { name: 'Domains' }).click()
+  // S58: navigate to the Tasks tab, then the Domains segment of its sub-nav.
+  await page.getByRole('button', { name: 'Tasks' }).click()
+  await page.getByRole('tab', { name: 'Domains' }).click()
 
-  // S9: the Domains tab now shows DomainsMap — 7 warmth tiles, one per domain.
+  // S9: the Domains segment shows DomainsMap — 7 warmth tiles, one per domain.
   // Wait for tiles to appear (seed data may still be loading).
   await expect(page.locator('[data-testid="domain-tile"]').first()).toBeVisible({ timeout: 10000 })
 

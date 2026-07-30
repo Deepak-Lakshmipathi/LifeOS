@@ -9,11 +9,10 @@ import { Header } from './components/cockpit/Header'
 import { VitalsRow } from './components/cockpit/VitalsRow'
 import { TabBar, type ViewTab } from './components/TabBar'
 import { HomeView } from './components/home/HomeView'
+import { TasksView } from './components/tasks/TasksView'
 import { MoneyView } from './components/money/MoneyView'
 import { CareerView } from './components/career/CareerView'
 import { AgentsView } from './components/agents/AgentsView'
-import { DomainsMap } from './components/DomainsMap'
-import { PulseView } from './components/PulseView'
 import { distinctProjects } from './lib/distinctProjects'
 import { seedIfEmpty } from './data/seed'
 import { clearVaultPat } from './vault/pat'
@@ -36,10 +35,15 @@ const TAB_STATIC = { initial: false, animate: { opacity: 1, y: 0 }, transition: 
 /**
  * App — the Glass Cockpit shell (§5). Its only job is layout + mount points:
  * an aurora canvas ground (z0), then the 1180px `.shell` (z1) holding the
- * header slot, vitals slot, the six-tab pill bar, one section per tab, and a
+ * header slot, vitals slot, the five-tab pill bar, one section per tab, and a
  * footer. Every tab section is its own component — App carries NO mission,
  * vitals-data, or money logic inline, so from here on each later slice edits
- * only its own file and never this one (S24 is the sole App.tsx toucher).
+ * only its own file and never this one.
+ *
+ * S58 folded the old Domains/Pulse top-level tabs into the new Tasks tab
+ * (`TasksView`, which owns their imports + a `Segmented` sub-nav) and is now
+ * the sole post-v2 toucher of this file — no other card may edit it (S24
+ * held that role for v2; the rule transfers here for whatever comes next).
  */
 export default function App() {
   const { tasks, loading, error, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
@@ -96,20 +100,20 @@ export default function App() {
             <AnimatePresence mode="wait">
               <motion.section key={tab} {...tabMotion}>
                 {tab === 'home' && (
-                  <HomeView
+                  <HomeView tasks={tasks} onToggle={toggleDone} onAdd={addTask} />
+                )}
+                {tab === 'tasks' && (
+                  <TasksView
                     tasks={tasks}
                     onToggle={toggleDone}
                     onDelete={deleteTask}
                     onUpdate={updateTask}
-                    onAdd={addTask}
                     projects={projects}
                   />
                 )}
                 {tab === 'money' && <MoneyView />}
                 {tab === 'career' && <CareerView />}
                 {tab === 'agents' && <AgentsView />}
-                {tab === 'domains' && <DomainsMap tasks={tasks} />}
-                {tab === 'pulse' && <PulseView tasks={tasks} />}
               </motion.section>
             </AnimatePresence>
           )}
