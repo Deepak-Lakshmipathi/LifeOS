@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../../types'
-import { NowView } from '../NowView'
 import { CaptureSheet } from '../CaptureSheet'
 import { MissionCard } from './MissionCard'
 import { DayReview } from './DayReview'
@@ -19,27 +18,26 @@ import { GitTransport, type VaultTransport } from '../../vault/transport'
  *
  * S24 landed the v1 NOW content here verbatim (balance-brain task list +
  * capture) so no functionality was lost in the shell restructure. S27
- * (this slice) replaces the top of that NOW list with Today's Mission — the
- * same balance-brain picks, now with why + done_when always visible
- * (§4.3, §8) — via the new MissionCard/missionPicks seam; NowView still owns
- * the fuller Up next / Later fold sections below it. S29 prepends the
- * evening-only Day Review (§6) full-width, ahead of everything else, when
- * `useTimeOfDay` resolves to `pm`. S32 (this slice) is the head of the
- * right-stack chain: it introduces the §5 two-column Home body
- * (`1.5fr 1fr`, 1 col ≤840px — same breakpoint idiom MoneyView already
- * uses) and mounts the first right-stack card, HabitsCard, with no data
- * props (it self-loads via the transport seam — see HabitsCard's own
- * "head of chain" comment, mirroring VitalsRow). S34 prepends TodayCard
- * ahead of HabitsCard in that same stack, per §5's documented order (Today,
- * then Habits, then a Fleet mini-strip in a later slice) — it takes `tasks`
- * (already in scope here for MissionCard/NowView) and self-loads calendar
- * events the same way HabitsCard self-loads habits. S37 mounts AttentionCard
- * ("Needs you", §4.4) in the left stack below MissionCard — same "head of
- * chain" self-load convention, no data props from here. S48 mounts
- * FleetStrip ("Fleet mini strip", §4.7/§5) at the bottom of the right
- * stack, below HabitsCard — same self-load convention, no data props from
- * here. This is the ONLY place that changes for new right-stack cards; App
- * mounts HomeView once and never edits it again.
+ * replaced the top of that list with Today's Mission — the same
+ * balance-brain picks, now with why + done_when always visible (§4.3, §8) —
+ * via the MissionCard/missionPicks seam. S29 prepends the evening-only Day
+ * Review (§6) full-width, ahead of everything else, when `useTimeOfDay`
+ * resolves to `pm`. S32 (this slice) is the head of the right-stack chain:
+ * it introduces the §5 two-column Home body (`1.5fr 1fr`, 1 col ≤840px —
+ * same breakpoint idiom MoneyView already uses) and mounts the first
+ * right-stack card, HabitsCard, with no data props (it self-loads via the
+ * transport seam — see HabitsCard's own "head of chain" comment, mirroring
+ * VitalsRow). S34 prepends TodayCard ahead of HabitsCard in that same
+ * stack, per §5's documented order (Today, then Habits, then a Fleet
+ * mini-strip in a later slice) — it takes `tasks` (already in scope here
+ * for MissionCard) and self-loads calendar events the same way HabitsCard
+ * self-loads habits. S37 mounts AttentionCard ("Needs you", §4.4) in the
+ * left stack below MissionCard — same "head of chain" self-load
+ * convention, no data props from here. S48 mounts FleetStrip ("Fleet mini
+ * strip", §4.7/§5) at the bottom of the right stack, below HabitsCard —
+ * same self-load convention, no data props from here. This is the ONLY
+ * place that changes for new right-stack cards; App mounts HomeView once
+ * and never edits it again.
  *
  * S50 (the final v2 card) prepends the daily-brief agent's 5-line morning
  * brief (`Briefs/<date>.md`, src/vault/briefs.ts's `parseBrief`) as one
@@ -52,6 +50,14 @@ import { GitTransport, type VaultTransport } from '../../vault/transport'
  * showing a placeholder or error. `mode === 'am'` reuses the exact same
  * `useTimeOfDay`/`modeOverride` seam Day Review already uses for its own
  * pm-only gating, so the am-only behavior is testable the same way.
+ *
+ * S58 makes Home ONLY the check-in surface, per owner feedback: the
+ * Up next / Later folds (`NowView`, previously rendered here with
+ * `hideLive`) move out entirely into the new Tasks tab
+ * (`src/components/tasks/TasksView.tsx`), alongside the old Domains/Pulse
+ * top-level tabs as `Segmented` sub-nav segments. Home keeps + New task,
+ * MissionCard, AttentionCard and the whole right stack (Today, Habits,
+ * Fleet strip) — nothing else changes.
  *
  * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
  * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
@@ -69,13 +75,7 @@ type AddInput = {
 interface HomeViewProps {
   tasks: Task[]
   onToggle: (id: string) => Promise<void>
-  onDelete: (id: string) => Promise<void>
-  onUpdate: (
-    id: string,
-    patch: Partial<Pick<Task, 'title' | 'done_when' | 'priority' | 'project' | 'domain'>>
-  ) => Promise<void>
   onAdd: (input: AddInput) => Promise<void>
-  projects: string[]
   /**
    * S29: forces `useTimeOfDay`'s mode for deterministic Day Review
    * visibility tests (same injection pattern Header's own seg-control
@@ -97,10 +97,7 @@ interface HomeViewProps {
 export function HomeView({
   tasks,
   onToggle,
-  onDelete,
-  onUpdate,
   onAdd,
-  projects,
   modeOverride,
   briefLines: briefLinesProp,
   briefTransport,
@@ -185,15 +182,6 @@ export function HomeView({
           <div className="mb-3">
             <AttentionCard />
           </div>
-
-          <NowView
-            tasks={tasks}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            onUpdate={onUpdate}
-            projects={projects}
-            hideLive
-          />
         </div>
 
         {/* Right stack (§5): Today (calendar), Habits, Fleet mini-strip. */}

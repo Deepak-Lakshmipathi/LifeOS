@@ -258,7 +258,7 @@ Pipeline: `grid-template-columns:repeat(4,1fr); gap:10px` (→ 2 cols ≤840px).
 <div .shell (1180px, z1)>
   header            greeting (H1 shine) + date/mission-note | seg control (Morning/Midday/Evening)
   .vitals           auto-fit grid ≥150px: Completion · Net worth · Burn/income · Pipeline · Streak
-  nav.tabs          Home · Money · Career · Agents · Domains · Pulse   (centered pill)
+  nav.tabs          Home · Tasks · Money · Career · Agents   (centered pill)
   section.tab       one per tab
   footer            12px --faint, centered
 ```
@@ -268,7 +268,7 @@ Pipeline: `grid-template-columns:repeat(4,1fr); gap:10px` (→ 2 cols ≤840px).
 - Career: full-width pipeline card, then Courses card.
 - Agents: fleet table card, then supervisor report card.
 - Domains and Pulse embed the already-shipped warmth map and trends views unchanged.
-- Six tabs, no more; new surfaces earn a tab only by demoting nothing.
+- Five tabs, no more; new surfaces earn a tab only by demoting nothing.
 
 ## 6. Time-of-day system
 

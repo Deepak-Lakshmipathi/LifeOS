@@ -1,22 +1,23 @@
 /**
  * TabBar — centered pill tab bar for the Glass Cockpit shell (§4.1 nav.tabs).
  *
- * Six tabs in fixed IA order: Home · Money · Career · Agents · Domains · Pulse
- * (§5). Frosted pill track, borderless buttons, active = brighter white fill +
- * soft shadow. This replaces the v1 bottom icon bar; App mounts it once between
- * the vitals row and the tab sections.
+ * Five tabs in fixed IA order: Home · Tasks · Money · Career · Agents (§5).
+ * S58 folded the old Domains/Pulse top-level tabs into the new Tasks tab as
+ * `Segmented` sub-nav segments (see `src/components/tasks/TasksView.tsx`) —
+ * they no longer appear here. Frosted pill track, borderless buttons, active =
+ * brighter white fill + soft shadow. This replaces the v1 bottom icon bar;
+ * App mounts it once between the vitals row and the tab sections.
  */
 
-export type ViewTab = 'home' | 'money' | 'career' | 'agents' | 'domains' | 'pulse'
+export type ViewTab = 'home' | 'tasks' | 'money' | 'career' | 'agents'
 
-/** Tab IA order — §5 "Six tabs, no more." */
+/** Tab IA order — §5 "Five tabs, no more." */
 export const TABS: { id: ViewTab; label: string }[] = [
   { id: 'home', label: 'Home' },
+  { id: 'tasks', label: 'Tasks' },
   { id: 'money', label: 'Money' },
   { id: 'career', label: 'Career' },
   { id: 'agents', label: 'Agents' },
-  { id: 'domains', label: 'Domains' },
-  { id: 'pulse', label: 'Pulse' },
 ]
 
 interface TabBarProps {

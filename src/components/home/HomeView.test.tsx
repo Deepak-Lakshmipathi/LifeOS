@@ -18,10 +18,7 @@ function noopAsync() {
 const baseProps = {
   tasks: [] as Task[],
   onToggle: noopAsync(),
-  onDelete: noopAsync(),
-  onUpdate: noopAsync(),
   onAdd: noopAsync(),
-  projects: [] as string[],
 }
 
 describe('HomeView — Day Review visibility (§6)', () => {
@@ -58,6 +55,25 @@ describe('HomeView — right stack mounts HabitsCard (S32)', () => {
     render(<HomeView {...baseProps} modeOverride="am" />)
     expect(screen.getByLabelText('Add task')).toBeInTheDocument()
     expect(screen.getByText("Today's Mission")).toBeInTheDocument()
+  })
+})
+
+// ─── S58 — Home slims down to the check-in surface only ────────────────────
+
+describe('HomeView — slims to the check-in surface, no Up next/Later (S58)', () => {
+  it('renders Mission, Needs You, Today, Habits and the Fleet strip', () => {
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    expect(screen.getByText("Today's Mission")).toBeInTheDocument()
+    expect(screen.getByTestId('attention-card')).toBeInTheDocument()
+    expect(screen.getByTestId('today-card')).toBeInTheDocument()
+    expect(screen.getByTestId('habits-card')).toBeInTheDocument()
+    expect(screen.getByTestId('fleet-strip')).toBeInTheDocument()
+  })
+
+  it('does not render the Up next / Later folds (moved to the Tasks tab)', () => {
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    expect(screen.queryByText(/Up next/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Later/)).not.toBeInTheDocument()
   })
 })
 
