@@ -113,6 +113,55 @@ describe('VaultSync.list — Mail/ is not a task source', () => {
   })
 })
 
+// ─── list — agents/ + Briefs/ pollution proof (S61/#158) ──────────────────────
+
+describe('VaultSync.list — newly-surfaced agents/ and Briefs/ files produce no phantom tasks', () => {
+  it('does not turn agents/<name>/status.json or Briefs/<date>.md content into spurious tasks', async () => {
+    // S61/#158 taught GitTransport.readFiles() to recurse into agents/ (for
+    // <name>/status.json) and Briefs/ (for <date>.md) — the same class of
+    // "newly-surfaced folder could pollute list()" risk #148 (Habits) and
+    // #154 (Mail) hit, which is why every new folder gets this check.
+    //
+    // Unlike those two, NEITHER new folder needs an explicit skip guard here:
+    //   - agents/<name>/status.json is JSON. Every line of a JSON.stringify
+    //     body (pretty-printed or not) starts with `{`, `"`, `}`, or a
+    //     structural character — never the literal `- [ ]`/`- [x]` prefix
+    //     parseTaskLine's checkboxMatch regex (`/^- \[([ xX])\]\s+(.*)$/`)
+    //     requires at the start of the trimmed line. Even a note field whose
+    //     *value* contains that text stays inside a quoted string, so the
+    //     line still starts with `"`, not `- [`.
+    //   - Briefs/<date>.md's bullet lines are `- Win: ...` (single dash,
+    //     space, text — see src/vault/briefs.ts's `parseBrief`), never
+    //     `- [ ]`/`- [x]`. This is the same "structurally can't match"
+    //     shape as Calendar/today.md (#151), which also needed no guard.
+    // This test is the mutation-proof: delete the folder-agnostic reasoning
+    // above (i.e. actually feed these bodies through parseTaskLine) and it
+    // still asserts zero phantom tasks — there is no guard to remove because
+    // the checkbox regex itself never matches either shape.
+    const transport = new FakeTransport([
+      {
+        path: 'agents/daily-brief/status.json',
+        content: JSON.stringify(
+          { agent: 'daily-brief', last_run: '2026-07-30T06:00:00.000Z', ok: true, note: '- [ ] not a task' },
+          null,
+          2,
+        ),
+      },
+      {
+        path: 'Briefs/2026-07-30.md',
+        content: ['# Briefs/2026-07-30.md', '', '- Win: ship S61.', '- 10:00 Client call.', ''].join('\n'),
+      },
+      { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+    ])
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.title).toBe('Real task')
+  })
+})
+
 // ─── (a) add — path resolution + content ─────────────────────────────────────
 
 describe('VaultSync.add — path resolution and line append', () => {

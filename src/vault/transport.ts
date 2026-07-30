@@ -6,15 +6,21 @@
  *
  * Git implementation:
  *   Clones or pulls the vault repo into an IndexedDB-backed virtual FS
- *   via isomorphic-git + @isomorphic-git/lightning-fs, then reads all
- *   *.md files under the 7 canonical domain folders plus the top-level
- *   Inbox/ folder (S15b — home for domain-less/project-less writes),
- *   Habits/ folder (S32/#148 — habits.md + log.md, the append-only hit
- *   log appendHabitHit does read-modify-write against), Calendar/
- *   folder (S34/#151 — today.md, which TodayCard's live self-load reads
- *   via `files.find(f => f.path === 'Calendar/today.md')`), and Mail/
- *   folder (S37/#154 — attention.md, which AttentionCard's live self-load
- *   reads via `files.find(f => f.path === 'Mail/attention.md')`).
+ *   via isomorphic-git + @isomorphic-git/lightning-fs, then recursively
+ *   reads (depth-bounded, S61/#158) *.md files under the 7 canonical
+ *   domain folders plus the top-level Inbox/ folder (S15b — home for
+ *   domain-less/project-less writes), Habits/ folder (S32/#148 —
+ *   habits.md + log.md, the append-only hit log appendHabitHit does
+ *   read-modify-write against), Calendar/ folder (S34/#151 — today.md,
+ *   which TodayCard's live self-load reads via
+ *   `files.find(f => f.path === 'Calendar/today.md')`), Mail/ folder
+ *   (S37/#154 — attention.md, which AttentionCard's live self-load reads
+ *   via `files.find(f => f.path === 'Mail/attention.md')`), Briefs/
+ *   folder (S50/S61/#158 — <date>.md, which HomeView's live self-load
+ *   reads via `latestBriefPath`), and agents/ folder (S48/S61/#158 —
+ *   <name>/status.json, one directory deeper than the other folders and
+ *   `.json` rather than `.md`, which FleetStrip's live self-load reads —
+ *   the only folder where a non-.md extension is allowed).
  *
  * All isomorphic-git / lightning-fs imports are deferred to readFiles()
  * so that importing this module in tests never triggers browser-only side
@@ -203,37 +209,79 @@ export class GitTransport implements VaultTransport {
       })
     }
 
-    // ── Read *.md files under each canonical domain folder + top-level
-    //    Inbox + Habits (S32/#148 — Habits/log.md must round-trip through
-    //    the snapshot so appendHabitHit's read-modify-write sees prior hits
-    //    instead of degrading to an overwrite) + Calendar (S34/#151 —
-    //    today.md must round-trip so TodayCard's live self-load finds it
-    //    instead of permanently rendering "No calendar data yet") + Mail
-    //    (S37/#154 — attention.md must round-trip so AttentionCard's live
-    //    self-load finds it instead of permanently rendering "Nothing needs
-    //    you right now") ────────────────────────────────────────────────
+    // ── Recursively read files under each canonical domain folder + the
+    //    top-level consumer folders that have each needed their own read
+    //    path over time: Inbox (S15b), Habits (S32/#148 — log.md must
+    //    round-trip through the snapshot so appendHabitHit's read-modify-
+    //    write sees prior hits instead of degrading to an overwrite),
+    //    Calendar (S34/#151 — today.md must round-trip so TodayCard's live
+    //    self-load finds it), Mail (S37/#154 — attention.md must round-trip
+    //    so AttentionCard's live self-load finds it), agents (S61/#158 —
+    //    <name>/status.json is one directory deeper than a flat scan can
+    //    reach, and isn't markdown) and Briefs (S61/#158 — <date>.md, same
+    //    "silently invisible" gap).
+    //
+    //    #158's root cause was this loop being a hardcoded flat-.md scan:
+    //    every new consumer folder needed its own one-string patch (Habits,
+    //    Calendar, Mail), and agents/<name>/status.json couldn't be reached
+    //    at all (one directory deeper AND `.json`, not `.md`). This walks
+    //    each folder recursively (depth-bounded — see MAX_DEPTH below, so a
+    //    corrupt vault or FS cycle can't stall the read) and allows `.json`
+    //    files scoped to the `agents/` folder, so any future nested/non-.md
+    //    consumer folder is a one-string addition to the array below rather
+    //    than a new code path.
     const result: { path: string; content: string }[] = []
     const pfs = this.fs.promises
 
-    for (const folder of [...DOMAINS, 'Inbox', 'Habits', 'Calendar', 'Mail']) {
-      let entries: string[]
+    /** Recursion depth ceiling — defensive only; no known vault path nests this deep. */
+    const MAX_DEPTH = 4
+
+    /**
+     * Enumerate `relPath` under the vault root. `topFolder` is the
+     * top-level folder this walk started from — it's the only thing that
+     * varies the extension allowlist (`agents/` additionally allows
+     * `.json`; every other folder stays `.md`-only, unchanged from before).
+     *
+     * Directory vs. file is decided by trying `readdir`: it succeeds for a
+     * directory and throws for a file (or a missing path) — no separate
+     * `stat` call needed, and it keeps the "never throw" ADR-0003 shape the
+     * rest of this method already uses.
+     */
+    const walk = async (topFolder: string, relPath: string, depth: number): Promise<void> => {
+      let entries: string[] | undefined
       try {
-        entries = await pfs.readdir(`${DIR}/${folder}`)
+        entries = (await pfs.readdir(`${DIR}/${relPath}`)) as string[]
       } catch {
-        // Folder absent in this vault — skip silently
-        continue
+        entries = undefined
       }
 
-      for (const entry of (entries as string[])) {
-        if (!entry.endsWith('.md')) continue
-        const relPath = `${folder}/${entry}`
-        try {
-          const content = await pfs.readFile(`${DIR}/${relPath}`, { encoding: 'utf8' }) as string
-          result.push({ path: relPath, content })
-        } catch {
-          // Unreadable file — skip gracefully (ADR-0003: never throw in transport)
+      if (entries !== undefined) {
+        // relPath is a directory — recurse into its children, depth-bounded.
+        if (depth >= MAX_DEPTH) return
+        for (const entry of entries) {
+          await walk(topFolder, `${relPath}/${entry}`, depth + 1)
         }
+        return
       }
+
+      // relPath resolved to a file (readdir on a file throws) — apply the
+      // extension allowlist.
+      const isMd = relPath.endsWith('.md')
+      const isAgentJson = topFolder === 'agents' && relPath.endsWith('.json')
+      if (!isMd && !isAgentJson) return
+
+      try {
+        const content = (await pfs.readFile(`${DIR}/${relPath}`, { encoding: 'utf8' })) as string
+        result.push({ path: relPath, content })
+      } catch {
+        // Unreadable file — skip gracefully (ADR-0003: never throw in transport)
+      }
+    }
+
+    for (const folder of [...DOMAINS, 'Inbox', 'Habits', 'Calendar', 'Mail', 'agents', 'Briefs']) {
+      // Folder absent in this vault → readdir throws inside walk() → treated
+      // as a non-matching "file" → silently skipped, same as before.
+      await walk(folder, folder, 0)
     }
 
     return result

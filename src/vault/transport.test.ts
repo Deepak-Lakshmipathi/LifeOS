@@ -29,6 +29,14 @@ const h = vi.hoisted(() => {
   // write (the #148 regression below) need readdir/readFile to reflect
   // those writes on a later read — a static "always reject" mock can't do
   // that, so this fake is stateful instead.
+  //
+  // readdir returns the immediate child name for EVERY key under the
+  // queried prefix, whether that child is a leaf file or itself a
+  // subdirectory (S61/#158 — GitTransport's recursive walk relies on
+  // readdir succeeding for a directory path and throwing for a file path
+  // to tell the two apart; a mock that only ever returns leaf files one
+  // level deep, as before this slice, can't exercise nested reads like
+  // `agents/<name>/status.json`).
   class FakeFS {
     private files = new Map<string, string>()
     promises = {
@@ -38,7 +46,8 @@ const h = vi.hoisted(() => {
         for (const p of this.files.keys()) {
           if (p.startsWith(prefix)) {
             const rest = p.slice(prefix.length)
-            if (rest && !rest.includes('/')) entries.add(rest)
+            const firstSegment = rest.split('/')[0]
+            if (firstSegment) entries.add(firstSegment)
           }
         }
         if (entries.size === 0) throw new Error('ENOENT: no such directory')
@@ -194,5 +203,114 @@ describe('GitTransport — Mail/attention.md surfaced in the snapshot (#154 regr
 
     expect(entry).toBeDefined()
     expect(entry?.content).toBe(attentionMd)
+  })
+})
+
+// ─── Recursive, non-.md reads (S61/#158) ──────────────────────────────────────
+
+describe('GitTransport — recursive descent + agents/ .json allowlist (S61/#158)', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_VAULT_REPO_URL', 'https://example.invalid/vault.git')
+    // Same reasoning as the #148/#151/#154 blocks above: `pull` must succeed
+    // so the FakeFS's in-memory file map survives between the seed writes
+    // and the later read on this same GitTransport instance.
+    h.pull.mockResolvedValue(undefined)
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    h.pull.mockRejectedValue(new Error('no pull'))
+  })
+
+  it(
+    "readFiles() surfaces agents/<name>/status.json AND Briefs/<date>.md " +
+      '(red-before-fix: the old flat, .md-only, non-recursive scan can reach ' +
+      'neither — status.json is one directory deeper AND not .md; Briefs/ ' +
+      "wasn't in the hardcoded folder list at all)",
+    async () => {
+      const transport = new GitTransport()
+
+      const statusJson = JSON.stringify({
+        agent: 'daily-brief',
+        last_run: '2026-07-30T06:00:00.000Z',
+        ok: true,
+      })
+      const briefMd = [
+        '# Briefs/2026-07-30.md',
+        '',
+        '- Win: ship S61.',
+        '- 10:00 Client call.',
+        '',
+      ].join('\n')
+
+      await transport.writeFile('agents/daily-brief/status.json', statusJson, 'seed status')
+      await transport.writeFile('Briefs/2026-07-30.md', briefMd, 'seed brief')
+
+      const files = await transport.readFiles()
+
+      const status = files.find((f) => f.path === 'agents/daily-brief/status.json')
+      const brief = files.find((f) => f.path === 'Briefs/2026-07-30.md')
+
+      expect(status).toBeDefined()
+      expect(status?.content).toBe(statusJson)
+      expect(brief).toBeDefined()
+      expect(brief?.content).toBe(briefMd)
+    },
+  )
+
+  it('does NOT surface agents/<name>/runs.jsonl (only .json is allowlisted, and only under agents/)', async () => {
+    const transport = new GitTransport()
+
+    await transport.writeFile('agents/daily-brief/status.json', '{}', 'seed status')
+    await transport.writeFile('agents/daily-brief/runs.jsonl', '{"ts":"x","ok":true}\n', 'seed runs')
+
+    const files = await transport.readFiles()
+
+    expect(files.find((f) => f.path === 'agents/daily-brief/status.json')).toBeDefined()
+    expect(files.find((f) => f.path === 'agents/daily-brief/runs.jsonl')).toBeUndefined()
+  })
+
+  it('does NOT extend the .json allowlist outside agents/ (a stray .json elsewhere in the vault stays invisible)', async () => {
+    const transport = new GitTransport()
+
+    await transport.writeFile('Growth/notes.json', '{"not":"a task file"}', 'seed stray json')
+    await transport.writeFile('Growth/Reading.md', '- [ ] Real task\n', 'seed real task')
+
+    const files = await transport.readFiles()
+
+    expect(files.find((f) => f.path === 'Growth/notes.json')).toBeUndefined()
+    expect(files.find((f) => f.path === 'Growth/Reading.md')).toBeDefined()
+  })
+
+  it('all previously-surfaced folders still round-trip byte-identically alongside the new nested/non-md reads (no regression)', async () => {
+    const transport = new GitTransport()
+
+    const readingMd = '- [ ] Real task\n'
+    const inboxMd = '- [ ] Inbox item\n'
+    const statusJson = JSON.stringify({ agent: 'x', last_run: '2026-07-30T00:00:00.000Z', ok: true })
+
+    await transport.writeFile('Growth/Reading.md', readingMd, 'seed domain file')
+    await transport.writeFile('Inbox/Inbox.md', inboxMd, 'seed inbox')
+    await transport.writeFile('agents/x/status.json', statusJson, 'seed status')
+
+    const files = await transport.readFiles()
+
+    expect(files.find((f) => f.path === 'Growth/Reading.md')?.content).toBe(readingMd)
+    expect(files.find((f) => f.path === 'Inbox/Inbox.md')?.content).toBe(inboxMd)
+    expect(files.find((f) => f.path === 'agents/x/status.json')?.content).toBe(statusJson)
+  })
+
+  it('recursion is depth-bounded (a pathologically deep nested path is not read)', async () => {
+    const transport = new GitTransport()
+
+    // 6 directory levels deep under agents/ — past MAX_DEPTH (4) in
+    // transport.ts's walk(). This can't happen with the real agent-status
+    // writer, but the bound must hold regardless so a corrupt/malicious
+    // vault can't stall the read via runaway recursion.
+    const deepPath = 'agents/a/b/c/d/e/status.json'
+    await transport.writeFile(deepPath, '{}', 'seed pathologically deep file')
+
+    const files = await transport.readFiles()
+
+    expect(files.find((f) => f.path === deepPath)).toBeUndefined()
   })
 })

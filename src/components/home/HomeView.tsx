@@ -117,12 +117,10 @@ export function HomeView({
 
   // Self-load today's brief from the vault when the caller didn't inject
   // fixture data — the AttentionCard/FleetStrip "head of chain" convention.
-  // Note: GitTransport.readFiles() does not yet walk a `Briefs/` folder (it
-  // only walks the 7 domain folders + Inbox/Habits/Calendar/Mail) — the same
-  // class of gap FleetStrip documented for `agents/` before its own
-  // transport extension, so the live self-load always resolves to "no
-  // brief" (renders nothing) until a later slice extends the transport.
-  // Out of this slice's write-set to fix.
+  // GitTransport.readFiles() walks the `Briefs/` folder recursively (S61/
+  // #158 — the same transport extension that taught it to reach
+  // `agents/<name>/status.json`), so the live self-load resolves today's
+  // brief when `Briefs/<date>.md` exists instead of always rendering nothing.
   useEffect(() => {
     if (briefLinesProp !== undefined) return
     if (!briefTransport && !import.meta.env.VITE_VAULT_REPO_URL) return
