@@ -12,8 +12,24 @@
  * Reduced-motion contract (§7, non-negotiable): under
  * `prefers-reduced-motion: reduce`, paint exactly ONE static frame and never
  * schedule `requestAnimationFrame`.
+ *
+ * S60 (owner feedback items 3+4): Warmth's vital tile is gone — warmth now
+ * tints THIS background instead, so the whole app is colored by how hot the
+ * owner's domains are. Aurora self-loads the task list through the same
+ * `LocalOnly`/`VaultSync` provider seam `VitalsRow` uses (copied verbatim,
+ * including the tests-inject-`tasks` short-circuit so no test ever touches
+ * the provider), runs `computeWarmth`, and derives `{ color, alpha }` via the
+ * pure `warmthTint` module. The tint renders as one extra `fixed inset-0`
+ * layer, static — no new `requestAnimationFrame` scheduling, no
+ * reduced-motion branch needed (§7): it never animates in the first place.
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { LocalOnly } from '../../sync/LocalOnly'
+import { VaultSync } from '../../sync/VaultSync'
+import type { SyncProvider } from '../../sync/SyncProvider'
+import type { Task } from '../../types'
+import { computeWarmth } from '../../warmth/computeWarmth'
+import { warmthTint } from '../../lib/warmthTint'
 
 export type AuroraPalette = [string, string, string, string]
 
@@ -23,6 +39,10 @@ export const MORNING_PALETTE: AuroraPalette = ['#312e81', '#155e75', '#4c1d95', 
 interface AuroraProps {
   /** 4 blob colors, fixed anatomical order: top-left, top-right, bottom-center, bottom-left. */
   palette?: AuroraPalette
+  /** Loaded task list, for the warmth tint. Omit in-app (self-loads); inject in tests. */
+  tasks?: Task[]
+  /** Current time in ms, for the warmth tint — inject for deterministic tests. */
+  now?: number
 }
 
 /** Base position (fraction of viewport) + radius per blob — from the mockup's `blobs` literal. */
@@ -33,8 +53,38 @@ const BLOB_LAYOUT: ReadonlyArray<{ x: number; y: number; r: number }> = [
   { x: 0.1, y: 0.8, r: 280 },
 ]
 
-export function Aurora({ palette = MORNING_PALETTE }: AuroraProps) {
+// Mirrors VitalsRow's provider selection (ADR-0002 seam). LocalOnly and
+// VaultSync both read the same store App does, so the tint here matches the
+// rest of the app's view of warmth.
+const provider: SyncProvider =
+  import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
+
+export function Aurora({ palette = MORNING_PALETTE, tasks: tasksProp, now }: AuroraProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [loaded, setLoaded] = useState<Task[]>([])
+  const tasks = tasksProp ?? loaded
+
+  useEffect(() => {
+    // Tests inject tasks; skip the async load entirely so the provider (and
+    // its Dexie/vault I/O) is never reached under test.
+    if (tasksProp) return
+    let live = true
+    provider
+      .list()
+      .then((all) => {
+        if (live) setLoaded(all)
+      })
+      .catch(() => {
+        // The tint is non-critical chrome — a failed read just leaves every
+        // domain cold rather than surfacing an error behind the glass.
+      })
+    return () => {
+      live = false
+    }
+  }, [tasksProp])
+
+  const warmth = computeWarmth(tasks, now ?? Date.now())
+  const tint = warmthTint(warmth)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -95,16 +145,34 @@ export function Aurora({ palette = MORNING_PALETTE }: AuroraProps) {
   }, [palette])
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        opacity: 0.55,
-        pointerEvents: 'none',
-      }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          opacity: 0.55,
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Warmth tint (S60): static, one solid fill — no rAF, no reduced-
+          motion branch needed. Same z-index as the canvas but painted after
+          it in DOM order, so it stacks above the aurora and below `.shell`
+          (z-index 1, §2.3 Z) without inventing a fractional z-index. */}
+      <div
+        aria-hidden="true"
+        data-testid="warmth-tint"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          backgroundColor: tint.color,
+          opacity: tint.alpha,
+          pointerEvents: 'none',
+        }}
+      />
+    </>
   )
 }

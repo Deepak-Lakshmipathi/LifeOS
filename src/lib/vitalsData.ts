@@ -1,6 +1,7 @@
 import { formatINR, networthDelta } from '../vault/finance'
 import type { NetworthPoint, BurnMonth } from '../vault/finance'
 import type { JobEntry } from '../vault/career'
+import type { Task } from '../types'
 
 /**
  * vitalsData — pure selectors (S41) that turn S39 finance-parser output into
@@ -16,6 +17,11 @@ import type { JobEntry } from '../vault/career'
  *
  * S45 extends this file with `pipelineVital`, same idiom, over S43's
  * `parsePipeline` (`Career/pipeline.md`) output.
+ *
+ * S60 extends this file with `completionVital` — owner feedback retired the
+ * Warmth vital tile (it now tints the Aurora background, see
+ * `src/lib/warmthTint.ts`) and gave its vacated first slot to Completion,
+ * a pure selector over VitalsRow's already-loaded task list.
  */
 
 /** One vital tile's derived value/sub/direction. */
@@ -116,4 +122,22 @@ export function pipelineVital(entries: JobEntry[]): VitalDatum {
       : (hottestNext(active) ?? 'no interviews yet')
 
   return { value: active.length, sub }
+}
+
+/**
+ * Completion tile (S60, first vital — replaces Warmth): percent of tasks
+ * done, with the raw counts spelled out in the sub line.
+ *
+ * `tasks` empty (no vault data yet, or a genuinely empty vault) → `NO_DATA`
+ * stub, the same honest `—` every other tile falls back to — 0 done of 0
+ * tasks is "nothing to show", never a fake `0%`/`100%` (§8).
+ */
+export function completionVital(tasks: Task[]): VitalDatum {
+  if (!tasks || tasks.length === 0) return NO_DATA
+
+  const done = tasks.filter((t) => t.done).length
+  const open = tasks.length - done
+  const pct = Math.round((done / tasks.length) * 100)
+
+  return { value: pct, sub: `${done} done · ${open} to do` }
 }

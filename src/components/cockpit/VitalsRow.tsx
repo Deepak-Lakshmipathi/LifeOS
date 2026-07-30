@@ -3,32 +3,29 @@ import { LocalOnly } from '../../sync/LocalOnly'
 import { VaultSync } from '../../sync/VaultSync'
 import type { SyncProvider } from '../../sync/SyncProvider'
 import type { Task } from '../../types'
-import { DOMAINS } from '../../data/domains'
-import type { Domain } from '../../data/domains'
-import { computeWarmth } from '../../warmth/computeWarmth'
-import type { WarmthState } from '../../warmth/computeWarmth'
 import { Vital } from '../glass/Vital'
 import { formatINR } from '../../vault/finance'
 import type { NetworthPoint, BurnMonth } from '../../vault/finance'
 import type { JobEntry } from '../../vault/career'
-import { netWorthVital, burnVital, pipelineVital } from '../../lib/vitalsData'
+import { netWorthVital, burnVital, pipelineVital, completionVital } from '../../lib/vitalsData'
 
 /**
  * VitalsRow — the Glass Cockpit Life Vitals strip (DESIGN_LANGUAGE §4.2 / §5):
  * an auto-fit grid of 5 tiles in the fixed order
- *   Warmth · Net worth · Burn/income · Pipeline · Streak.
+ *   Completion · Net worth · Burn/income · Pipeline · Streak.
  *
- * S26 (this slice) fills the S24 stub. Only Warmth is real — its 7-bar strip
- * variant is derived live from `computeWarmth` over the loaded task list. The
- * other four are honest placeholders (value `—`, no fake-real numbers); S41
- * (money → Net worth, Burn) and S45 (pipeline → Pipeline) wire them to vault
- * data later, and S30 (habits) feeds Streak. This file is the head of the
- * VitalsRow chain — those slices extend THIS file, not App.tsx.
+ * S26 originally filled the S24 stub with Warmth as the first vital. S60
+ * (owner feedback items 3+4) retires that tile: warmth doesn't disappear, it
+ * moves to the Aurora background tint (`src/lib/warmthTint.ts` +
+ * `src/components/glass/Aurora.tsx`), and Completion — a pure percent/count
+ * selector — takes the vacated first slot. Net worth, Burn/income, and
+ * Pipeline are unchanged by this move.
  *
  * App.tsx mounts `<VitalsRow />` with no props (it never edits this mount
  * point again), so the component sources its own task list through the same
- * provider seam App uses. Tests inject `tasks` + `now` directly, which short-
- * circuits the load — the provider is never touched under test.
+ * provider seam App uses — Completion needs the same loaded task list
+ * Warmth used to. Tests inject `tasks` directly, which short-circuits the
+ * load — the provider is never touched under test.
  *
  * S41 fills the Net worth + Burn/income tiles from S39 finance-parser
  * output, passed in as the `networth`/`burn` props. VitalsRow does no
@@ -43,43 +40,14 @@ import { netWorthVital, burnVital, pipelineVital } from '../../lib/vitalsData'
  */
 
 // Mirrors App.tsx's provider selection (ADR-0002 seam). LocalOnly and VaultSync
-// both read the same store App does, so warmth here matches the rest of the app.
+// both read the same store App does, so Completion here matches the rest of
+// the app.
 const provider: SyncProvider =
   import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
-
-/**
- * WarmthState → bar opacity. §4.2: "opacity = warmth (hot ≈ .9 → cold ≈ .2)".
- * Evenly spread across the 5 states so hotter domains read brighter and cold
- * domains genuinely look cold (§8 Do: "let cold domains look cold").
- */
-export const WARMTH_OPACITY: Record<WarmthState, number> = {
-  hot: 0.9,
-  warm: 0.725,
-  ok: 0.55,
-  stale: 0.375,
-  cold: 0.2,
-}
-
-/**
- * Canonical domain → design token CSS var (§2.1). Uses the LOCKED --d-* tokens
- * from tokens.css, NOT the legacy DOMAIN_COLORS palette (which predates the
- * Glass Cockpit contract).
- */
-const DOMAIN_VAR: Record<Domain, string> = {
-  'Building Things': 'var(--d-build)',
-  Career: 'var(--d-career)',
-  Growth: 'var(--d-growth)',
-  'Life Admin': 'var(--d-admin)',
-  'Body & Mind': 'var(--d-body)',
-  Finance: 'var(--d-fin)',
-  Relationship: 'var(--d-rel)',
-}
 
 export interface VitalsRowProps {
   /** Loaded task list. Omit in-app (component self-loads); inject in tests. */
   tasks?: Task[]
-  /** Current time in ms — inject for deterministic tests. */
-  now?: number
   /** Net-worth series, ascending by date (`parseNetworthHistory` output). */
   networth?: NetworthPoint[]
   /** Income/spend per month, ascending (`parseBurn` output). */
@@ -88,44 +56,8 @@ export interface VitalsRowProps {
   pipeline?: JobEntry[]
 }
 
-/**
- * Warmth strip variant (§4.2): the `.k` label over 7 flex bars, one per domain
- * in canonical order, each tinted its domain token at an opacity derived from
- * warmth. Bars carry a `title` so warmth is legible without relying on color
- * alone (§8 Do: "encode state in form + color"). The tile chrome matches the
- * glass `Vital` panel exactly.
- */
-function WarmthTile({ warmth }: { warmth: Record<Domain, WarmthState> }) {
-  return (
-    <div
-      className="bg-panel border border-panel-brd rounded-tile backdrop-blur-tile px-[14px] py-3"
-      data-testid="vital-tile"
-      data-vital="warmth"
-    >
-      <div className="k text-[11px] uppercase tracking-[.09em] text-faint">Warmth</div>
-      <div className="mt-2 flex gap-1" role="img" aria-label="Domain warmth">
-        {DOMAINS.map((domain) => {
-          const state = warmth[domain]
-          return (
-            <i
-              key={domain}
-              data-testid="warmth-bar"
-              data-domain={domain}
-              data-warmth={state}
-              title={`${domain}: ${state}`}
-              className="h-1.5 flex-1 rounded-[3px]"
-              style={{ backgroundColor: DOMAIN_VAR[domain], opacity: WARMTH_OPACITY[state] }}
-            />
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 export function VitalsRow({
   tasks: tasksProp,
-  now,
   networth = [],
   burn = [],
   pipeline = [],
@@ -144,15 +76,15 @@ export function VitalsRow({
         if (live) setLoaded(all)
       })
       .catch(() => {
-        // Warmth is non-critical chrome — a failed read just leaves every
-        // domain cold rather than surfacing an error in the vitals strip.
+        // Completion is non-critical chrome — a failed read just leaves the
+        // tile at the honest no-data stub rather than surfacing an error.
       })
     return () => {
       live = false
     }
   }, [tasksProp])
 
-  const warmth = computeWarmth(tasks, now ?? Date.now())
+  const completion = completionVital(tasks)
   const netWorth = netWorthVital(networth)
   const burnTile = burnVital(burn)
   const pipelineTile = pipelineVital(pipeline)
@@ -162,7 +94,20 @@ export function VitalsRow({
       aria-label="Life vitals"
       className="vitals mb-[14px] grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]"
     >
-      <WarmthTile warmth={warmth} />
+      {/* Completion (S60, first vital — replaces Warmth): % of tasks done +
+          raw counts. `value === null` (empty vault) falls back to the same
+          honest `—` placeholder every other stub tile uses (§8: no
+          fake-real data — 0/0 is not 100%). */}
+      {completion.value != null ? (
+        <Vital
+          k="Completion"
+          value={completion.value}
+          format={(v) => `${Math.round(v)}%`}
+          sub={completion.sub}
+        />
+      ) : (
+        <Vital k="Completion" value={0} format={() => '—'} sub={completion.sub} />
+      )}
       {/* Net worth / Burn (S41): real values once `networth`/`burn` fixtures
           are injected; `value === null` (no data) falls back to the same
           honest `—` placeholder S26 shipped (§8: no fake-real data). */}
