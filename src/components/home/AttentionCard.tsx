@@ -69,13 +69,11 @@ export function AttentionCard({ items: itemsProp, transport }: AttentionCardProp
   // never constructed under test).
   useEffect(() => {
     if (itemsProp !== undefined) return
-    // Fast honest-empty path: with no configured vault remote, a default
-    // GitTransport always rejects (transport.ts's own `VITE_VAULT_REPO_URL
-    // is not configured` guard) — but only AFTER paying for isomorphic-git's
-    // dynamic import. Skip straight to the empty state when unconfigured and
-    // no caller-supplied transport is present, rather than paying that cost
-    // just to land on the exact same empty result.
-    if (!transport && !import.meta.env.VITE_VAULT_REPO_URL) return
+    // No unconfigured-vault short-circuit here (S62/#155 — deleted): with no
+    // configured vault remote, GitTransport itself now rejects synchronously,
+    // BEFORE paying for isomorphic-git's dynamic import (the check moved to
+    // the seam in transport.ts's loadGit()). The try/catch below still lands
+    // on the exact same honest empty state either way.
     let live = true
     ;(async () => {
       try {

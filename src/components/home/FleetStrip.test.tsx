@@ -114,6 +114,24 @@ describe('FleetStrip — DoD #1: health→LED mapping (ok/amber/red + idle for m
   })
 })
 
+describe('FleetStrip — real self-load, no vault configured (S62/#155 DoD 3)', () => {
+  it('mounted with no `statuses`/`transport` (the live-app shape), the real GitTransport self-load still settles on the honest idle state', async () => {
+    // No `statuses` fixture and no `transport` override — this is the same
+    // "App default" shape as the test above, made explicit and awaited:
+    // exercises the ACTUAL self-load effect against a real (unconfigured)
+    // GitTransport. VITE_VAULT_REPO_URL is never stubbed in this file, so
+    // GitTransport.loadGit() rejects synchronously before its isomorphic-git/
+    // lightning-fs dynamic import — the try/catch in the effect lands on the
+    // same idle state as the fixture-injected tests above.
+    render(<FleetStrip now={NOW} />)
+    const leds = await screen.findAllByTestId('fleet-led')
+    expect(leds).toHaveLength(7)
+    expect(leds.every((l) => l.getAttribute('data-health') === 'idle')).toBe(true)
+    // Every one of the 7 pills is idle/never-ran — no fixture reached "ok".
+    expect(screen.getAllByText(/never ran/)).toHaveLength(7)
+  })
+})
+
 describe('FleetStrip — DoD #2: blink animation class present only on red', () => {
   it('blinks the red LED when motion is allowed', () => {
     rm.value = false

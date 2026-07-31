@@ -105,6 +105,32 @@ export class GitTransport implements VaultTransport {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async loadGit(): Promise<{ git: any; http: any; LightningFS: any; sharedOpts: any }> {
+    // ── Validate config BEFORE paying for the dynamic import (S62/#155) ──────
+    // isomorphic-git + @isomorphic-git/lightning-fs are a real bundle-split
+    // cost (the whole reason these imports are dynamic instead of top-level
+    // in the first place). Every self-loading card (AttentionCard,
+    // FleetStrip, TodayCard, HabitsCard, HomeView's brief) calls readFiles()
+    // on mount; with no vault configured (VITE_VAULT_REPO_URL unset — the
+    // default in tests and in any deploy that hasn't wired up the vault
+    // yet), that import used to run to completion before this same `!url`
+    // check threw, which is exactly the "wasted work + it pushed
+    // cockpitShell.test.tsx over its render budget" problem #155 tracks.
+    // Checking synchronously first means the unconfigured path never touches
+    // `import()` at all, and also — same reasoning as before, restated —
+    // never constructs LightningFS, whose constructor kicks off a real
+    // fire-and-forget internal async _init() reaching into DefaultBackend
+    // (which references `navigator`). A caller that swallows this error
+    // (e.g. HabitsCard's self-load try/catch) would otherwise leave that
+    // dangling promise to settle later — potentially after its test's
+    // environment has torn down — surfacing as an unhandled-rejection
+    // "navigator is not defined" with no connection to the actual failing
+    // assertion.
+    const url = import.meta.env.VITE_VAULT_REPO_URL as string | undefined
+    const corsProxy = import.meta.env.VITE_VAULT_CORS_PROXY as string | undefined
+    const pat = getVaultPat()
+
+    if (!url) throw new Error('VITE_VAULT_REPO_URL is not configured')
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [{ default: git }, { default: http }, { default: LightningFS }]: [any, any, any] =
       await Promise.all([
@@ -112,25 +138,6 @@ export class GitTransport implements VaultTransport {
         import('isomorphic-git/http/web'),
         import('@isomorphic-git/lightning-fs'),
       ])
-
-    // ── Validate config BEFORE touching the FS backend ───────────────────────
-    // Constructing LightningFS kicks off its own internal async _init() that
-    // the constructor never awaits (a real fire-and-forget promise chain
-    // reaching into DefaultBackend, which references `navigator`). If this
-    // transport is unconfigured (VITE_VAULT_REPO_URL unset — the default in
-    // any environment/test that never stubs it), throwing here first means
-    // that dangling init promise is never created in the first place, rather
-    // than being created and then abandoned when the `!url` throw below
-    // unwound the caller. A caller that swallows this error (e.g.
-    // HabitsCard's self-load try/catch) would otherwise leave that promise
-    // to settle later — potentially after its test's environment has torn
-    // down — surfacing as an unhandled-rejection "navigator is not defined"
-    // with no connection to the actual failing assertion.
-    const url = import.meta.env.VITE_VAULT_REPO_URL as string | undefined
-    const corsProxy = import.meta.env.VITE_VAULT_CORS_PROXY as string | undefined
-    const pat = getVaultPat()
-
-    if (!url) throw new Error('VITE_VAULT_REPO_URL is not configured')
 
     // ── Initialise FS on first call (only once we know we're configured) ────
     if (this.fs === null) {
