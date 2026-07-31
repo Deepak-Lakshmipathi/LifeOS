@@ -19,6 +19,13 @@ import type { Task } from '../types'
  * Both call sites keep their own tests-inject-`tasks` short-circuit exactly
  * as before — this module is only ever reached from the self-load path, so
  * no test touches it.
+ *
+ * #167: `??=` alone would memoize the *promise*, so a rejected first read
+ * stays cached forever — no caller ever retries. The `.catch` below clears
+ * `inFlight` before rethrowing, so a rejection un-poisons the memo for the
+ * next call while a successful read still resolves to the one shared
+ * promise every concurrent caller in that window received (the property
+ * this module exists for — see above).
  */
 const provider: SyncProvider =
   import.meta.env.VITE_VAULT === '1' ? new VaultSync() : new LocalOnly()
@@ -26,5 +33,19 @@ const provider: SyncProvider =
 let inFlight: Promise<Task[]> | null = null
 
 export function selfLoadTasks(): Promise<Task[]> {
-  return (inFlight ??= provider.list())
+  return (inFlight ??= provider.list().catch((err: unknown) => {
+    inFlight = null
+    throw err
+  }))
+}
+
+/**
+ * #168: test-only reset seam. The module-scoped `inFlight` memo has no
+ * other way to be cleared between tests — call this from `beforeEach` in
+ * any test that exercises the real load path (i.e. does NOT inject `tasks`
+ * directly into VitalsRow/Aurora), so it doesn't silently inherit whatever
+ * a prior test in the same file left in `inFlight`.
+ */
+export function __resetSelfLoadTasksCache(): void {
+  inFlight = null
 }
