@@ -31,7 +31,7 @@ import { TabBar, TABS } from './TabBar'
 // canvas 2D context (no `canvas` package in this project), so `measureText`
 // isn't available as an alternative.
 const CHAR_WIDTH_PER_1000: Record<string, number> = {
-  H: 722, o: 556, m: 556, e: 556, T: 611, a: 556, s: 500, k: 500,
+  H: 722, o: 556, m: 833, e: 556, T: 611, a: 556, s: 500, k: 500,
   M: 833, n: 556, y: 500, C: 722, r: 333, A: 667, g: 556, t: 278,
 }
 
@@ -81,7 +81,9 @@ describe('TabBar — S59 responsive metrics', () => {
     expect(within(bar).getByText('Home')).not.toHaveAttribute('aria-current')
   })
 
-  it('the track keeps shrink-to-fit (w-max) sizing plus a max-w-full safety cap — never a full-bleed bar', () => {
+  // `max-w-full` caps the frosted track box only; it does not constrain the
+  // button row (verified in a real browser). The fit comes from the clamps.
+  it('the track keeps shrink-to-fit (w-max) sizing plus a max-w-full cap on the track box', () => {
     render(<TabBar active="home" onTabChange={() => {}} />)
     const bar = screen.getByTestId('tab-bar')
     expect(bar.className).toMatch(/\bw-max\b/)

@@ -139,3 +139,37 @@ test('Domains sub-nav renders one warmth tile per domain after seed import', asy
     page.locator('[data-testid="domain-tile"][data-domain="Building Things"]'),
   ).toBeVisible()
 })
+
+// ---------------------------------------------------------------------------
+// 6. Tab bar fits every width without clipping (Slice S59, DoD 1) — the real
+//    computed-layout check. TabBar.test.tsx guards the same property with a
+//    box model in jsdom (which has no layout engine and drops clamp() from its
+//    CSSOM); this measures the actual rendered pill in Chromium.
+// ---------------------------------------------------------------------------
+test('tab bar fits every width without clipping', async ({ page }) => {
+  for (const width of [320, 360, 390, 1280]) {
+    await page.setViewportSize({ width, height: 800 })
+    await page.goto('/?noseed')
+
+    const bar = page.getByTestId('tab-bar')
+    await expect(bar).toBeVisible()
+
+    // The pill never scrolls internally...
+    expect(await bar.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+    // ...and never pushes the page into a horizontal scroll.
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true)
+
+    // Same five words at every width — no abbreviation, no icon fallback (DoD 4).
+    await expect(bar.getByRole('button')).toHaveText([
+      'Home',
+      'Tasks',
+      'Money',
+      'Career',
+      'Agents',
+    ])
+  }
+})

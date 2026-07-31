@@ -17,9 +17,11 @@
  * chosen so both metrics already saturate at their S58 fixed values by
  * ~800px — comfortably inside the shell's own 841px breakpoint (DoD #2) —
  * while shrinking to 8px padding / 11px font at a 320px viewport, which
- * fits all five labels with room to spare (DoD #1; see TabBar.test.tsx for
- * the arithmetic). `max-w-full` on the track is a belt-and-suspenders cap so
- * it can never overflow its container even if a label set changes later.
+ * fits all five labels with room to spare (DoD #1; TabBar.test.tsx models the
+ * arithmetic, e2e/pwa.spec.ts measures the real rendered layout). The fit is
+ * delivered by the clamps alone — `max-w-full` only caps the frosted track
+ * box, it does NOT constrain the button row, which would still overflow if a
+ * future label set outgrew the clamp floor.
  */
 
 export type ViewTab = 'home' | 'tasks' | 'money' | 'career' | 'agents'
