@@ -1,8 +1,8 @@
 {
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\e2e\\pwa.spec.ts": {
-    "mtime": 1785412474.0297732,
-    "ast_hash": "dd86d9538c6a564ad58c8611770fc911",
-    "semantic_hash": "dd86d9538c6a564ad58c8611770fc911"
+    "mtime": 1785476400.1020896,
+    "ast_hash": "e5ddedf072db7afb82045762cd57741d",
+    "semantic_hash": "e5ddedf072db7afb82045762cd57741d"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\package.json": {
     "mtime": 1783495560.8162594,
@@ -10,9 +10,9 @@
     "semantic_hash": "79b33ba610b83c0d9e9ab8ed04a548f3"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\playwright.config.ts": {
-    "mtime": 1781564380.7860274,
-    "ast_hash": "55c99bb3feabd0acf4a2b65bed914066",
-    "semantic_hash": "55c99bb3feabd0acf4a2b65bed914066"
+    "mtime": 1785492161.674902,
+    "ast_hash": "c60a7c8d5984afb405fb892a96db58be",
+    "semantic_hash": "c60a7c8d5984afb405fb892a96db58be"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\postcss.config.js": {
     "mtime": 1781562394.4674065,
@@ -145,9 +145,9 @@
     "semantic_hash": "fd8fe4eddefe9c0c622839f300667b3c"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\HANDOFF.md": {
-    "mtime": 1785469531.6172192,
-    "ast_hash": "14aadb9c389f83aab0cd99393ec42363",
-    "semantic_hash": "14aadb9c389f83aab0cd99393ec42363"
+    "mtime": 1785496089.983168,
+    "ast_hash": "8251a4581084c8c9c034fc8613597ca6",
+    "semantic_hash": "8251a4581084c8c9c034fc8613597ca6"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\adr\\0001-pwa-over-native.md": {
     "mtime": 1781559973.251291,
@@ -185,9 +185,9 @@
     "semantic_hash": "90ebdeb16430156c6fb30c27dfbe8abc"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\kanban.html": {
-    "mtime": 1785412484.1409357,
-    "ast_hash": "0248a936e2aab3d2e7510e33e092e9e5",
-    "semantic_hash": "0248a936e2aab3d2e7510e33e092e9e5"
+    "mtime": 1785492161.5477636,
+    "ast_hash": "d5b906de108fe72a578888a4387d6040",
+    "semantic_hash": "d5b906de108fe72a578888a4387d6040"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\public\\icons\\icon-192.png": {
     "mtime": 1781564380.7880216,
@@ -1595,9 +1595,9 @@
     "semantic_hash": "8e4554f5541e787faa1f189690a531a7"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\TabBar.tsx": {
-    "mtime": 1785412474.0370095,
-    "ast_hash": "3f8059852b1fe3f4107d23e514fdb50d",
-    "semantic_hash": "3f8059852b1fe3f4107d23e514fdb50d"
+    "mtime": 1785476400.133979,
+    "ast_hash": "3a2080ad66f57aaafee04f5923fac6c9",
+    "semantic_hash": "3a2080ad66f57aaafee04f5923fac6c9"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\UndoToast.tsx": {
     "mtime": 1782803765.0234756,
@@ -1660,9 +1660,9 @@
     "semantic_hash": "5177a198c1ee21a5f1234bcb328993a8"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\transport.ts": {
-    "mtime": 1785401704.6976068,
-    "ast_hash": "68bc0602555da7cd9462be6118aef877",
-    "semantic_hash": "68bc0602555da7cd9462be6118aef877"
+    "mtime": 1785476635.3009157,
+    "ast_hash": "03351724daaf10432f152c2018d95fb0",
+    "semantic_hash": "03351724daaf10432f152c2018d95fb0"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vite-env.d.ts": {
     "mtime": 1782886007.6497855,
@@ -2130,14 +2130,14 @@
     "semantic_hash": "1e88a339f1c96126808562f4b9142004"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\HomeView.test.tsx": {
-    "mtime": 1785412474.038024,
-    "ast_hash": "4b8e4fc7e33012c0ddc6b577d0e1d95d",
-    "semantic_hash": "4b8e4fc7e33012c0ddc6b577d0e1d95d"
+    "mtime": 1785476635.2946956,
+    "ast_hash": "55bfe1804f37c79b14a0a3a65f5a9d35",
+    "semantic_hash": "55bfe1804f37c79b14a0a3a65f5a9d35"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\HomeView.tsx": {
-    "mtime": 1785412474.040023,
-    "ast_hash": "e569b34495275ed377659e7577468c97",
-    "semantic_hash": "e569b34495275ed377659e7577468c97"
+    "mtime": 1785476635.2956965,
+    "ast_hash": "1243b8dc96ee9486f92b198f2711d0bf",
+    "semantic_hash": "1243b8dc96ee9486f92b198f2711d0bf"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\MissionCard.test.tsx": {
     "mtime": 1784296010.0639474,
@@ -2355,9 +2355,9 @@
     "semantic_hash": "b8e094f319882e9f05569bea63efe419"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\DESIGN_LANGUAGE.md": {
-    "mtime": 1785412474.0287707,
-    "ast_hash": "faffcd0f35947b1cee406bcb85bf15e7",
-    "semantic_hash": "faffcd0f35947b1cee406bcb85bf15e7"
+    "mtime": 1785476400.1020896,
+    "ast_hash": "bd301af7063e090925d7b429529e8364",
+    "semantic_hash": "bd301af7063e090925d7b429529e8364"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\FABLE_DESIGN_DOC_PROMPT.md": {
     "mtime": 1783582243.6214678,
@@ -2390,9 +2390,9 @@
     "semantic_hash": "a46f0166c07a557a44db4073643cd3af"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\agents\\afk-pipeline.md": {
-    "mtime": 1784527453.7825732,
-    "ast_hash": "1a74c8d445792385a2464ffbb0aa74a4",
-    "semantic_hash": "1a74c8d445792385a2464ffbb0aa74a4"
+    "mtime": 1785492161.674902,
+    "ast_hash": "e31f25f02a6f41349d04827fdfcdbc24",
+    "semantic_hash": "e31f25f02a6f41349d04827fdfcdbc24"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\docs\\agents\\domain.md": {
     "mtime": 1783667404.0794897,
@@ -2760,9 +2760,9 @@
     "semantic_hash": "d4e598f8b82ba63cd2639d3b904ea0c3"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\vault\\transport.test.ts": {
-    "mtime": 1785401704.6946187,
-    "ast_hash": "5f289f57d231f2b75a1b2070e2db8c88",
-    "semantic_hash": "5f289f57d231f2b75a1b2070e2db8c88"
+    "mtime": 1785476635.2997017,
+    "ast_hash": "2238d74e30aebb2758313e627682efe0",
+    "semantic_hash": "2238d74e30aebb2758313e627682efe0"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\.github\\workflows\\agent-rotate.yml": {
     "mtime": 1784689410.9077175,
@@ -2815,9 +2815,9 @@
     "semantic_hash": "a75afb5a20e1f3fe8d24822d1e7b2fe5"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\HabitsCard.test.tsx": {
-    "mtime": 1784723624.5998547,
-    "ast_hash": "48146602978bc2a1817c4bc45be211d7",
-    "semantic_hash": "48146602978bc2a1817c4bc45be211d7"
+    "mtime": 1785476635.2936938,
+    "ast_hash": "8eb06ea85e8a785405ac2ad5f604ad19",
+    "semantic_hash": "8eb06ea85e8a785405ac2ad5f604ad19"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\HabitsCard.tsx": {
     "mtime": 1784723624.5998547,
@@ -2870,34 +2870,34 @@
     "semantic_hash": "b0f47be857d1e8e2b3ed4ee7bceaca73"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\AttentionCard.test.tsx": {
-    "mtime": 1784781983.7842119,
-    "ast_hash": "4951d9e6c1ff3c993c45406a5b7d1b49",
-    "semantic_hash": "4951d9e6c1ff3c993c45406a5b7d1b49"
+    "mtime": 1785476635.2886872,
+    "ast_hash": "9c10de8f72431939c9d58c89b9a96057",
+    "semantic_hash": "9c10de8f72431939c9d58c89b9a96057"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\AttentionCard.tsx": {
-    "mtime": 1784781983.7842119,
-    "ast_hash": "82ea278fd232e5696f9569248886295c",
-    "semantic_hash": "82ea278fd232e5696f9569248886295c"
+    "mtime": 1785476635.2896852,
+    "ast_hash": "ef8caa4ac51ed4716d083c9ee06a6d23",
+    "semantic_hash": "ef8caa4ac51ed4716d083c9ee06a6d23"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\FleetStrip.test.tsx": {
-    "mtime": 1784784144.9721165,
-    "ast_hash": "b656602e3ab62a207ad99237dd3ba8f7",
-    "semantic_hash": "b656602e3ab62a207ad99237dd3ba8f7"
+    "mtime": 1785476635.290684,
+    "ast_hash": "227337f307dda70386c00e6bd5cc95bb",
+    "semantic_hash": "227337f307dda70386c00e6bd5cc95bb"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\FleetStrip.tsx": {
-    "mtime": 1785401704.6804557,
-    "ast_hash": "dd0b0c4bcf160ae0a2c31be95200e0d1",
-    "semantic_hash": "dd0b0c4bcf160ae0a2c31be95200e0d1"
+    "mtime": 1785476635.291684,
+    "ast_hash": "b96b580f9643ee1f1d712c168ab50ae1",
+    "semantic_hash": "b96b580f9643ee1f1d712c168ab50ae1"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\TodayCard.test.tsx": {
-    "mtime": 1784734285.3857517,
-    "ast_hash": "482c09203df32c960119e9881677d660",
-    "semantic_hash": "482c09203df32c960119e9881677d660"
+    "mtime": 1785476635.2966938,
+    "ast_hash": "8b1e755913db9360a0f502cd15e69445",
+    "semantic_hash": "8b1e755913db9360a0f502cd15e69445"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\home\\TodayCard.tsx": {
-    "mtime": 1784781983.7842119,
-    "ast_hash": "78d5965b24e2b83e49d06a6b37f90f80",
-    "semantic_hash": "78d5965b24e2b83e49d06a6b37f90f80"
+    "mtime": 1785476635.2987008,
+    "ast_hash": "33fa4c6bce2615a6a3ea823effbc02e0",
+    "semantic_hash": "33fa4c6bce2615a6a3ea823effbc02e0"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\lib\\gapFit.test.ts": {
     "mtime": 1784734285.3901587,
@@ -2950,9 +2950,9 @@
     "semantic_hash": "139514788f0eb15d83e9dfd2a4b2b6b8"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\sync\\selfLoadTasks.ts": {
-    "mtime": 1785410426.1169095,
-    "ast_hash": "579ca5157a25bdf606b0f6b5ebb53509",
-    "semantic_hash": "579ca5157a25bdf606b0f6b5ebb53509"
+    "mtime": 1785492160.9300241,
+    "ast_hash": "17d8110d134b813dd78f6152d350edf1",
+    "semantic_hash": "17d8110d134b813dd78f6152d350edf1"
   },
   "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\Post V2 User FeedBack, Features, Updates, Fixes.md": {
     "mtime": 1785396530.6089234,
@@ -2983,5 +2983,15 @@
     "mtime": 1785397137.35581,
     "ast_hash": "9ad6f307c5123526eaf8ba629427c4fb",
     "semantic_hash": "9ad6f307c5123526eaf8ba629427c4fb"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\components\\TabBar.test.tsx": {
+    "mtime": 1785476400.133979,
+    "ast_hash": "4be74b20968aa10994152cc7cb25d161",
+    "semantic_hash": "4be74b20968aa10994152cc7cb25d161"
+  },
+  "C:\\Users\\ldeep\\Python_Projects\\LifeOS\\src\\sync\\selfLoadTasks.test.ts": {
+    "mtime": 1785492160.9300241,
+    "ast_hash": "ceab1ab9791721ea869ed37907eb11ce",
+    "semantic_hash": "ceab1ab9791721ea869ed37907eb11ce"
   }
 }
