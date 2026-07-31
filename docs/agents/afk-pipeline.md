@@ -10,7 +10,9 @@ Loaded by the `afk-pipeline` skill at P0. Per-repo facts live here, not in the s
 
 TS/React PWA: Vite, React 18, Tailwind, Dexie/isomorphic-git vault layer. Deployed to GitHub Pages.
 
-Acceptance criteria in slices target **Vitest unit/component tests** (jsdom + Testing Library, `npm test`) — fast, CI-runnable. Playwright e2e (`npm run test:e2e`) exists but is NOT a slice acceptance target: too slow/flaky for the merge gate. Never require an emulator, live external service, or manual verification in AFK slice criteria.
+Acceptance criteria in slices target **Vitest unit/component tests** (jsdom + Testing Library, `npm test`) — fast, CI-runnable. Default to those; don't reach for Playwright when jsdom can prove the property. But **`pwa-e2e` is a CI job and must be green to merge** (see "Eval gate" below) — "not the default acceptance surface" is not "not a gate". When a DoD names a property jsdom structurally cannot observe — real layout, service-worker/offline behaviour, cross-page navigation — the e2e suite is the correct home for it and a slice MAY add a case there (S59 added the tab bar's `scrollWidth <= clientWidth` check after jsdom proved unable to measure `clamp()`). Never require an emulator, live external service, or manual verification in AFK slice criteria.
+
+> **Local e2e reds are weak evidence.** `playwright.config.ts` wraps `npm run build && npm run preview` in a 60 s `webServer.timeout`; under concurrent agent load the build alone exceeds it and the run dies with `Timed out waiting 60000ms from config.webServer` — an infrastructure failure that reads like an app failure. Build first and start `npm run preview -- --port 4173` yourself before running Playwright locally, and treat the clean CI runner as the verdict.
 
 ## CI flake fingerprints
 
@@ -39,7 +41,7 @@ Canonical vocabulary in [triage-labels.md](triage-labels.md): `ready-for-agent`,
 
 Every v2 slice PR merges only on **triple-green**:
 
-1. **CI green** (build-test; bot-test when `services/bot` touched).
+1. **CI green** — every job on the PR: `build-test`, `pwa-e2e`, and `bot-test`. No job is exempt; a red `pwa-e2e` is a red gate unless it matches a documented flake fingerprint AND reruns green.
 2. **Review green** (ponytail-review).
 3. **Eval green** — dispatch a FRESH read-only eval subagent (Sonnet; not the implementer, no shared context) with exactly three inputs: (a) the slice ticket `docs/slices/slice-S##-*.md`, (b) `gh pr diff <N>`, (c) the CI run result. It must:
    - verify each numbered **Definition of Done** item against the diff, one row per item: `#N — PASS/FAIL — evidence (file:line or test name)`;

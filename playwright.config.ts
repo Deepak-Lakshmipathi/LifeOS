@@ -30,7 +30,11 @@ export default defineConfig({
     command: 'npm run build && npm run preview -- --port 4173',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
-    // 60 s is enough for a clean build + vite preview start
-    timeout: 60_000,
+    // 60 s covered a clean build + vite preview start on an idle box, but this
+    // budget spans the whole `build &&` above: with parallel agent worktrees
+    // running suites, the build alone blows it and the run dies with
+    // "Timed out waiting 60000ms from config.webServer" — infra noise that
+    // reads as an app failure and got misreported as flake twice in wave 13.
+    timeout: 180_000,
   },
 })
