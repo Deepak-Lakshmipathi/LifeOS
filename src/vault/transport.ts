@@ -116,8 +116,11 @@ export class GitTransport implements VaultTransport {
     // check threw, which is exactly the "wasted work + it pushed
     // cockpitShell.test.tsx over its render budget" problem #155 tracks.
     // Checking synchronously first means the unconfigured path never touches
-    // `import()` at all, and also — same reasoning as before, restated —
-    // never constructs LightningFS, whose constructor kicks off a real
+    // `import()` at all, never prompts for a PAT (getVaultPat() falls through
+    // to a BLOCKING window.prompt when nothing is stored — with the per-card
+    // short-circuits gone, every self-loading card would otherwise raise its
+    // own modal on an unconfigured build), and also — same reasoning as
+    // before, restated — never constructs LightningFS, whose ctor kicks off a
     // fire-and-forget internal async _init() reaching into DefaultBackend
     // (which references `navigator`). A caller that swallows this error
     // (e.g. HabitsCard's self-load try/catch) would otherwise leave that
@@ -127,9 +130,12 @@ export class GitTransport implements VaultTransport {
     // assertion.
     const url = import.meta.env.VITE_VAULT_REPO_URL as string | undefined
     const corsProxy = import.meta.env.VITE_VAULT_CORS_PROXY as string | undefined
-    const pat = getVaultPat()
 
     if (!url) throw new Error('VITE_VAULT_REPO_URL is not configured')
+
+    // Below the guard on purpose: only the configured path needs credentials
+    // (`pat` is read once, at `onAuth` below).
+    const pat = getVaultPat()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [{ default: git }, { default: http }, { default: LightningFS }]: [any, any, any] =
