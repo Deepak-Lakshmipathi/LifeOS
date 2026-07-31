@@ -141,6 +141,8 @@ nav.tabs button{font-size:14px;padding:9px 20px;transition:.2s}
 nav.tabs button.on{background:rgba(255,255,255,.13);color:var(--txt);box-shadow:0 1px 8px rgba(0,0,0,.3)}
 ```
 
+S59: `nav.tabs button`'s `padding` and `font-size` above are the ≥~800px (desktop) value — below that they shrink fluidly (`padding-inline:clamp(6px,2.5vw,20px)`, `font-size:clamp(11px,1.75vw,14px)`) so all five tab labels still fit, unclipped, at a 320px viewport.
+
 Tab panels: `.tab{display:none}` / `.tab.on{display:block;animation:fade .3s ease}` with `@keyframes fade{from{opacity:0;transform:translateY(6px)}}`.
 
 ### 4.2 Vital tile
