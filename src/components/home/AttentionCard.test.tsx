@@ -133,3 +133,18 @@ describe('AttentionCard — no data (honest empty state)', () => {
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Needs you · 0')
   })
 })
+
+describe('AttentionCard — real self-load, no vault configured (S62/#155 DoD 3)', () => {
+  it('mounted with no `items`/`transport` (the live-app shape), the real GitTransport self-load still settles on the honest empty state', async () => {
+    // No `items` fixture, no `transport` override — this exercises the ACTUAL
+    // self-load effect against a real (unconfigured) GitTransport, same as
+    // the live app's mount. VITE_VAULT_REPO_URL is never stubbed in this
+    // file, so GitTransport.loadGit() rejects synchronously before its
+    // isomorphic-git/lightning-fs dynamic import — the try/catch in the
+    // effect lands on the same empty state as the `items`-fixture tests
+    // above, just via the real (short) code path instead of a skipped one.
+    render(<AttentionCard />)
+    expect(await screen.findByText('Nothing needs you right now.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Needs you · 0')
+  })
+})

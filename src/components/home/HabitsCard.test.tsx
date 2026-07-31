@@ -168,3 +168,18 @@ describe('HabitsCard — no data (honest empty state)', () => {
     expect(screen.queryByTestId('habit-row')).not.toBeInTheDocument()
   })
 })
+
+describe('HabitsCard — real self-load, no vault configured (S62/#155 DoD 3)', () => {
+  it('mounted with no `habits`/`transport` (the live-app shape), the real GitTransport self-load still settles on the honest empty state', async () => {
+    // No `habits` fixture (genuinely omitted, not `[]`) and no `transport`
+    // override — this exercises the ACTUAL self-load effect against a real
+    // (unconfigured) GitTransport, same as the live app's mount. Unlike the
+    // `habits={[]}` case above (which short-circuits the effect via the
+    // habitsProp-defined check and never touches GitTransport at all), this
+    // proves the try/catch after a real unconfigured GitTransport rejection
+    // lands on the same "No habits tracked yet." empty state.
+    render(<HabitsCard today={TODAY} />)
+    expect(await screen.findByText('No habits tracked yet.')).toBeInTheDocument()
+    expect(screen.queryByTestId('habit-row')).not.toBeInTheDocument()
+  })
+})

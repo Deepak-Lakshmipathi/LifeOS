@@ -24,10 +24,13 @@ import { GitTransport, type VaultTransport } from '../../vault/transport'
  * fetch under test, so fixture rendering never touches GitTransport (or its
  * IndexedDB/network side effects), same as HabitsCard's `habits`/`hits`.
  *
- * GitTransport.readFiles() (src/vault/transport.ts) walks the 7 domain
- * folders + Inbox/ + Habits/ + Calendar/ (S34/#151 fixed the gap where
- * Calendar/ was missing, leaving the live self-load permanently empty).
- * Under test this is moot: `events`/`date` short-circuit the fetch entirely.
+ * GitTransport.readFiles() (src/vault/transport.ts) recursively walks the 7
+ * domain folders plus Inbox/, Habits/, Calendar/, Mail/, agents/ and Briefs/
+ * (S34/#151 fixed the gap where Calendar/ was missing, leaving the live
+ * self-load permanently empty; S61/#158 made the walk itself recursive and
+ * depth-bounded, with a `.json` allowlist scoped to agents/ — every other
+ * folder, including Calendar/, stays `.md`-only). Under test this is moot:
+ * `events`/`date` short-circuit the fetch entirely.
  */
 
 // §4.5 — GCal-style tinted fill + matching light text, no accent bar.

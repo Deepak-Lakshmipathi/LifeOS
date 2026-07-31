@@ -25,12 +25,12 @@ import { GitTransport, type VaultTransport } from '../../vault/transport'
  * allowlist scoped to `agents/`), so the live self-load resolves real
  * agent health instead of always idle.
  *
- * AttentionCard's self-load has a fast honest-empty short-circuit for the
- * unconfigured-vault case (skip straight to empty rather than paying for
- * isomorphic-git's dynamic import just to land on the same empty result) —
- * mirrored verbatim here (open follow-up #155 tracks moving this check to
- * the seam itself) so this mount doesn't regress cockpitShell.test.tsx's
- * render budget.
+ * The unconfigured-vault fast-empty path lives in GitTransport itself
+ * (S62/#155): loadGit() checks `VITE_VAULT_REPO_URL` synchronously before
+ * paying for isomorphic-git's dynamic import, so this self-load (and every
+ * other card's) gets the fast honest-empty path for free without needing a
+ * component-local guard — keeping cockpitShell.test.tsx inside its render
+ * budget.
  */
 
 /** Default cadence used only for the missing-status idle case — no health math lives here. */
@@ -56,12 +56,10 @@ export function FleetStrip({ statuses: statusesProp, transport, now }: FleetStri
   // GitTransport is never constructed under test).
   useEffect(() => {
     if (statusesProp !== undefined) return
-    // Fast honest-empty path (mirrors AttentionCard verbatim): with no
-    // configured vault remote, a default GitTransport always rejects — but
-    // only AFTER paying for isomorphic-git's dynamic import. Skip straight
-    // to the idle state when unconfigured and no caller-supplied transport
-    // is present.
-    if (!transport && !import.meta.env.VITE_VAULT_REPO_URL) return
+    // No unconfigured-vault short-circuit here (S62/#155 — deleted): see the
+    // file-level comment above — GitTransport itself now rejects
+    // synchronously before the dynamic import when unconfigured, so the
+    // try/catch below already lands on the same honest idle state.
     let live = true
     ;(async () => {
       try {

@@ -192,6 +192,22 @@ describe('TodayCard — no data (honest empty state)', () => {
   })
 })
 
+describe('TodayCard — real self-load, no vault configured (S62/#155 DoD 3)', () => {
+  it('mounted with no `events`/`transport` (the live-app shape), the real GitTransport self-load still settles on the honest empty state', async () => {
+    // No `events` fixture (genuinely omitted, not `[]`) and no `transport`
+    // override — this exercises the ACTUAL self-load effect against a real
+    // (unconfigured) GitTransport, same as the live app's mount. Unlike the
+    // `events={[]}`/`date={undefined}` case above (which short-circuits the
+    // effect via the itemsProp-defined check and never touches GitTransport
+    // at all), this proves the try/catch after a real unconfigured
+    // GitTransport rejection lands on the same "No calendar data yet."
+    // empty state.
+    render(<TodayCard tasks={[]} today={FIXTURE_DATE} />)
+    expect(await screen.findByText('No calendar data yet.')).toBeInTheDocument()
+    expect(screen.queryByTestId('today-slot')).not.toBeInTheDocument()
+  })
+})
+
 describe('TodayCard — heading', () => {
   it('renders the "Today" card heading', () => {
     render(<TodayCard tasks={[]} events={fixtureEvents} date={fixtureDate} today={FIXTURE_DATE} />)

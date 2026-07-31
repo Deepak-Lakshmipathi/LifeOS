@@ -120,7 +120,10 @@ export function HomeView({
   // brief when `Briefs/<date>.md` exists instead of always rendering nothing.
   useEffect(() => {
     if (briefLinesProp !== undefined) return
-    if (!briefTransport && !import.meta.env.VITE_VAULT_REPO_URL) return
+    // No unconfigured-vault short-circuit here (S62/#155 — deleted):
+    // GitTransport itself now rejects synchronously before the dynamic
+    // isomorphic-git import when unconfigured, so the try/catch below
+    // already lands on the same "render nothing" empty state.
     let live = true
     ;(async () => {
       try {

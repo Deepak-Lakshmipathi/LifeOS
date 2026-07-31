@@ -144,3 +144,21 @@ describe('HomeView — daily-brief morning-only surface (S50)', () => {
     expect(screen.getByTestId('habits-card')).toBeInTheDocument()
   })
 })
+
+describe('HomeView — real self-load, no vault configured (S62/#155 DoD 3)', () => {
+  it('mounted with no `briefLines`/`briefTransport` (the live-app shape), the real GitTransport self-load renders no brief block and no error UI', async () => {
+    // No `briefLines` fixture (genuinely omitted, not `[]`) and no
+    // `briefTransport` override — exercises the ACTUAL self-load effect
+    // against a real (unconfigured) GitTransport, same as the live app's
+    // mount. This also mounts AttentionCard/TodayCard/HabitsCard/FleetStrip
+    // with no fixture props at all (HomeView never injects data props into
+    // them — see its own render body), so this one render exercises EVERY
+    // self-loading card's real, unconfigured self-load in the same pass.
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    // Something from below the brief block must have painted before we can
+    // trust the brief's absence isn't just "hasn't loaded yet" — Habits'
+    // honest-empty text only appears once its own self-load effect settles.
+    expect(await screen.findByText('No habits tracked yet.')).toBeInTheDocument()
+    expect(screen.queryByTestId('home-brief')).not.toBeInTheDocument()
+  })
+})

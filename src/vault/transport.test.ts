@@ -20,6 +20,14 @@ const h = vi.hoisted(() => {
   const log = vi.fn().mockRejectedValue(new Error('no local repo'))
   const add = vi.fn().mockResolvedValue(undefined)
   const commit = vi.fn().mockResolvedValue(undefined)
+  // Set to true the moment each mocked module's factory actually runs — i.e.
+  // the moment GitTransport's dynamic `import(...)` for that specifier is
+  // reached. vi.mock factories are lazy: they only execute on first import of
+  // that specifier, so these flags are a direct proxy for "did loadGit() get
+  // past the synchronous `if (!url)` check" (S62/#155) — NOT just "was
+  // LightningFS ever constructed", which the pre-S62 code already avoided
+  // and so wouldn't catch a regression back to import-before-check.
+  const moduleReached = { isomorphicGit: false, http: false, lightningFs: false }
   // Minimal lightning-fs stand-in, backed by a real in-memory Map per
   // instance: readdir/readFile/writeFile derive their answers from whatever
   // has actually been "written" so far. With an empty map every domain dir
@@ -64,19 +72,67 @@ const h = vi.hoisted(() => {
       mkdir: async (): Promise<void> => {},
     }
   }
-  return { clone, pull, push, log, add, commit, FakeFS }
+  return { clone, pull, push, log, add, commit, FakeFS, moduleReached }
 })
 
-vi.mock('isomorphic-git', () => ({
-  default: { clone: h.clone, pull: h.pull, push: h.push, log: h.log, add: h.add, commit: h.commit },
-}))
-vi.mock('isomorphic-git/http/web', () => ({ default: {} }))
-vi.mock('@isomorphic-git/lightning-fs', () => ({ default: h.FakeFS }))
+vi.mock('isomorphic-git', () => {
+  h.moduleReached.isomorphicGit = true
+  return {
+    default: { clone: h.clone, pull: h.pull, push: h.push, log: h.log, add: h.add, commit: h.commit },
+  }
+})
+vi.mock('isomorphic-git/http/web', () => {
+  h.moduleReached.http = true
+  return { default: {} }
+})
+vi.mock('@isomorphic-git/lightning-fs', () => {
+  h.moduleReached.lightningFs = true
+  return { default: h.FakeFS }
+})
 vi.mock('./pat', () => ({ getVaultPat: () => undefined, clearVaultPat: () => {} }))
 
 import { GitTransport } from './transport'
 import { appendHabitHit } from './habitsWrite'
 import type { HabitHit } from './habits'
+
+// ─── Unconfigured path skips the dynamic import entirely (S62/#155) ──────────
+//
+// MUST run first in this file (declaration order === execution order,
+// vitest's default within a file, and this repo sets no shuffle/concurrent
+// sequencer). Every dynamic-import specifier below is mocked via vi.mock,
+// whose factories run lazily on first import — so `moduleReached` only
+// tells us anything if these are the very first assertions to touch
+// GitTransport in this module. Once any other test's readFiles()/writeFile()
+// call reaches loadGit()'s import() (which they all do, with the env stubbed),
+// the flags flip true for the rest of the file's run.
+describe('GitTransport — unconfigured self-load skips isomorphic-git/lightning-fs entirely (S62/#155)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('readFiles() rejects on missing url WITHOUT ever reaching the isomorphic-git/lightning-fs import', async () => {
+    // VITE_VAULT_REPO_URL intentionally left unset — no vi.stubEnv call.
+    const transport = new GitTransport()
+
+    await expect(transport.readFiles()).rejects.toThrow('VITE_VAULT_REPO_URL is not configured')
+
+    expect(h.moduleReached.isomorphicGit).toBe(false)
+    expect(h.moduleReached.http).toBe(false)
+    expect(h.moduleReached.lightningFs).toBe(false)
+  })
+
+  it('writeFile() also rejects on missing url WITHOUT ever reaching the import', async () => {
+    const transport = new GitTransport()
+
+    await expect(transport.writeFile('x.md', 'a', 'msg')).rejects.toThrow(
+      'VITE_VAULT_REPO_URL is not configured',
+    )
+
+    expect(h.moduleReached.isomorphicGit).toBe(false)
+    expect(h.moduleReached.http).toBe(false)
+    expect(h.moduleReached.lightningFs).toBe(false)
+  })
+})
 
 describe('GitTransport — shallow, single-branch clone (S56 DoD #1)', () => {
   beforeEach(() => {
