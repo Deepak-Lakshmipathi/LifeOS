@@ -1,5 +1,58 @@
 # LifeOS — Handoff
 
+Last updated: 2026-08-03. **WAVE 14 TRIAGE COMPLETE — the live-testing backlog is now a dispatchable plan. No code shipped this session by design; the output is tickets, rulings and measurements.** The 2026-07-31/08-01 live-testing session filed **11 issues (#173–#183)**. This session ran a graph read + **two** subagents (`systems-architect` for the design forks, an engineer for the empirical unknowns) over the seven that were blocked, then verified the last unknown live in the browser.
+
+**Wave 14 = S63–S73, numbered `S(N−110)` against issue `#N`.** Three tickets exist (`docs/slices/slice-S63-nav-exit-trap.md` #173 · `slice-S64-optimistic-task-writes.md` #174 · `slice-S66-lightning-fs-lock-safety.md` #176) — salvaged from the 2026-08-01 dispatch that lost 11 agents to the session limit. **Eight remain to author.** `docs/slices/_GRILL_BRIEF.md` is the authoring brief and now carries a **TRIAGE RULING** section that supersedes its own salvaged grounding — read that section before writing any wave-14 ticket.
+
+**Structural rulings (they change the ticket set, not just its content):**
+- **#179 folds into #180 → one ticket `S70`.** Both must break Header's zero-prop contract (`Header.tsx:12-13`) and both rewrite `Header.test.tsx:86-100`, which today asserts the fabricated strings verbatim. #179 cannot choose *which* note to render without owning `mode`, so shipping it first means calling `useTimeOfDay` inside Header — the exact bug #180 exists to delete.
+- **#177 splits.** `S67a` = the persistent sync-status surface (`src/vault/syncStatus.ts` + `SyncStatus.tsx`, mounted in `App.tsx` **outside `<main>`** so it survives the error branch). `S67b` = the 401 — **closed, see below.**
+- **S71 (#181) MUST land before S73 (#183).** #183 *moves* `HomeView.tsx:199-237` into `TasksView`; #181 *edits* those same lines. Neither issue says so.
+- **No repo-wide framer-motion exit audit** — S63 owns the shell protocol + ADR-0015, S71 amends it locally. `slice-S63:222` already lists the audit under forbidden over-builds.
+- **Owner decision recorded: YES** — `docs/DESIGN_LANGUAGE.md` §6 may be amended so the header note derives from `dayStats` with **no calendar claim**. That was the only human call in the whole blocked set; S70 is now unblocked.
+
+**Measured live on the deployed build (browser session, full network + console capture) — two issues resolved by measurement:**
+- **#177's premise is REFUTED.** One cold load: `git-upload-pack` **7×401 → 7×200**, `git-receive-pack` **7×401 → 7×200**. Every 401 is immediately followed by a 200 on the same service; **zero authed 401s**. The original "upload-pack 401 ×4 / receive-pack 200" was a **filtered network log**. isomorphic-git's `discover` is anonymous-first for *both* services (`node_modules/isomorphic-git/index.js:9104-9169`; `_push` calls the same `discover`), and `cors-proxy/worker.js` has **no branch on `service=`** at all — `?service=` is in the query, not the pathname. Proxy exonerated by construction, PAT proven good on both services. #177 **retitled** to the staleness surface only; it is now a *hardening* ticket, not a live-defect fix, and its priority drops.
+- **#176 confirmed and quantified: seven of everything.** 7 `AbortError: Lock broken` exceptions, all on the same timestamp, one per reader — matching the seven `GitTransport`/`LightningFS` owners exactly. S66's DoD can now assert a **measured** number: after the fix, a cold load produces exactly **one** handshake and **zero** AbortErrors, red against 7 and 7 today.
+- **New issue #184** — the same capture showed **4 × `POST git-receive-pack` on a plain page load**. The read path writes: `transport.ts:184-222` pushes on the pull-failure branch, × the fan-out. S66 reduces it to at most 1 but does not remove it; whether the read path should push at all is a separate call.
+
+**Corrections that would have produced wrong tickets — all now in the brief:**
+- **The reduced-motion masking hazard does not exist.** Measured: Playwright 1.61 defaults `reducedMotion: 'no-preference'` and *overrides the host OS*; jsdom has no `matchMedia`, so framer-motion's `useReducedMotion()` returns `false` via its else-branch. Both gate environments run motion **on**. A one-line guard assertion replaces the whole warning.
+- **But `test.use({ reducedMotion: … })` is silently ignored in Playwright 1.61.0** — proven against a `colorScheme`/`viewport` control in the same block, which did apply. `e2e/zzrepro173b.spec.ts:7-37` never tested what it claimed. Use `browser.newContext()` or `page.emulateMedia()`.
+- **#182's second call site is `TaskItem.handleDotTap` (`TaskItem.tsx:51-68`), not `NowView`** — and moving `setPendingUndo` earlier is not enough, because `UndoToast.tsx:26-29` starts its dismiss timer on *mount*: a 3s timer at t=0 fires before an 8s write resolves, making the bug worse.
+- **#178 has four unguarded `await refresh()` sites** (`useTasks.ts:64, 72, 84, 92`), not one.
+- **#183's `App.tsx` line numbers are exact at HEAD but +12 off** in a tree carrying the ownership comment — cite symbols, not lines.
+
+**Board: 74 done, 0 ready/progress/backlog — wave 14 is NOT on the kanban yet (only 3 of 11 tickets exist, so cards would be fiction). Open issues: 12 (#173–#184). Open PRs: 0.** `#board-data`'s `meta.note` now carries the wave-14 lanes.
+
+**⚠️ Master is 1 ahead of origin, 0 behind — owner push pending** (2 ahead once this close commit lands). Ahead: `55f8745` *docs(slices): wave-14 tickets S63/S64/S66 + triage ruling* — docs + a comment-only `App.tsx` change, no executable lines. behind == 0 → clean fast-forward: `git push origin master`. Push stays owner-gated; the harness still denies it to the agent, so run it as `! git push origin master`.
+
+**6 untracked scratch specs left on purpose** (`e2e/zz{diag173,repro173,repro173b,scratch-s71}.spec.ts`, `src/test/zz{repro173,scratchS71}.test.tsx`). They assert against known-open bugs and `pwa-e2e` is a merge gate, so they must NOT be committed — but `src/test/zzscratchS71.test.tsx` is the **starting harness for the S71 spike**, so don't delete them either.
+
+> **NEXT SESSION — author wave-14 tickets, two at a time.** `/lifeos-boot` will report 0 unblocked because the board has no wave-14 cards; that is expected, the work is in `docs/slices/_GRILL_BRIEF.md` + issues #173–#184. **Read the brief's TRIAGE RULING section first.**
+>
+> **Authoring pairs (hard limit: 2 subagents, then ask before the next pair):**
+> 1. **S68 (#178) + S72 (#182)** — same `useTasks.ts` lane. S72 must **amend S64's DoD #7**: a second `toggleDone(id)` for an in-flight id is not a dropped no-op but a *queued inversion applied exactly once on settle*, so S68's author needs to see it. Both unmerged, so amending now is free.
+> 2. **S70 (#180+#179) + S73 (#183)** — S73 inherits S70's `HomeView` prop change (`mode: CockpitMode` becomes a required prop; App owns the single `useTimeOfDay` call).
+> 3. **S67a (#177) + the S71 spike** — no shared files.
+>
+> **The one remaining investigation — S71 spike (≤1h, read-only).** Reproduce #181 with a deferred `onAdd` that resolves *with a parent re-render inside the exit window*. The assertion is already written and **green on broken master** (`src/test/zzscratchS71.test.tsx:36-38`) — **the red IS the deliverable**; if the spike can't turn it red, the ticket is not ready and must not be authored. Run pre-S64 or with an artificially slowed provider: S64 cuts `onAdd` from 1–9s to ~1.1s and may make #181 unreproducible without fixing it.
+>
+> **Hotspot lanes — strictly serial within a lane:**
+> `src/App.tsx`: **S63 → S70 → S71 → S73 → S67a** (S67a is one line, anywhere after S63) · `src/hooks/useTasks.ts`: **S64 → S68 → S72** · `src/vault/transport.ts`: **S66 → S67a** · `src/components/home/HomeView.tsx`: **S70 → S71 → S73** · `src/components/UndoToast.tsx`: **S68 → S72**
+>
+> **⚠️ Local `.env` produces 3 phantom red tests** — `VITE_VAULT_REPO_URL` is inlined by Vite, so `transport.ts:134`'s `if (!url)` guard never fires (2 vitest reds in `transport.test.ts`) and the prod build reaches `window.prompt` in `pat.ts:26-28` (1 e2e red). Run `VITE_VAULT_REPO_URL= npm run test`. CI has no `.env` and is green — do not chase these.
+>
+> **Dispatch note:** ticket *authoring* needs no eval subagents, so it proceeds regardless of the spend limit. **Merging** still needs triple-green = CI (**every job**, incl `pwa-e2e`) + ponytail-review + a FRESH eval subagent vs the numbered DoD. Standing local gate: run **`npm run build`** (tsc), not just `npm test`. `[UI]` work: feed `docs/DESIGN_LANGUAGE.md`, tokens-only, honor reduced-motion via `useReducedMotion()`, don't break `data-testid="tab-bar"`. Telegram bot's owner-only S16c live verify (`afk-pipeline-out/s16c-verify-checklist.md`) remains the one human gate.
+
+**Session lessons (2026-08-03) —**
+- **Two grounded agents beat eleven cold ones.** The 2026-08-01 fan-out lost 11 agents and all their work to the session limit; this session got a better answer from a graph query + 2 agents, because each prompt carried the *salvaged grounding* rather than making the agent re-derive it. Apply: pre-load agents with verified file:line facts and tell them which claims to sanity-check, not to re-discover.
+- **A filtered log is not evidence.** #177 sent a ticket into "investigation-required" for three days on the strength of a network panel filtered to failing rows. One unfiltered capture refuted the whole premise. Apply: when an issue reports an *asymmetry*, confirm the log wasn't filtered before theorising about the cause.
+- **Verify the test harness does what it claims.** `test.use({ reducedMotion })` is a silent no-op in Playwright 1.61.0 — the control experiment (`colorScheme` in the same block) is what proved it. Apply: when a test option is load-bearing for a DoD, assert the option actually took effect.
+- **Distillation due next close** — the dated session-lesson blocks are at 2; fold the oldest into the standing `## Lessons / gotchas` list when they reach 4.
+
+**— previous session —**
+
 Last updated: 2026-07-31 (session 2). **Post-v2 WAVE 13 COMPLETE — S59 + S62 merged triple-green, dispatched two-wide in parallel worktrees.** Shipped: **S59** (#169 → `e07b6d7`) tab bar fits every screen — `TabBar.tsx` buttons went fluid (`px-[clamp(6px,2.5vw,20px)]` / `text-[clamp(11px,1.75vw,14px)]`, track `w-max max-w-full`), both clamps saturating at **800px** so ≥841px is pixel-identical to S58; measured in real Chromium at 320/360/390/1280px · **S62** (#170 → `84203c2`, closes **#155**) `GitTransport.loadGit()` now does its synchronous `if (!url)` check **above** the dynamic `import()`, so the unconfigured path never loads isomorphic-git/lightning-fs; every `import.meta.env.VITE_VAULT_REPO_URL` read is gone from `src/components/` (zero hits repo-wide outside `App.tsx`/`selfLoadTasks.ts`/`pat.ts`/`transport.ts`).
 
 **Both PRs needed a gate-caught revision before merge — the gates keep paying for themselves, do not shortcut them:**
@@ -198,7 +251,9 @@ Order of operations:
 Known follow-ups (non-blocking): the Pages deploy workflow's `actions/*@v4` run on a deprecated Node 20 (bump when convenient); the runtime PAT uses a `window.prompt` (fine for single-user; a small settings input is the obvious upgrade).
 
 ## Outstanding board state
-**74 done, 0 backlog, 0 in-progress, 0 ready — v2 COMPLETE + the entire post-v2 wave (S58–S62) shipped.** (v1 S1–S19 = 30 cards + v2 S20–S57 = 38 slices + `bug-136` + post-v2 S58/S59/S60/S61/S62.) v2 chains all complete: HomeView (S27→S28→S29→S32→S34→S37→S48→S50), VitalsRow (S26→S41→S45), AgentsView/Supervisor (S49→S53→S54, S55). **The board is empty — no ready, no in-flight, no backlog, and zero open issues or PRs.** #155 closed by S62; #158 by S61; #164/#165 by S60; #167/#168 by #172. The hub rebuilds its progress stats live from `kanban.html`'s `#board-data`. No deferred flips remain. `#board-data`'s `meta.note` still describes wave-12/13 dispatch rules — rewrite it when the next wave is loaded.
+**74 done, 0 backlog, 0 in-progress, 0 ready — v2 COMPLETE + the entire post-v2 wave (S58–S62) shipped.** (v1 S1–S19 = 30 cards + v2 S20–S57 = 38 slices + `bug-136` + post-v2 S58/S59/S60/S61/S62.) v2 chains all complete: HomeView (S27→S28→S29→S32→S34→S37→S48→S50), VitalsRow (S26→S41→S45), AgentsView/Supervisor (S49→S53→S54, S55). **The board carries no wave-14 cards yet** — deliberately: only 3 of 11 tickets exist (S63/S64/S66), so cards for the other 8 would be fiction. Add them as each ticket is authored. #155 closed by S62; #158 by S61; #164/#165 by S60; #167/#168 by #172. The hub rebuilds its progress stats live from `kanban.html`'s `#board-data`. No deferred flips remain. `#board-data`'s `meta.note` now carries the wave-14 lanes.
+
+**Open issues: 12 (#173–#184)** — the live-testing backlog. Wave 14 numbers them `S(N−110)`: S63/#173 · S64/#174 · S65/#175 · S66/#176 · **S67a**/#177 · S68/#178 · **S70/#180 (absorbs #179)** · S71/#181 · S72/#182 · S73/#183. #175 is a one-line deletion needing no ticket. #184 (write amplification on page load) is post-S66 work. See the head banner for lanes and authoring pairs.
 
 ## Architecture (decided — do not re-litigate)
 - **Stack:** Vite + React + TS, Tailwind, Framer Motion, Dexie/IndexedDB (PWA); Node/TS long-poll worker (bot). ADR-0001.

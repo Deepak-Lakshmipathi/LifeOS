@@ -194,8 +194,8 @@
 {
  "meta": {
   "project": "LifeOS",
-  "updated": "2026-07-30",
-  "note": "v1 (S1-S19) + v2 (S20-S57) DONE — 69 cards in done. POST-V2 wave loaded: 5 cards (S58-S62) from owner feedback (Post V2 User FeedBack, Features, Updates, Fixes.md) + issues #158/#155; tickets in docs/slices/. DISPATCH RULES: Wave 12 = S58 · S60 · S61 fully parallel (disjoint write-sets). Wave 13 = S59 (TabBar.tsx, after S58) · S62 (transport.ts, after S61). Hotspots: App.tsx+TabBar.tsx = S58 only; transport.ts = S61 then S62; Aurora.tsx+VitalsRow.tsx = S60. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
+  "updated": "2026-08-03",
+  "note": "v1 (S1-S19) + v2 (S20-S57) + post-v2 wave (S58-S62) DONE — 74 cards in done. WAVE 14 TRIAGED, NOT YET CARDED: 11 issues (#173-#183) from the 2026-07-31/08-01 live-testing session, numbered S(N-110). Only 3 tickets exist so far — S63/#173, S64/#174, S66/#176 in docs/slices/; the other 8 are unwritten, which is why this board shows 0 ready. Add a card as each ticket is authored. AUTHORING BRIEF: docs/slices/_GRILL_BRIEF.md — read its TRIAGE RULING section first, it supersedes the salvaged grounding above it. RULINGS: #179 folds into #180 (one ticket S70); #177 splits into S67a (staleness surface) + S67b (401, CLOSED — refuted by live capture); #175 is a one-line deletion needing no ticket; #184 (write amplification on page load) is post-S66. LANES (strictly serial within a lane): App.tsx = S63 -> S70 -> S71 -> S73 -> S67a; useTasks.ts = S64 -> S68 -> S72; transport.ts = S66 -> S67a; HomeView.tsx = S70 -> S71 -> S73; UndoToast.tsx = S68 -> S72. S71 (#181) MUST land before S73 (#183) — S73 relocates the exact lines S71 edits. S71 still needs a <=1h spike to produce a RED test before its ticket may be authored. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
  },
  "columns": [
   {

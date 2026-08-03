@@ -1,0 +1,61 @@
+{
+  "runs": [
+    {
+      "date": "2026-06-23T07:59:44.330839+00:00",
+      "input_tokens": 106508,
+      "output_tokens": 18794,
+      "files": 64
+    },
+    {
+      "date": "2026-06-29T07:05:18.626320+00:00",
+      "input_tokens": 91130,
+      "output_tokens": 4000,
+      "files": 31
+    },
+    {
+      "date": "2026-06-29T16:05:43.933931+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 10
+    },
+    {
+      "date": "2026-07-01T09:02:23.582697+00:00",
+      "input_tokens": 51537,
+      "output_tokens": 2000,
+      "files": 42
+    },
+    {
+      "date": "2026-07-21T15:17:35.024506+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 222,
+      "note": "incremental --update: v1→v2 catch-up, 4 semantic subagents"
+    },
+    {
+      "date": "2026-07-22T04:13:12.517845+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 51
+    },
+    {
+      "date": "2026-07-22T12:57:27.663861+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 25
+    },
+    {
+      "date": "2026-07-23T08:19:48.154566+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 23
+    },
+    {
+      "date": "2026-07-31T03:55:43.065810+00:00",
+      "input_tokens": 130000,
+      "output_tokens": 16000,
+      "files": 32
+    }
+  ],
+  "total_input_tokens": 379175,
+  "total_output_tokens": 40794
+}
