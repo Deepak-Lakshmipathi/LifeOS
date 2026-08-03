@@ -41,9 +41,21 @@ const TAB_STATIC = { initial: false, animate: { opacity: 1, y: 0 }, transition: 
  * only its own file and never this one.
  *
  * S58 folded the old Domains/Pulse top-level tabs into the new Tasks tab
- * (`TasksView`, which owns their imports + a `Segmented` sub-nav) and is now
- * the sole post-v2 toucher of this file — no other card may edit it (S24
- * held that role for v2; the rule transfers here for whatever comes next).
+ * (`TasksView`, which owns their imports + a `Segmented` sub-nav).
+ *
+ * OWNERSHIP (wave 14, 2026-08-01 — supersedes S58's sole-toucher clause).
+ * The single-owner rule was a serialization guard, not a design constraint;
+ * three wave-14 slices must edit this file, so it is retired in favour of an
+ * explicit order. This file is a HOTSPOT: edit it only from a slice listed
+ * here, and rebase on the prior one rather than editing in parallel.
+ *   1. S63 (#173) — removes the shell's `AnimatePresence mode="wait"`; its
+ *      presence-acknowledgement protocol is what blanks the app when a tab
+ *      panel joins it implicitly (via `exit` OR `layout`/`layoutId`).
+ *   2. S70 (#180) — lifts cockpit mode state so Header and HomeView stop
+ *      holding separate `useTimeOfDay` instances. Rebase on S63.
+ *   3. S73 (#183) — threads `onAdd` to `TasksView` when capture moves off
+ *      Home. Rebase on whatever landed before it.
+ * Add the next slice to this list rather than deleting the rule.
  */
 export default function App() {
   const { tasks, loading, error, refresh, addTask, updateTask, toggleDone, deleteTask } = useTasks(provider)
