@@ -1,0 +1,43 @@
+{
+  "run": "wave-14 slices S63 + S64",
+  "date": "2026-08-04",
+  "mode": "auto, resumed at P5 (tickets pre-authored; P0 dedupe found issues + tickets already present)",
+  "slices": [
+    {
+      "id": "S63",
+      "issue": 173,
+      "pr": 185,
+      "merge_commit": "cbb59d3",
+      "model": "opus",
+      "implementer_attempts": 1,
+      "review_rejects": 0,
+      "eval_verdict": "PASS",
+      "ci_flake_reruns": 0,
+      "fallbacks_fired": 0,
+      "human_gates": ["exit-cut visual (ticket Human decision 2) — owner approved live before merge"],
+      "notes": "Human decision 1 (App.tsx ownership) was already retired at App.tsx:46-58 before dispatch. Removed AnimatePresence mode=wait from the shell; ADR-0015 added."
+    },
+    {
+      "id": "S64",
+      "issue": 174,
+      "pr": 187,
+      "merge_commit": "00e5dbf",
+      "model": "sonnet",
+      "implementer_attempts": 1,
+      "review_rejects": 0,
+      "eval_verdict": "FAIL then resolved (DoD #4 real gap fixed inline; DoD #14 stale CI sample)",
+      "ci_flake_reruns": 1,
+      "flake_fingerprint": "pwa-e2e offline-persistence, pwa.spec.ts:90 getByText('emu-test') 8000ms — 3rd recorded occurrence",
+      "fallbacks_fired": 1,
+      "fallback_detail": "orchestrator implemented inline twice: the XOR latch correction (owner ruling) and the missing deleteTask tests (f)/(f2)",
+      "human_gates": ["DoD #7 latch model — owner ruled XOR over sticky; ticket amended in 752b5f6"],
+      "notes": "Ticket contradiction found by a dispatcher-written probe, not by any gate. Issue #186 filed per Owner decision 4."
+    }
+  ],
+  "board_delta": "74 -> 76 done",
+  "issues_closed": [173, 174],
+  "issues_filed": [186],
+  "subagents_used": 5,
+  "subagent_cap": 2,
+  "cap_respected": true
+}
