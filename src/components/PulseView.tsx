@@ -61,11 +61,11 @@ export function PulseView({ tasks }: PulseViewProps) {
   )
 
   return (
+    // Enter-only, and no `key` — same unowned obligation as DomainsMap
+    // (S63/#173, ADR-0015). Do not "restore" either one.
     <motion.div
-      key="pulse"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       className="flex flex-col gap-4 px-4 pt-4"
     >

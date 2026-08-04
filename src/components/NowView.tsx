@@ -67,11 +67,13 @@ export function NowView({ tasks, onToggle, onDelete, onUpdate, projects, hideLiv
   return (
     <>
       {ranked.length === 0 ? (
+        // Enter-only, and no `key` — this ternary has no presence ancestor of
+        // its own, so the same unowned obligation as DomainsMap/PulseView
+        // (S63/#173, ADR-0015). The three real presence blocks further down
+        // this file are well-formed and are deliberately left alone.
         <motion.div
-          key="now-empty"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
           className="flex flex-col items-center justify-center py-20 px-8 text-center"
         >

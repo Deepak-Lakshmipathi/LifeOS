@@ -141,6 +141,85 @@ test('Domains sub-nav renders one warmth tile per domain after seed import', asy
 })
 
 // ---------------------------------------------------------------------------
+// 5b. Domains sub-nav does not trap main-nav navigation (Slice S63, closes
+//     #173). Acceptance evidence that a real browser is fixed — NOT the DoD
+//     anchor for the bug. This red is real but incidental: it depends on seed
+//     size, seed timing and self-loader latency, none of which are stated
+//     invariants, so any of them shifting would turn it green with the defect
+//     still present. The invariant itself is pinned deterministically in
+//     src/test/shellNavigation.test.tsx (Test A).
+//
+//     Uses the seeded `/` + `serviceWorker.ready` idiom of case 5 above: the
+//     107-row seed is exactly what made #173 reproduce.
+// ---------------------------------------------------------------------------
+test.describe('S63 — nav exit trap', () => {
+  // Pinned, not merely inherited. Headless Chromium was measured reporting
+  // `prefers-reduced-motion: no-preference` (Chrome 149, Desktop Chrome), so
+  // this is today's default — but it is an unpinned dependency on Playwright's
+  // device profile, the Chromium build and runner OS settings. This whole bug
+  // class exists ONLY on the motion branch (TAB_STATIC has never declared a
+  // leaving state), so a silent flip to `reduce` would convert this into a
+  // permanently-green vacuous test, undetectably. One line removes the class.
+  test.use({ reducedMotion: 'no-preference' })
+
+  test('leaving the Domains sub-tab for a main tab unmounts it completely', async ({ page }) => {
+    await page.goto('/')
+    await page.evaluate(() => navigator.serviceWorker.ready)
+
+    const tiles = page.locator('[data-testid="domain-tile"]')
+
+    // Get into the trapping state: Tasks → Domains, with the seed loaded.
+    await page.getByRole('button', { name: 'Tasks' }).click()
+    await page.getByRole('tab', { name: 'Domains' }).click()
+    await expect(tiles.first()).toBeVisible({ timeout: 10000 })
+    await expect(tiles).toHaveCount(7)
+
+    // Navigate to a main tab. Pre-S63 the nav pill moved and `aria-current`
+    // followed, but the incoming panel never mounted.
+    await page.getByRole('button', { name: 'Home' }).click()
+    await expect(page.getByRole('button', { name: 'Home' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+
+    // 1. The outgoing panel is gone from the DOM — not merely faded out.
+    await expect(tiles).toHaveCount(0)
+
+    // 2. And nothing invisible-but-clickable is left behind. #173 was not a
+    //    cosmetic blank: the stale panel sat at `opacity: 0` and
+    //    `document.elementFromPoint()` still resolved into the domain tiles.
+    //    Real hit-testing is the whole point of asserting this in Chromium —
+    //    jsdom has none and would hand back a vacuous pass.
+    const hit = await page.evaluate(() => {
+      const main = document.querySelector('main')
+      if (!main) return { probed: false, reason: 'no <main>', insideTile: null }
+      const box = main.getBoundingClientRect()
+      // Clamp the probe to main's visible slice: elementFromPoint takes
+      // VIEWPORT coordinates, and main's true centre can sit below the fold on
+      // a seeded Home, where it would return null and pass vacuously.
+      const top = Math.max(box.top, 0)
+      const bottom = Math.min(box.bottom, window.innerHeight)
+      const left = Math.max(box.left, 0)
+      const right = Math.min(box.right, window.innerWidth)
+      if (bottom <= top || right <= left) {
+        return { probed: false, reason: 'main not in viewport', insideTile: null }
+      }
+      const el = document.elementFromPoint((left + right) / 2, (top + bottom) / 2)
+      if (!el) return { probed: false, reason: 'elementFromPoint returned null', insideTile: null }
+      return {
+        probed: true,
+        reason: '',
+        insideTile: el.closest('[data-testid="domain-tile"]') !== null,
+      }
+    })
+    // The probe must have actually landed on something, or the check below
+    // asserts nothing at all.
+    expect(hit.probed, `hit-test probe did not run: ${hit.reason}`).toBe(true)
+    expect(hit.insideTile).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 6. Tab bar fits every width without clipping (Slice S59, DoD 1) — the real
 //    computed-layout check. TabBar.test.tsx guards the same property with a
 //    box model in jsdom (which has no layout engine and drops clamp() from its
