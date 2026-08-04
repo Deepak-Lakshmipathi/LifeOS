@@ -54,6 +54,13 @@
       "input_tokens": 130000,
       "output_tokens": 16000,
       "files": 32
+    },
+    {
+      "date": "2026-08-04T13:05:02.604648+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 354,
+      "note": "full rebuild, 7 subagents, tokens tracked in session not chunk files"
     }
   ],
   "total_input_tokens": 379175,
