@@ -1,0 +1,281 @@
+/**
+ * S64 (#174) — optimistic task writes.
+ *
+ * Root cause on master: every write path in useTasks.ts does
+ * `await provider.X(...)` then `await refresh()` — two serialized round
+ * trips before React ever sees a state change. VaultSync already IS the
+ * cache (it returns the persisted Task and updates its own snapshot), so
+ * the re-read buys nothing; it just sits in the user-visible latency path.
+ *
+ * Anti-vacuity harness rule (the #120 lesson, restated by S64's ticket):
+ * clicks are driven with the SYNCHRONOUS `act(() => { void promise })`,
+ * never `await act(async () => ...)`. The async form drains microtasks and
+ * would let a master-shaped implementation reach its `setTasks`, passing
+ * the test for the wrong reason. Every assertion that must hold BEFORE the
+ * provider settles is therefore taken immediately after a sync `act`, with
+ * no `await` in between.
+ */
+import { describe, it, expect, vi } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useTasks } from '../hooks/useTasks'
+import type { SyncProvider } from '../sync/SyncProvider'
+import type { Task } from '../types'
+
+// ─── deferred<T>() — load-bearing mock shape ───────────────────────────────
+// Exposes isSettled() so test (a) can mechanically prove an assertion is
+// taken pre-settle rather than relying on timing.
+
+function deferred<T>() {
+  let resolveFn!: (v: T) => void
+  let rejectFn!: (e: unknown) => void
+  let settled = false
+  const promise = new Promise<T>((res, rej) => {
+    resolveFn = (v: T) => {
+      settled = true
+      res(v)
+    }
+    rejectFn = (e: unknown) => {
+      settled = true
+      rej(e)
+    }
+  })
+  return {
+    promise,
+    resolve: resolveFn,
+    reject: rejectFn,
+    isSettled: () => settled,
+  }
+}
+
+// ─── fixtures ───────────────────────────────────────────────────────────────
+// Distinct created_at and domain so newest-first ordering and rollback
+// scoping are both observable.
+
+const A: Task = { id: 'a', title: 'Task A', done: false, created_at: 2000, domain: 'Growth' }
+const B: Task = { id: 'b', title: 'Task B', done: false, created_at: 1000, domain: 'Career' }
+
+// ─── provider mock ──────────────────────────────────────────────────────────
+// `list` resolves via a controllable deferred (mount, or a manually-held
+// stale call). `toggleDone` hands back a fresh per-call deferred so a
+// caller can resolve/reject a specific call (e.g. the follow-up call
+// issued by the deferred-inversion latch) independently of earlier ones.
+
+function makeDeferredProvider() {
+  const listDeferred = deferred<Task[]>()
+  const list = vi.fn(() => listDeferred.promise)
+
+  const calls: Array<{ id: string; d: ReturnType<typeof deferred<Task>> }> = []
+  const toggleDone = vi.fn((id: string) => {
+    const d = deferred<Task>()
+    calls.push({ id, d })
+    return d.promise
+  })
+
+  const provider = { list, toggleDone } as unknown as SyncProvider
+
+  return {
+    provider,
+    list,
+    toggleDone,
+    listDeferred,
+    /** The deferred for the nth (0-based) toggleDone(id) call. */
+    callFor: (id: string, n = 0) => calls.filter((c) => c.id === id)[n]!.d,
+  }
+}
+
+async function mountWith(provider: SyncProvider, listDeferred: ReturnType<typeof deferred<Task[]>>) {
+  const rendered = renderHook(() => useTasks(provider))
+  await act(async () => {
+    listDeferred.resolve([A, B])
+  })
+  return rendered
+}
+
+describe('useTasks optimistic writes (S64, #174)', () => {
+  it('(a) optimistic flip is visible before the provider settles, and no re-read happens on the write path', async () => {
+    const { provider, list, listDeferred, callFor } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    // Drive the click SYNCHRONOUSLY — never `await act(async () => ...)`.
+    act(() => {
+      void result.current.toggleDone('a').catch(() => {})
+    })
+
+    const tgl0 = callFor('a', 0)
+    // Red-first check: prove this assertion is genuinely pre-settle.
+    expect(tgl0.isSettled()).toBe(false)
+
+    const flipped = result.current.tasks.find((t) => t.id === 'a')!
+    expect(flipped.done).toBe(true)
+    expect(flipped.completed_at).toEqual(expect.any(Number))
+
+    await act(async () => {
+      tgl0.resolve({ ...A, done: true, completed_at: 999 })
+    })
+
+    expect(result.current.tasks.find((t) => t.id === 'a')!.completed_at).toBe(999)
+    // Pins "no re-read on the write path": list() was called at mount only.
+    expect(list).toHaveBeenCalledTimes(1)
+  })
+
+  it('(b) rollback on write failure is scoped to the failing id only — control task b', async () => {
+    const { provider, listDeferred, callFor } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    act(() => {
+      void result.current.toggleDone('a').catch(() => {})
+      void result.current.toggleDone('b').catch(() => {})
+    })
+
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+    expect(result.current.tasks.find((t) => t.id === 'b')!.done).toBe(true)
+
+    const tglA = callFor('a', 0)
+    const tglB = callFor('b', 0)
+    await act(async () => {
+      tglA.reject(new Error('write failed'))
+      tglB.resolve({ ...B, done: true, completed_at: 555 })
+    })
+
+    const a = result.current.tasks.find((t) => t.id === 'a')!
+    const b = result.current.tasks.find((t) => t.id === 'b')!
+    expect(a.done).toBe(false)
+    expect(a.completed_at).toBeUndefined()
+    // The control: b's success proves the machinery genuinely ran and that
+    // a's rollback was scoped to a alone, not a whole-list restore.
+    expect(b.done).toBe(true)
+    expect(b.completed_at).toBe(555)
+  })
+
+  it('(c) a committed write survives a later list() rejection', async () => {
+    const { provider, listDeferred, callFor, list } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    act(() => {
+      void result.current.toggleDone('a').catch(() => {})
+    })
+    const tglA = callFor('a', 0)
+    await act(async () => {
+      tglA.resolve({ ...A, done: true, completed_at: 999 })
+    })
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+
+    list.mockRejectedValueOnce(
+      new Error('vault pull failed and local commits are unpushed; refusing to wipe'),
+    )
+    await act(async () => {
+      await result.current.refresh().catch(() => {})
+    })
+
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+    expect(result.current.tasks).toHaveLength(2)
+    expect(result.current.error).toBeNull()
+  })
+
+  it('(d) refresh() discards a late-resolving list() that predates a settled toggle (stale-list clobber guard)', async () => {
+    const { provider, listDeferred, callFor, list } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    // A second, slow list() call races the toggle below — the shape of the
+    // seedIfEmpty().then(refresh) race at App.tsx:67-71. Hold it pending.
+    const staleList = deferred<Task[]>()
+    list.mockReturnValueOnce(staleList.promise)
+    let refreshDone!: Promise<void>
+    act(() => {
+      refreshDone = result.current.refresh()
+    })
+
+    act(() => {
+      void result.current.toggleDone('a').catch(() => {})
+    })
+    const tglA = callFor('a', 0)
+    await act(async () => {
+      tglA.resolve({ ...A, done: true, completed_at: 999 })
+    })
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+
+    // The late list() resolves with PRE-toggle data — must be discarded,
+    // not applied on top of the settled toggle.
+    await act(async () => {
+      staleList.resolve([A, B])
+      await refreshDone
+    })
+
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+  })
+
+  it('(e) a second toggleDone while in flight defers instead of double-calling the provider', async () => {
+    const { provider, listDeferred, callFor, toggleDone } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    let p2!: Promise<void>
+    act(() => {
+      void result.current.toggleDone('a').catch(() => {})
+      p2 = result.current.toggleDone('a')
+    })
+
+    expect(toggleDone).toHaveBeenCalledTimes(1)
+    // The deferred flip is visible pre-settle — the discriminator between a
+    // deferred inversion and both a dropped no-op and an eager double-write.
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(false)
+    // Neither call threw (the guard returns, it does not throw — MissionCard
+    // awaits onToggle uncaught).
+    await expect(p2).resolves.toBeUndefined()
+
+    const tgl0 = callFor('a', 0)
+    await act(async () => {
+      tgl0.resolve({ ...A, done: true, completed_at: 999 })
+    })
+
+    expect(toggleDone).toHaveBeenCalledTimes(2)
+    expect(toggleDone.mock.calls[1]![0]).toBe('a')
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(false)
+  })
+
+  it('(e2) three synchronous toggles still collapse to exactly one follow-up call', async () => {
+    const { provider, listDeferred, callFor, toggleDone } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    act(() => {
+      void result.current.toggleDone('a').catch(() => {})
+      void result.current.toggleDone('a').catch(() => {})
+      void result.current.toggleDone('a').catch(() => {})
+    })
+
+    expect(toggleDone).toHaveBeenCalledTimes(1)
+
+    const tgl0 = callFor('a', 0)
+    await act(async () => {
+      tgl0.resolve({ ...A, done: true, completed_at: 999 })
+    })
+
+    expect(toggleDone).toHaveBeenCalledTimes(2)
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+  })
+
+  it('(e3) a rejected first op with the bit set issues no follow-up and still rejects the first caller', async () => {
+    const { provider, listDeferred, callFor, toggleDone } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    let p1!: Promise<void>
+    act(() => {
+      p1 = result.current.toggleDone('a')
+      void result.current.toggleDone('a').catch(() => {})
+    })
+
+    let rejected = false
+    p1.catch(() => {
+      rejected = true
+    })
+
+    const tgl0 = callFor('a', 0)
+    await act(async () => {
+      tgl0.reject(new Error('write failed'))
+      await p1.catch(() => {})
+    })
+
+    expect(toggleDone).toHaveBeenCalledTimes(1)
+    expect(rejected).toBe(true)
+    expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(false)
+  })
+})
