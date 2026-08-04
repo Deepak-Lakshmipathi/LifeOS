@@ -100,11 +100,13 @@ export function DomainsMap({ tasks }: DomainsMapProps) {
   const warmth = computeWarmth(tasks, Date.now())
 
   return (
+    // Enter-only, and no `key`: TasksView renders this from a bare conditional
+    // with no presence ancestor, so a leaving state here could never run as
+    // intended — it could only register an acknowledgement obligation nothing
+    // would ever discharge (S63/#173, ADR-0015). Do not "restore" either one.
     <motion.div
-      key="domains-map"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       className="px-4 pt-4 pb-6"
     >
