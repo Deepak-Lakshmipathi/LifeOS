@@ -202,7 +202,9 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
 4. `deleteTask` removes the task synchronously before its first `await`, and on write failure re-inserts it in newest-first order — proven by tests.
 5. A failed write rolls back **only the affected id**: test (b) asserts a concurrently-successful sibling task keeps its new `done: true` and `completed_at: 555` after the other task's write rejects.
 6. `toggleDone` and `deleteTask` still **reject** on write failure (the rethrow is present in the diff) — S72 depends on this signal.
-7. **Deferred inversion (amended 2026-08-03 by S72's design pass, OWNER SANCTIONED the same day — this replaces the earlier "silent no-op" wording).** A second `toggleDone(id)` for an id already in flight does **not** call the provider a second time while the first op is un-settled, does **not** throw, and **applies its optimistic flip synchronously before returning** (same contract as #3 — otherwise Undo is a dead click for the length of the settle window). It records a deferred inversion: a one-bit-per-id latch `owedRef: Set<string>`, where a further deferred call for the same id **clears** the bit rather than adding a second. On **successful** settle of the first op: if the bit is set, the hook **skips reconciling** the provider's returned `Task` (the row already shows the inverted state; reconciling would visibly bounce), clears the bit, and — after `inFlightRef.current.delete(id)`, and only while `mountedRef.current` — issues **exactly one** follow-up `provider.toggleDone(id)` **with no further optimistic apply**; if the bit is clear it reconciles normally. On **failed** settle: the bit is cleared and **no** follow-up is issued; the row rolls back to its captured pre-click value (which, for a completed-then-undone row, is already what the UI shows) and the rejection still propagates to the first caller. A follow-up call that itself fails rolls that id back to its pre-follow-up state and `console.error`s; it has no user-visible surface (S68's channel). **Invariant preserved: at most one un-settled provider op per id.** This is a latch, **not** a queue — one bit, never a list of operations. Proven by tests (e), (e2), (e3).
+7. **Deferred inversion (amended 2026-08-03 by S72's design pass, OWNER SANCTIONED the same day — this replaces the earlier "silent no-op" wording).** A second `toggleDone(id)` for an id already in flight does **not** call the provider a second time while the first op is un-settled, does **not** throw, and **applies its optimistic flip synchronously before returning** (same contract as #3 — otherwise Undo is a dead click for the length of the settle window). It records a deferred inversion: a one-bit-per-id latch `owedRef: Set<string>`, where a further deferred call for the same id **clears** the bit rather than adding a second. On **successful** settle of the first op: if the bit is set, the hook **skips reconciling** the provider's returned `Task` (the row already shows the inverted state; reconciling would visibly bounce), clears the bit, and — after `inFlightRef.current.delete(id)`, and only while `mountedRef.current` — issues **exactly one** follow-up `provider.toggleDone(id)` **with no further optimistic apply**; if the bit is clear it reconciles normally. On **failed** settle: the bit is cleared and **no** follow-up is issued; the row rolls back to its captured pre-click value (which, for a completed-then-undone row, is already what the UI shows) and the rejection still propagates to the first caller. A follow-up call that itself fails rolls that id back to its pre-follow-up state and `console.error`s; it has no user-visible surface (S68's channel). **Invariant preserved: at most one un-settled provider op per id.** This is a latch, **not** a queue — one bit, never a list of operations. Proven by tests (e), (e2), (e3), (e4).
+
+**XOR re-confirmed by the owner 2026-08-04.** The prose above ("a further deferred call for the same id **clears** the bit") is the binding model and is semantically correct; test (e2)'s original "exactly twice" contradicted it and has been amended to **exactly once** (see Tests). Read the bit as *"the row is inverted relative to what the in-flight op will leave on the server"* — two deferred flips cancel and owe nothing. The rejected alternative (sticky: any deferred call sets the bit) passes (e), (e2)-as-originally-written and (e3), yet issues a follow-up for an **even** number of deferred flips, so three rapid taps on a not-done row settle back to `done === false` with a visible bounce. Test (e4) exists to make that failure observable.
 8. Every `commit(...)` call reachable after an `await` is preceded by `if (!mountedRef.current) return` (grep the diff; there are exactly five such call sites after this change, up from two). `inFlightRef.current.delete(id)` stays in `finally`, outside that guard. `src/test/useTasksUnmount.test.tsx` still passes unmodified.
 9. `refresh()` discards a `list()` result when `localVersionRef` moved during the await **or** `inFlightRef` is non-empty — test (d) asserts a late-resolving mount `list()` carrying pre-toggle data does not revert a settled toggle.
 10. `setError` is called in exactly one place (the initial-load effect) — unchanged from `master`; `setError(null)` still appears nowhere. `grep -c "setError" src/hooks/useTasks.ts` returns the same count as on `master`.
@@ -280,7 +282,24 @@ unconditionally.
 first op and assert `provider.toggleDone` called **exactly twice**, its second
 argument was `'a'`, and `done === false`.
 **(e2)** Three synchronous calls → after settle, `provider.toggleDone` called
-**exactly twice** and `done === true`.
+**exactly once** and `done === true`. **(Amended 2026-08-04 — this said "exactly
+twice", which contradicted DoD #7's own prose and was the wrong number.** XOR
+means click 2 sets the bit and click 3 clears it, so the two deferred flips
+cancel: the in-flight op's result is already correct, it reconciles normally,
+and no follow-up is owed. Three taps on a not-done row are a net single toggle
+and must settle `done === true` on **both** sides. The "twice" reading forces a
+sticky latch, which performs two server toggles for three taps and lands the row
+back on `done === false` after a visible bounce.)
+
+**(e4) Convergence — the blind-spot closer.** (e)/(e2)/(e3) all stop at the
+**first** op's settle, so none of them observes where the row lands once a
+follow-up also resolves. A sticky latch passes all three while being wrong.
+Drive N synchronous clicks against a **stateful** provider (each `toggleDone`
+flips real server-side truth and returns it), settle every call including any
+follow-up, then assert UI and server both equal net click parity:
+**2 clicks → `false` via 2 calls; 3 clicks → `true` via 1 call.**
+*Red against a sticky latch* on the 3-click case specifically. Do not ship the
+latch without this test — the other three cannot see the defect.
 **(e3)** The first op **rejects** with the bit set → `provider.toggleDone` called
 **exactly once** in total (no follow-up), `done === false`, and the rejection
 still propagates to the first caller.
