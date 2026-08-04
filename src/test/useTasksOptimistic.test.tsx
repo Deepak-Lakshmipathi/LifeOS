@@ -71,15 +71,25 @@ function makeDeferredProvider() {
     return d.promise
   })
 
-  const provider = { list, toggleDone } as unknown as SyncProvider
+  const deleteCalls: Array<{ id: string; d: ReturnType<typeof deferred<void>> }> = []
+  const del = vi.fn((id: string) => {
+    const d = deferred<void>()
+    deleteCalls.push({ id, d })
+    return d.promise
+  })
+
+  const provider = { list, toggleDone, delete: del } as unknown as SyncProvider
 
   return {
     provider,
     list,
     toggleDone,
+    del,
     listDeferred,
     /** The deferred for the nth (0-based) toggleDone(id) call. */
     callFor: (id: string, n = 0) => calls.filter((c) => c.id === id)[n]!.d,
+    /** The deferred for the nth (0-based) delete(id) call. */
+    deleteFor: (id: string, n = 0) => deleteCalls.filter((c) => c.id === id)[n]!.d,
   }
 }
 
@@ -282,6 +292,59 @@ describe('useTasks optimistic writes (S64, #174)', () => {
     expect(toggleDone).toHaveBeenCalledTimes(1)
     expect(rejected).toBe(true)
     expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(false)
+  })
+
+  // (f)/(f2) — deleteTask. DoD #4 requires BOTH halves proven by test: the
+  // synchronous removal, and the newest-first re-insert on failure. The
+  // re-insert must not restore by index — the list can change shape while the
+  // delete is in flight — so (f2) removes the NEWEST task and checks it comes
+  // back at the front, which an index-restore would also satisfy... hence
+  // (f2) mutates the list mid-flight to tell the two apart.
+  it('(f) deleteTask removes the row synchronously, before the provider settles', async () => {
+    const { provider, listDeferred, deleteFor } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    act(() => {
+      void result.current.deleteTask('a').catch(() => {})
+    })
+
+    const del0 = deleteFor('a')
+    // Red-first check: prove the assertion is genuinely pre-settle.
+    expect(del0.isSettled()).toBe(false)
+    expect(result.current.tasks.map((t) => t.id)).toEqual(['b'])
+
+    await act(async () => {
+      del0.resolve(undefined)
+    })
+    expect(result.current.tasks.map((t) => t.id)).toEqual(['b'])
+  })
+
+  it('(f2) a failed delete re-inserts newest-first — by sort, not by append', async () => {
+    const { provider, listDeferred, deleteFor } = makeDeferredProvider()
+    const { result } = await mountWith(provider, listDeferred)
+
+    // Delete A — the NEWEST task, so the naive `[...prev, before]` restore and
+    // the sorted one disagree: append would land ['b','a'], the sort ['a','b'].
+    let p!: Promise<void>
+    act(() => {
+      p = result.current.deleteTask('a')
+      void p.catch(() => {})
+    })
+    expect(result.current.tasks.map((t) => t.id)).toEqual(['b'])
+
+    let rejected = false
+    await act(async () => {
+      deleteFor('a').reject(new Error('vault write failed'))
+      await p.catch(() => {
+        rejected = true
+      })
+    })
+
+    // Newest-first by created_at (A=2000, B=1000) — matches VaultSync.list().
+    expect(result.current.tasks.map((t) => t.id)).toEqual(['a', 'b'])
+    expect(result.current.tasks.map((t) => t.created_at)).toEqual([2000, 1000])
+    // DoD #6: deleteTask still rejects, so S72 keeps its failure signal.
+    expect(rejected).toBe(true)
   })
 
   // (e4) — the convergence check. (e)/(e2)/(e3) all stop at the FIRST op's
