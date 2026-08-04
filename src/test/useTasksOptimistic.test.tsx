@@ -232,7 +232,7 @@ describe('useTasks optimistic writes (S64, #174)', () => {
     expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(false)
   })
 
-  it('(e2) three synchronous toggles still collapse to exactly one follow-up call', async () => {
+  it('(e2) three synchronous toggles cancel out to NO follow-up call (XOR latch)', async () => {
     const { provider, listDeferred, callFor, toggleDone } = makeDeferredProvider()
     const { result } = await mountWith(provider, listDeferred)
 
@@ -249,8 +249,13 @@ describe('useTasks optimistic writes (S64, #174)', () => {
       tgl0.resolve({ ...A, done: true, completed_at: 999 })
     })
 
-    expect(toggleDone).toHaveBeenCalledTimes(2)
+    // XOR: click 2 set the bit, click 3 cleared it. The two deferred flips
+    // cancel, so the in-flight op's own result is already the right answer —
+    // reconcile it and issue NO follow-up. Three taps from done=false are a
+    // net single toggle, and the server must land on done=true to match.
+    expect(toggleDone).toHaveBeenCalledTimes(1)
     expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(true)
+    expect(result.current.tasks.find((t) => t.id === 'a')!.completed_at).toBe(999)
   })
 
   it('(e3) a rejected first op with the bit set issues no follow-up and still rejects the first caller', async () => {
@@ -277,5 +282,57 @@ describe('useTasks optimistic writes (S64, #174)', () => {
     expect(toggleDone).toHaveBeenCalledTimes(1)
     expect(rejected).toBe(true)
     expect(result.current.tasks.find((t) => t.id === 'a')!.done).toBe(false)
+  })
+
+  // (e4) — the convergence check. (e)/(e2)/(e3) all stop at the FIRST op's
+  // settle, so none of them can see where the row finally lands once a
+  // follow-up also resolves. That blind spot hid a real defect: a sticky
+  // (non-XOR) latch passes (e), (e2) and (e3) while leaving three rapid taps
+  // on a not-done row settled back to not-done, with a visible bounce on the
+  // way. This provider is STATEFUL — each toggleDone flips server-side truth
+  // and returns it — so UI and server can be compared at rest.
+  it('(e4) UI and server converge on net click parity once every call settles', async () => {
+    const cases = [
+      { clicks: 2, expected: false, calls: 2 },
+      { clicks: 3, expected: true, calls: 1 },
+    ]
+
+    for (const { clicks, expected, calls } of cases) {
+      const listDeferred = deferred<Task[]>()
+      let server: Task = { ...A }
+      const pending: Array<() => void> = []
+      const toggleDone = vi.fn(() => {
+        const d = deferred<Task>()
+        pending.push(() => {
+          const completing = !server.done
+          server = { ...server, done: completing }
+          if (completing) server.completed_at = 999
+          else delete server.completed_at
+          d.resolve({ ...server })
+        })
+        return d.promise
+      })
+      const provider = { list: () => listDeferred.promise, toggleDone } as unknown as SyncProvider
+
+      const { result } = renderHook(() => useTasks(provider))
+      await act(async () => {
+        listDeferred.resolve([A])
+      })
+
+      act(() => {
+        for (let i = 0; i < clicks; i++) void result.current.toggleDone('a').catch(() => {})
+      })
+
+      // Settle every call, including any follow-up the latch issues.
+      for (let i = 0; i < pending.length; i++) {
+        await act(async () => {
+          pending[i]()
+        })
+      }
+
+      expect(toggleDone, `${clicks} clicks → provider calls`).toHaveBeenCalledTimes(calls)
+      expect(server.done, `${clicks} clicks → server`).toBe(expected)
+      expect(result.current.tasks.find((t) => t.id === 'a')!.done, `${clicks} clicks → UI`).toBe(expected)
+    }
   })
 })

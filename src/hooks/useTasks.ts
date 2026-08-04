@@ -79,12 +79,16 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   // alone isn't sufficient.
   const inFlightRef = useRef<Set<string>>(new Set())
 
-  // Deferred-inversion latch (DoD #7, amended 2026-08-03, owner-sanctioned).
+  // Deferred-inversion latch (DoD #7, amended 2026-08-03, owner-sanctioned;
+  // XOR semantics re-confirmed by the owner 2026-08-04).
   // One bit per id — never a queue of operations. A toggleDone(id) call
   // that lands while `id` is already in inFlightRef cannot call the
   // provider again (the in-flight invariant above), so it flips the row
-  // locally and records "a follow-up is owed"; the settle handler in
-  // toggleDone consumes the bit and issues exactly one follow-up call.
+  // locally and XORs the bit; the settle handler in toggleDone consumes it
+  // and issues at most one follow-up call. Set bit = the row is inverted
+  // relative to the in-flight op's outcome, so one more toggle is owed;
+  // clear bit = the deferred flips cancelled out and the server is already
+  // heading to the right value.
   const owedRef = useRef<Set<string>>(new Set())
 
   /**
@@ -187,7 +191,13 @@ export function useTasks(provider: SyncProvider): UseTasksResult {
   const toggleDone = useCallback(
     async (id: string): Promise<void> => {
       if (inFlightRef.current.has(id)) {
-        owedRef.current.add(id)
+        // XOR, not sticky: the bit means "the row's state is inverted
+        // relative to what the in-flight op will leave on the server", so a
+        // second deferred flip CLEARS it (the two cancel) rather than owing
+        // a second follow-up. Sticky would issue a follow-up for an even
+        // number of deferred flips and land the server on the wrong value —
+        // three rapid taps on a not-done row would settle back to not-done.
+        if (!owedRef.current.delete(id)) owedRef.current.add(id)
         const current = tasksRef.current.find((t) => t.id === id)
         if (current) {
           commit((prev) => replaceById(prev, id, flipDone(current)), true)
