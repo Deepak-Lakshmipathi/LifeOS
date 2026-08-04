@@ -195,7 +195,7 @@
  "meta": {
   "project": "LifeOS",
   "updated": "2026-08-03",
-  "note": "v1 (S1-S19) + v2 (S20-S57) + post-v2 wave (S58-S62) DONE — 74 cards in done. WAVE 14 TRIAGED, NOT YET CARDED: 11 issues (#173-#183) from the 2026-07-31/08-01 live-testing session, numbered S(N-110). Only 3 tickets exist so far — S63/#173, S64/#174, S66/#176 in docs/slices/; the other 8 are unwritten, which is why this board shows 0 ready. Add a card as each ticket is authored. AUTHORING BRIEF: docs/slices/_GRILL_BRIEF.md — read its TRIAGE RULING section first, it supersedes the salvaged grounding above it. RULINGS: #179 folds into #180 (one ticket S70); #177 splits into S67a (staleness surface) + S67b (401, CLOSED — refuted by live capture); #175 is a one-line deletion needing no ticket; #184 (write amplification on page load) is post-S66. LANES (strictly serial within a lane): App.tsx = S63 -> S70 -> S71 -> S73 -> S67a; useTasks.ts = S64 -> S68 -> S72; transport.ts = S66 -> S67a; HomeView.tsx = S70 -> S71 -> S73; UndoToast.tsx = S68 -> S72. S71 (#181) MUST land before S73 (#183) — S73 relocates the exact lines S71 edits. S71 still needs a <=1h spike to produce a RED test before its ticket may be authored. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
+  "note": "v1 (S1-S19) + v2 (S20-S57) + post-v2 wave (S58-S62) DONE — 74 cards in done. WAVE 14 IN PROGRESS: 12 issues (#173-#184) from the 2026-07-31/08-01 live-testing session, numbered S(N-110). FIVE tickets authored and carded: S63/#173, S64/#174, S66/#176, S68/#178, S72/#182 in docs/slices/. FOUR remain to author: S67a (#177 staleness surface), S70 (#180+#179), S73 (#183), and S71 (#181, needs its <=1h RED-test spike first). AUTHORING BRIEF: docs/slices/_GRILL_BRIEF.md — read its TRIAGE RULING section first, it supersedes the salvaged grounding above it. RULINGS: #179 folds into #180 (one ticket S70); #177 splits into S67a + S67b (401, CLOSED — refuted by live capture); #175 is a one-line deletion needing no ticket; #184 (write amplification on page load) is post-S66. LANES (strictly serial within a lane): App.tsx = S63 -> S70 -> S71 -> S73 -> S67a; useTasks.ts = S64 -> S68 -> S72; transport.ts = S66 -> S67a; HomeView.tsx = S70 -> S71 -> S73; UndoToast.tsx = S72 ONLY (amended 2026-08-03: S68 no longer touches it). S71 (#181) MUST land before S73 (#183) — S73 relocates the exact lines S71 edits. S64 was amended 2026-08-03 by S72's design pass and OWNER SANCTIONED the same day: DoD #7 is now a deferred-inversion latch and pendingIds is dropped — merge S64 from its amended ticket, not the original. No open human gates on S63/S64/S66/S68/S72; all five are dispatchable. Merge gate = triple-green incl. eval-subagent DoD check (docs/agents/afk-pipeline.md)."
  },
  "columns": [
   {
@@ -1068,6 +1068,55 @@
     "s61"
    ],
    "notes": "Post-v2 · Wave 13 · ticket: docs/slices/slice-S62-transport-config-seam.md (FULL context+subtasks+DoD there — hand the whole file to /afk-pipeline auto). Perf/architecture. Zero VITE_VAULT_REPO_URL reads left under src/components/. transport.ts hotspot: after S61. Merge gate: triple-green (CI + review + eval-vs-DoD, see docs/agents/afk-pipeline.md)."
+  },
+  {
+   "id": "s63",
+   "column": "ready",
+   "slice": "S63",
+   "issue": 173,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Wave 14 · ticket: slice-S63-nav-exit-trap.md · Domains/Pulse sub-tab traps nav (blank screen). Head of the App.tsx lane; owns the shell presence protocol + ADR-0015."
+  },
+  {
+   "id": "s64",
+   "column": "ready",
+   "slice": "S64",
+   "issue": 174,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Wave 14 · ticket: slice-S64-optimistic-task-writes.md · Drop refresh() from all four write paths, flip optimistically. FIRST in the useTasks.ts lane. Amended 2026-08-03: deferred-inversion latch (DoD #7), no pendingIds."
+  },
+  {
+   "id": "s66",
+   "column": "ready",
+   "slice": "S66",
+   "issue": 176,
+   "pr": null,
+   "blockedBy": [],
+   "notes": "Wave 14 · ticket: slice-S66-lightning-fs-lock-safety.md · Seven GitTransport/LightningFS owners on the read path -> 7 AbortErrors. Head of the transport.ts lane."
+  },
+  {
+   "id": "s68",
+   "column": "ready",
+   "slice": "S68",
+   "issue": 178,
+   "pr": null,
+   "blockedBy": [
+    "s64"
+   ],
+   "notes": "Wave 14 · ticket: slice-S68-surface-capture-write-failures.md · Capture-failure surface in CaptureSheet + refresh() catch. Rebases on S64's head; no App.tsx, no UndoToast."
+  },
+  {
+   "id": "s72",
+   "column": "ready",
+   "slice": "S72",
+   "issue": 182,
+   "pr": null,
+   "blockedBy": [
+    "s68"
+   ],
+   "notes": "Wave 14 · ticket: slice-S72-undo-window.md · Toast at click time, countdown from settle, DISMISS_MS 8000, retract on failure, AnimatePresence for MissionCard's toast. Last in the useTasks.ts + UndoToast.tsx lanes."
   }
  ]
 }

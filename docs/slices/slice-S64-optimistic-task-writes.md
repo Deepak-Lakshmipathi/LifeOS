@@ -40,7 +40,7 @@ Three findings that shape the design (all verified against `master`):
 2. **`VaultSync.list()` (`:134-190`) is NOT enqueued** — only mutations go
    through the FIFO queue (`enqueue`, `:116-121`). A `list()` and a write can
    therefore be in flight simultaneously and settle in either order. The
-   stale-list clobber is reachable on `master` today via `App.tsx:55-59`
+   stale-list clobber is reachable on `master` today via `App.tsx:67-71`
    (`seedIfEmpty(...).then(count => { if (count > 0) refresh() })`), and
    optimistic state widens the window because the user can now click at t≈0.
    A staleness guard is required; the FIFO queue is not sufficient.
@@ -48,7 +48,10 @@ Three findings that shape the design (all verified against `master`):
    so an optimistic add has no real id at click time. That is a different state
    machine (temp-id remapping + what happens if the user toggles/deletes a
    temp-id task first — the provider would throw `Task ${id} not found`,
-   `VaultSync.ts:346`). Deliberately deferred to S68/#178.
+   `VaultSync.ts:346`). Deferred out of this slice — and **S68 has since
+   declined it too** (`slice-S68` Non-goals): it would manufacture a new silent
+   divergence inside the ticket that exists to kill one. File it as its own
+   issue if add latency ever measures as painful.
 
 **Side effect worth stating: this already kills #178's stated root cause.**
 #178 is "`addTask` succeeds, `refresh()` rejects unhandled, task never
@@ -74,7 +77,7 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
 - **A pending/spinner/disabled affordance on the dot.** See Owner decisions.
 - **Multi-device freshness.** Dropping `refresh()` from write paths means the
   list refreshes only at mount. `refresh()`'s only non-write caller is the
-  one-shot seed effect (`App.tsx:55-59`); there is no focus/interval/visibility
+  one-shot seed effect (`App.tsx:67-71`); there is no focus/interval/visibility
   refresh anywhere, so the "writes pick up other devices' edits" behaviour was
   incidental, not designed. Accepted regression; if freshness is wanted it
   belongs in a deliberate refresh-on-visibility slice, not smuggled into the
@@ -107,7 +110,12 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
    affordance is the toast rather than the row, and a "completed but still
    displayed" third UI state would foreclose S72's undo-window design. If it
    feels wrong live, it belongs in S72 alongside `DISMISS_MS`.
-3. **A follow-up issue should be filed for the `selfLoadTasks` stale reader**
+3. **DoD #7 = deferred-inversion latch. OWNER SANCTIONED 2026-08-03.** The
+   original "second `toggleDone(id)` is a silent no-op" wording is superseded;
+   `owedRef` + the amended tests (e)/(e2)/(e3) are the contract to implement.
+   `pendingIds` is dropped with it (DoD #12). Do not re-decide either at
+   dispatch — merge from this amended ticket, never from its pre-amendment form.
+4. **A follow-up issue should be filed for the `selfLoadTasks` stale reader**
    (non-goal above). Suggested title: *"VitalsRow/Aurora read a permanently-
    memoized task list, so Completion + warmth never update after a write."*
    Not filed by this ticket. Insert its number into the negative DoD item
@@ -116,16 +124,21 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
 ## Write-set
 
 - MODIFY `src/hooks/useTasks.ts` — the entire fix; **no other source file changes.**
-  - ADD three refs: `tasksRef` (mirrors `tasks` synchronously so two writes in
+  - ADD four refs: `tasksRef` (mirrors `tasks` synchronously so two writes in
     the same tick both read fresh state), `localVersionRef` (bumped by every
     *local* task mutation — optimistic apply, reconcile, rollback — never by a
     server list commit), `inFlightRef: Set<string>` (invariant: at most one
-    un-settled op per id).
+    un-settled op per id), and `owedRef: Set<string>` — the
+    **deferred-inversion latch** (DoD #7): one bit per id, never a list of
+    operations. It is **not** a second mutation queue and does not duplicate
+    `VaultSync.enqueue`'s FIFO.
   - ADD one internal helper `commit(fn, local)` — the single mutation point for
     `tasks`; keeps `tasksRef` in lockstep, bumps `localVersionRef` when
     `local`, calls `setTasks`. Plus `replaceById(id, next | null)`. Never
     called during render (StrictMode-safe).
-  - `toggleDone` (`:77-87`) — in-flight guard → optimistic apply mirroring
+  - `toggleDone` (`:77-87`) — in-flight guard (**deferred inversion**, DoD #7:
+    apply the flip synchronously, toggle the `owedRef` bit, return without
+    calling the provider) → optimistic apply mirroring
     `VaultSync.ts:351-357` **exactly** (including `completed_at`, which
     `computeWarmth.ts:64-68` reads) → `await provider.toggleDone(id)` →
     reconcile with the returned `Task` → on throw, roll back that **one id** to
@@ -151,15 +164,20 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
     the counter leaves the counter unchanged, so the version check alone still
     lets a pre-write server list commit. Commit with `local: false`.
     **Do not add a catch** — that is S68's.
-  - ADD `pendingIds: ReadonlySet<string>` to `UseTasksResult` and the return
-    object. No UI reads it in this slice; it exists so S72 can gate Undo (see
-    Sequencing).
+  - **No `pendingIds` on `UseTasksResult`.** An earlier draft exposed it so S72
+    could gate the Undo button; S72's design ruled that out — the undo re-issue
+    is itself a `toggleDone(id)`, so a gate keyed on `pendingIds` would re-arm
+    itself after the user already dismissed via Undo, and the real question
+    ("has *this toast's* write settled") is per-toast, not per-id. The
+    deferred-inversion latch below removes the hazard at its source. Do not add
+    the field; it would be a public API with no consumer.
   - **`error` and `setError` are NOT touched.** `useTasks.ts:8-9` documents
     `error` as "set when the initial load failed" and `App.tsx` gates a
     full-screen error card on it; `setError(null)` exists nowhere in the
     codebase, so setting `error` from a failed toggle would replace the entire
     app with an unclearable error card until reload.
-- ADD `src/test/useTasksOptimistic.test.tsx` — five tests (below). Location
+- ADD `src/test/useTasksOptimistic.test.tsx` — the tests below ((a)-(e), plus
+  (e2)/(e3) from the amended DoD #7). Location
   matches convention: `src/test/useTasksUnmount.test.tsx` already holds the
   cross-cutting `useTasks` tests; `src/hooks/` holds only self-contained ones.
 
@@ -170,10 +188,11 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
 2. Rewrite `toggleDone`: guard → optimistic → reconcile → rollback → rethrow.
 3. Rewrite `deleteTask` the same way (optimistic removal, re-insert + re-sort).
 4. `addTask` / `updateTask`: drop `refresh()`, apply the returned `Task`.
-5. Add the `refresh()` staleness guard; add `pendingIds` to the result type.
+5. Add the `refresh()` staleness guard. Do NOT add `pendingIds` (DoD #12).
 6. Audit every `commit(...)` reachable after an `await` for the `mountedRef`
    guard (see DoD #8).
-7. Write the five tests; confirm each is red on `master` for the stated reason.
+7. Write the tests; confirm each is red on `master` for the stated reason, and
+   that (e)'s middle assertion is red against the earlier no-op design too.
 
 ## Definition of Done
 
@@ -183,12 +202,12 @@ on `master` it makes a *successful* write reject. S68 shrinks accordingly.
 4. `deleteTask` removes the task synchronously before its first `await`, and on write failure re-inserts it in newest-first order — proven by tests.
 5. A failed write rolls back **only the affected id**: test (b) asserts a concurrently-successful sibling task keeps its new `done: true` and `completed_at: 555` after the other task's write rejects.
 6. `toggleDone` and `deleteTask` still **reject** on write failure (the rethrow is present in the diff) — S72 depends on this signal.
-7. A second `toggleDone(id)` for an id already in flight is a no-op that does **not** call the provider a second time and does **not** throw — test (e) asserts `provider.toggleDone` called exactly once.
+7. **Deferred inversion (amended 2026-08-03 by S72's design pass, OWNER SANCTIONED the same day — this replaces the earlier "silent no-op" wording).** A second `toggleDone(id)` for an id already in flight does **not** call the provider a second time while the first op is un-settled, does **not** throw, and **applies its optimistic flip synchronously before returning** (same contract as #3 — otherwise Undo is a dead click for the length of the settle window). It records a deferred inversion: a one-bit-per-id latch `owedRef: Set<string>`, where a further deferred call for the same id **clears** the bit rather than adding a second. On **successful** settle of the first op: if the bit is set, the hook **skips reconciling** the provider's returned `Task` (the row already shows the inverted state; reconciling would visibly bounce), clears the bit, and — after `inFlightRef.current.delete(id)`, and only while `mountedRef.current` — issues **exactly one** follow-up `provider.toggleDone(id)` **with no further optimistic apply**; if the bit is clear it reconciles normally. On **failed** settle: the bit is cleared and **no** follow-up is issued; the row rolls back to its captured pre-click value (which, for a completed-then-undone row, is already what the UI shows) and the rejection still propagates to the first caller. A follow-up call that itself fails rolls that id back to its pre-follow-up state and `console.error`s; it has no user-visible surface (S68's channel). **Invariant preserved: at most one un-settled provider op per id.** This is a latch, **not** a queue — one bit, never a list of operations. Proven by tests (e), (e2), (e3).
 8. Every `commit(...)` call reachable after an `await` is preceded by `if (!mountedRef.current) return` (grep the diff; there are exactly five such call sites after this change, up from two). `inFlightRef.current.delete(id)` stays in `finally`, outside that guard. `src/test/useTasksUnmount.test.tsx` still passes unmodified.
 9. `refresh()` discards a `list()` result when `localVersionRef` moved during the await **or** `inFlightRef` is non-empty — test (d) asserts a late-resolving mount `list()` carrying pre-toggle data does not revert a settled toggle.
 10. `setError` is called in exactly one place (the initial-load effect) — unchanged from `master`; `setError(null)` still appears nowhere. `grep -c "setError" src/hooks/useTasks.ts` returns the same count as on `master`.
 11. **Negative criterion (out-of-scope detector):** given a task completed via the mission dot, the DAY REVIEW Completion counter is expected **NOT** to change without a reload. `src/sync/selfLoadTasks.ts` and `src/components/cockpit/VitalsRow.tsx` are absent from the diff. A change here means out-of-scope work was done and is a **FAIL**, not a pass.
-12. `UseTasksResult` exposes `pendingIds: ReadonlySet<string>`; no component reads it in this PR (`grep -rn "pendingIds" src/components/` returns nothing).
+12. `UseTasksResult` exposes **no** `pendingIds` (or any other per-id status set): `grep -rn "pendingIds" src/` returns nothing. The deferred-inversion latch (#7) is internal to the hook and is not part of the public result type.
 13. The diff touches exactly two files: `src/hooks/useTasks.ts` and the new `src/test/useTasksOptimistic.test.tsx`. No new modules, no new dependencies, no new design tokens, no call-site changes.
 14. `npm run build` + `npm test` green incl. `pwa-e2e`; issue #174 closed by the PR.
 
@@ -254,13 +273,27 @@ Assert `a.done` is still `true`.
 *Fails on `master`:* the late `setTasks(all)` at `:46` overwrites
 unconditionally.
 
-**(e) Double-click guard.** Two synchronous `toggleDone('a')` calls before
-settle. Assert `provider.toggleDone` called **once** and the second call
-returned without throwing.
-*Fails on `master`:* called twice. (This is the user-reported "click again,
-queue a second write" behaviour.) Note the guard must `return`, not `throw` —
-`MissionCard.tsx:75` awaits `onToggle` uncaught, so throwing would produce an
-unhandled rejection.
+**(e) Deferred-inversion guard (amended — see DoD #7).** Two synchronous
+`toggleDone('a')` calls before settle. Assert `provider.toggleDone` called
+**exactly once**, neither call threw, and `tasks.find('a').done === false`
+**immediately** (the deferred flip is visible pre-settle). **Then** resolve the
+first op and assert `provider.toggleDone` called **exactly twice**, its second
+argument was `'a'`, and `done === false`.
+**(e2)** Three synchronous calls → after settle, `provider.toggleDone` called
+**exactly twice** and `done === true`.
+**(e3)** The first op **rejects** with the bit set → `provider.toggleDone` called
+**exactly once** in total (no follow-up), `done === false`, and the rejection
+still propagates to the first caller.
+*Fails on `master`:* `master` calls the provider twice with no guard at all, so
+(e)'s first `toHaveBeenCalledTimes(1)` fails. (This is the user-reported "click
+again, queue a second write" behaviour.)
+*Fails on the earlier no-op design:* `done` would stay `true` after the second
+call and the provider would sit at 1× forever, so (e)'s middle and final
+assertions both fail. **The middle assertion — immediate `done === false` while
+the provider is still at 1× — is what discriminates a deferred inversion from
+both a dropped no-op and an eager double-write. Do not ship (e) without it.**
+Note the guard must `return`, not `throw` — `MissionCard.tsx:75` awaits
+`onToggle` uncaught, so throwing would produce an unhandled rejection.
 
 ## Design refs
 
@@ -292,21 +325,24 @@ Ownership line, so the two do not double-implement:
 | `refresh()` staleness guard; applying provider return values | **S64** |
 | `console.error` breadcrumbs on write failure | **S64** |
 | **Any** user-visible write-failure surface | **S68** |
-| `setError(null)` / making `error` clearable; splitting fatal-load vs transient-write | **S68** |
-| Catching `refresh()` rejections (incl. the uncaught one at `App.tsx:57`) | **S68** |
-| Optimistic **add** (temp id + reconcile); duplicate-capture prevention | **S68** |
+| `setError(null)` / making `error` clearable; splitting fatal-load vs transient-write | **nobody** — S68 declined it; `error` stays initial-load-only |
+| Catching `refresh()` rejections (which also fixes the uncaught one at `App.tsx:67-71` without editing `App.tsx`) | **S68** |
+| Optimistic **add** (temp id + reconcile); duplicate-capture prevention | **nobody** — S68 declined both; file separately if add latency measures painful |
+| The deferred-inversion latch (DoD #7) | **S64** — sanctioned by S72's design pass; S72 implements it only if the owner declines the amendment |
+| Undo timing, `DISMISS_MS`, the toast `pending` gate, toast retraction on failure | **S72** |
 
 **What S64 guarantees so S72 is not precluded:** (1) `toggleDone` applies the
 flip synchronously before its first `await` — state this in the hook's JSDoc as
 a **contract**, not an implementation detail, so S72 can move `setPendingUndo`
 from after the await (`MissionCard.tsx:75-76`) to before it and get a genuine
 0ms toast; (2) `toggleDone` still rejects on write failure, so S72 can decide
-what happens to an already-shown toast; (3) **hazard S64 hands to S72:** undo
-is a second `toggleDone(id)` (`MissionCard.tsx:83`, `NowView.tsx:44-50`), so an
-undo tapped inside the ~1.1s settle window is **silently dropped by the
-in-flight guard** — `pendingIds` is exposed specifically so S72 can gate the
-Undo button or defer the re-issue rather than discovering the drop in
-production; (4) S64 adds no "completed but still shown" grace state.
+what happens to an already-shown toast; (3) **the undo-inside-the-window hazard
+is resolved here, not handed to S72:** undo is a second `toggleDone(id)`
+(`MissionCard.tsx:83`, `NowView.tsx:44-50`), and an earlier draft of this slice
+dropped it silently via the in-flight guard. DoD #7's deferred-inversion latch
+accepts the tap instead — the flip is visible immediately and the provider call
+is issued once on settle — so S72 needs no Undo gate and `pendingIds` is not
+exposed; (4) S64 adds no "completed but still shown" grace state.
 
 **Forbidden over-builds (reject in review):** an offline outbox or retry queue
 — `transport.ts:335-339` states the local commit is authoritative and push is
