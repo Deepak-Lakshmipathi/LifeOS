@@ -1089,12 +1089,12 @@
   },
   {
    "id": "s66",
-   "column": "ready",
+   "column": "done",
    "slice": "S66",
    "issue": 176,
-   "pr": null,
+   "pr": 192,
    "blockedBy": [],
-   "notes": "Wave 14 · ticket: slice-S66-lightning-fs-lock-safety.md · Seven GitTransport/LightningFS owners on the read path -> 7 AbortErrors. Head of the transport.ts lane."
+   "notes": "Wave 14 · ticket: slice-S66-lightning-fs-lock-safety.md · Seven GitTransport/LightningFS owners on the read path -> 7 AbortErrors. Head of the transport.ts lane. DONE 2026-08-05 triple-green, 0 rejects: one lazy module-level owner + in-place fs.init() reset + content-type guard. ADR-0016 (not 0011 - taken since S16). DoD #12 still HITL-pending (live console check on the deployed build). Follow-ups filed: #188 cross-tab, #189 card reads, #190 VaultSync collapse, #191 appendHabitHit FIFO. Unblocks S67a."
   },
   {
    "id": "s68",
