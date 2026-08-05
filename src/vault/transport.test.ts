@@ -448,9 +448,8 @@ describe('GitTransport — recursive descent + agents/ .json allowlist (S61/#158
 //     `git.pull`, so every counter reads 0 and the test is vacuously green on
 //     master *and* on the fix.
 //  2. **`__resetVaultTransport()` in `beforeEach`.** The owner is a
-//     module-scoped memo (same idiom as `selfLoadTasks.ts:30-51`); without the
-//     reset, one test's transport — and its already-initialised `fs` — bleeds
-//     into the next.
+//     module-scoped memo; without the reset, one test's transport — and its
+//     already-initialised `fs` — bleeds into the next.
 //
 // What these tests deliberately do NOT do: mock `navigator.locks`. jsdom has
 // none, so `DefaultBackend.init` (`:31`) picks the IDB `Mutex`, not `Mutex2`,
@@ -484,11 +483,18 @@ describe('GitTransport — single process-wide owner of FS_NAME (S66/#176)', () 
 
     // The five self-loading cards' defaults — AttentionCard:80, FleetStrip:66,
     // HabitsCard:124, HomeView:130, TodayCard:92 — each `transport ??
-    // getVaultTransport()`; plus the two module-level VaultSync singletons
-    // (App.tsx:22 and selfLoadTasks.ts:31), which both route through
-    // VaultSync.ts:88. Seven owners on master, one after this slice.
+    // getVaultTransport()`; plus TWO module-level VaultSync singletons routing
+    // through VaultSync.ts:88. Seven owners pre-S66, one after.
+    //
+    // #186 has since deleted the second of those singletons (it lived in
+    // `selfLoadTasks.ts`, alongside the memo that gave the task list two
+    // owners), so production is down to `App.tsx:22`. Both are still
+    // constructed here on purpose: this test measures that N independent
+    // VaultSync owners fan out to ONE transport, and dropping to a single
+    // construction would make it pass trivially — the property under test is
+    // the collapse, not today's owner count.
     const appSync = new VaultSync()
-    const selfLoadSync = new VaultSync()
+    const secondSync = new VaultSync()
     const readers: (() => Promise<unknown>)[] = [
       () => getVaultTransport().readFiles(),
       () => getVaultTransport().readFiles(),
@@ -496,7 +502,7 @@ describe('GitTransport — single process-wide owner of FS_NAME (S66/#176)', () 
       () => getVaultTransport().readFiles(),
       () => getVaultTransport().readFiles(),
       () => appSync.list(),
-      () => selfLoadSync.list(),
+      () => secondSync.list(),
     ]
 
     // Sequential on purpose — see the harness note above (i-b): two
@@ -656,7 +662,7 @@ describe('getVaultTransport — lazy module-scoped owner (S66/#176, DoD #2/#11)'
     expect(getVaultTransport()).toBe(getVaultTransport())
   })
 
-  it('__resetVaultTransport() mints a fresh owner (test seam, mirrors selfLoadTasks.ts:49)', () => {
+  it('__resetVaultTransport() mints a fresh owner (test seam)', () => {
     const before = getVaultTransport()
     __resetVaultTransport()
     expect(getVaultTransport()).not.toBe(before)

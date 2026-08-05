@@ -9,8 +9,13 @@
  *
  * Both now take the list as a required prop from `useTasks` in `App.tsx`, so
  * this asserts through the real App: complete a task via the mission dot, and
- * the Completion tile's counts move in the same mount cycle. Reverting either
- * prop wiring turns this red (the tile falls back to the stale/empty list).
+ * the Completion tile's counts move in the same mount cycle. Reverting
+ * VitalsRow's prop wiring turns this red.
+ *
+ * Aurora's tint is NOT asserted here — `computeWarmth` is domain-based and
+ * these fixture tasks are domain-less, so its opacity would not move. It is
+ * covered structurally instead: Aurora takes the same required prop from the
+ * same owner, so the tint cannot go stale unless this assertion also fails.
  *
  * Asserts on the tile's `sub` line ("N done · M to do") rather than the
  * percent, because the percent is rendered through `Vital`'s 900ms count-up.
