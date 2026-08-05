@@ -7,7 +7,7 @@ import type { CalEvent, CalEventType, Gap } from '../../vault/calendar'
 import { gapFit, estimateEffortMinutes } from '../../lib/gapFit'
 import { rankNow } from '../../now/rankNow'
 import { computeWarmth } from '../../warmth/computeWarmth'
-import { GitTransport, type VaultTransport } from '../../vault/transport'
+import { getVaultTransport, type VaultTransport } from '../../vault/transport'
 
 /**
  * TodayCard — the Home right-stack Today/calendar card (DESIGN_LANGUAGE
@@ -62,7 +62,7 @@ export interface TodayCardProps {
   date?: string
   /** Reference "today" (`YYYY-MM-DD`) the staleness check compares against — inject for deterministic tests. */
   today?: string
-  /** Read seam. Defaults to a fresh GitTransport. */
+  /** Read seam. Defaults to the shared process-wide vault transport (S66/#176). */
   transport?: VaultTransport
   /** Current time in ms — inject for deterministic rankNow/warmth tests (defaults to Date.now()). */
   now?: number
@@ -89,7 +89,7 @@ export function TodayCard({
     let live = true
     ;(async () => {
       try {
-        const t = transport ?? new GitTransport()
+        const t = transport ?? getVaultTransport()
         const files = await t.readFiles()
         if (!live) return
         const md = files.find((f) => f.path === 'Calendar/today.md')?.content ?? ''

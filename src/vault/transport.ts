@@ -33,6 +33,15 @@
  *                           with Contents: Read AND Write (S15b — write needs
  *                           push, not just clone/pull). Optional; NEVER logged.
  *
+ * Single ownership (S66/#176, ADR-0016):
+ *   `FS_NAME` names ONE IndexedDB store and ONE `navigator.locks` lock, so
+ *   exactly one `GitTransport` — and therefore one `LightningFS` — may exist
+ *   per process. Take it from `getVaultTransport()` at the bottom of this
+ *   file; never construct your own. The memo is per JavaScript realm, so two
+ *   browser TABS remain two owners; post-S66 that is slow-but-safe (tab B's
+ *   first read queues behind tab A's lock instead of wiping the store out
+ *   from under it) and is deferred as issue **#188**.
+ *
  * Offline behavior (ADR-0003):
  *   If neither pull nor clone succeeds (e.g. no network), the error
  *   propagates to VaultSync.list(), which the UI surfaces as an empty
@@ -104,7 +113,7 @@ export class GitTransport implements VaultTransport {
    * logged, never returned as a plain string.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async loadGit(): Promise<{ git: any; http: any; LightningFS: any; sharedOpts: any }> {
+  private async loadGit(): Promise<{ git: any; http: any; sharedOpts: any }> {
     // ── Validate config BEFORE paying for the dynamic import (S62/#155) ──────
     // isomorphic-git + @isomorphic-git/lightning-fs are a real bundle-split
     // cost (the whole reason these imports are dynamic instead of top-level
@@ -163,20 +172,36 @@ export class GitTransport implements VaultTransport {
       singleBranch: true,
     }
 
-    return { git, http, LightningFS, sharedOpts }
+    // `LightningFS` deliberately does NOT escape this method: the FS is
+    // constructed exactly once, above, and every later reset goes through
+    // `this.fs.init(...)` on that same handle (S66/#176).
+    return { git, http, sharedOpts }
   }
 
   async readFiles(): Promise<{ path: string; content: string }[]> {
     // Collapse concurrent callers into a single clone/pull.
-    if (this.inflight) return this.inflight
-    this.inflight = this._readFiles().finally(() => {
-      this.inflight = null
-    })
-    return this.inflight
+    if (!this.inflight) {
+      this.inflight = this._readFiles().finally(() => {
+        this.inflight = null
+      })
+    }
+
+    // Defensive copy PER CALLER, above `inflight` (S66/#176). Sharing one
+    // transport process-wide means `inflight` now hands the SAME array of the
+    // SAME objects to every sharer — the five self-loading cards and both
+    // VaultSync singletons. VaultSync mutates those entries in place: it
+    // aliases the array (`VaultSync.ts:136`), assigns `fileEntry.content`
+    // after each write (`:240 :334 :379 :414`) and pushes new entries
+    // (`:242`). Without this copy, one VaultSync's write would silently
+    // rewrite the snapshot another consumer is rendering from. Before the
+    // singleton every consumer had its own transport and therefore its own
+    // freshly-built `result`, so this hazard is created BY the fix; the copy
+    // is not optional. Cost is a shallow spread over tens of entries.
+    return this.inflight.then((files) => files.map((entry) => ({ ...entry })))
   }
 
   private async _readFiles(): Promise<{ path: string; content: string }[]> {
-    const { git, LightningFS, sharedOpts } = await this.loadGit()
+    const { git, sharedOpts } = await this.loadGit()
 
     // ── Attempt pull first; fall back to fresh clone only when nothing to
     //    lose (must-fix transport hazard, ADR-0010) ───────────────────────────
@@ -214,7 +239,35 @@ export class GitTransport implements VaultTransport {
       }
 
       // Nothing ahead of origin — safe to wipe and re-clone from scratch.
-      this.fs = new LightningFS(FS_NAME, { wipe: true })
+      //
+      // Reset IN PLACE on the handle we already own, rather than constructing
+      // a second LightningFS over the same store (S66/#176). Verified against
+      // @isomorphic-git/lightning-fs@4.6.2: a fresh instance wipes BEFORE it
+      // holds the mutex — `DefaultBackend.activate()` (`:40-48`) runs
+      // `_idb.wipe()` then `_mutex.release({force:true})`, and a fresh
+      // `Mutex2` has `_release === null`, so that release takes the
+      // `navigator.locks.request(name, {steal:true})` branch. A steal breaks
+      // every held lock of that name and rejects the victims' `request()`
+      // promises with `AbortError: Lock broken by another request with the
+      // 'steal' option` — promises lightning-fs discards without a `.catch`
+      // (`Mutex2.js:14,31`), so they surface as uncaught rejections that no
+      // try/catch of ours can reach. Worse, the mutex is advisory (checked
+      // only in `activate()`), so a victim keeps reading and writing IDB
+      // afterwards and its debounced `saveSuperblock()` flushes a stale tree
+      // over `!root` — durable corruption, and colliding inodes from
+      // `CacheFS.autoinc()`.
+      //
+      // `fs.init(name, options)` is public API (`index.js:34-36`) and routes
+      // to `PromisifiedFS._init`, which does `await this._gracefulShutdown()`
+      // and then `if (this._activationPromise) await this._deactivate()`
+      // BEFORE building the replacement backend. In-flight operations drain
+      // and the mutex is handed back through the normal `_release()` path, so
+      // when the new backend's `release({force:true})` takes the steal branch
+      // there is no holder left to victimise — and a Web Locks steal with no
+      // current holder grants immediately and rejects nobody. Only one
+      // PromisifiedFS ever exists, so the divergent-superblock corruption is
+      // gone by construction rather than merely made rarer.
+      await this.fs.init(FS_NAME, { wipe: true })
       await git.clone({
         ...sharedOpts,
         fs: this.fs,
@@ -284,7 +337,25 @@ export class GitTransport implements VaultTransport {
       if (!isMd && !isAgentJson) return
 
       try {
-        const content = (await pfs.readFile(`${DIR}/${relPath}`, { encoding: 'utf8' })) as string
+        const content: unknown = await pfs.readFile(`${DIR}/${relPath}`, { encoding: 'utf8' })
+
+        // A ghost entry reaches here WITHOUT throwing, so the catch below can
+        // never see it (S66/#176). On a store some other instance wiped mid-
+        // read, `DefaultBackend.readFile` (`:100-127`) still finds a truthy
+        // `stat` in the surviving in-memory tree, `IdbBackend.readFile` is
+        // `idb.get(ino)` which RESOLVES `undefined` for a missing key, `_http`
+        // is undefined (we never pass `url`), and `if (!stat) throw ENOENT` is
+        // skipped — so the call returns `undefined` cleanly. The old
+        // `as string` cast laundered exactly that `undefined` past the type
+        // system and pushed it into the snapshot, where it became either a
+        // `content.split('\n')` TypeError that rejected all of
+        // `VaultSync.list()`, or — for the five cards that read this
+        // transport directly and parse inside their own try/catch — no error
+        // at all, just TodayCard confidently rendering "no events today".
+        // Ownership stops NEW corruption; this guard is the only part of S66
+        // that degrades an ALREADY-corrupt store gracefully.
+        if (typeof content !== 'string') return
+
         result.push({ path: relPath, content })
       } catch {
         // Unreadable file — skip gracefully (ADR-0003: never throw in transport)
@@ -375,4 +446,53 @@ export class GitTransport implements VaultTransport {
       // Offline / non-fast-forward — commit stays local, retried later.
     }
   }
+}
+
+// ─── The single process-wide owner of the vault FS (S66/#176, ADR-0016) ──────
+
+let sharedTransport: GitTransport | null = null
+
+/**
+ * The one `GitTransport` — and therefore the one `LightningFS` — allowed to
+ * exist in this process. Every default read/write seam resolves through here:
+ * `VaultSync.ts:88` (which covers both module-level `VaultSync` singletons)
+ * and the five self-loading Home cards.
+ *
+ * `FS_NAME` names ONE IndexedDB store and ONE `navigator.locks` lock, so
+ * multiple `LightningFS` instances over it are not isolated replicas, they are
+ * interfering writers of one superblock: divergent in-memory trees, colliding
+ * inodes from `CacheFS.autoinc()`, and a debounced `saveSuperblock()` that
+ * flushes stale state over `!root`. `GitTransport.inflight` was always the
+ * right guard at the wrong scope — per-instance, over a per-process resource.
+ * A single owner puts the guard where the resource is. **Do not add a ninth
+ * `new GitTransport()`; take it from here.** (ADR-0016.)
+ *
+ * Lazy on purpose. An eager `export const t = new GitTransport()` would be a
+ * module-import side effect, which is the one thing this file is organised to
+ * avoid (deferred dynamic imports; S62's synchronous config check ahead of
+ * `import()`) — it would revive #155's render budget and `getVaultPat()`'s
+ * blocking `window.prompt` on unconfigured builds. Same lazy-memo + test-reset
+ * idiom as `selfLoadTasks.ts:30-51`.
+ *
+ * **Known limitation — cross-tab contention (tracked as #188).** This memo is
+ * per JavaScript realm, so two tabs of the PWA are still two owners of one
+ * IndexedDB store. Post-S66 that degrades to slow-but-safe rather than
+ * destructive: neither tab wipes a store it does not hold the lock on any
+ * more, so tab B's first read simply queues behind tab A's lock
+ * (`Mutex2.wait()`, 10-minute ceiling, released ~500ms after A's operations
+ * drain). That is an interaction bug, not data loss, and it is deferred
+ * deliberately — the owner runs a single tab. Anything that would reintroduce
+ * a wipe not guarded by the lock re-escalates #188 to a corruption vector.
+ */
+export function getVaultTransport(): VaultTransport {
+  return (sharedTransport ??= new GitTransport())
+}
+
+/**
+ * Test-only: clear the module-scoped owner so state cannot bleed between
+ * tests. Call from `beforeEach` in any suite that exercises the real read
+ * path. Mirrors `__resetSelfLoadTasksCache()` (`selfLoadTasks.ts:49`).
+ */
+export function __resetVaultTransport(): void {
+  sharedTransport = null
 }

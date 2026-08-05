@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { agentManifest, type AgentSpec } from '../../data/agentManifest'
 import { healthOf, parseStatus, type AgentStatus, type Health } from '../../vault/agentStatus'
-import { GitTransport, type VaultTransport } from '../../vault/transport'
+import { getVaultTransport, type VaultTransport } from '../../vault/transport'
 
 /**
  * FleetStrip — the Home right-stack Fleet mini strip (DESIGN_LANGUAGE §4.7,
@@ -39,7 +39,7 @@ const NEVER_RAN = 'never ran'
 export interface FleetStripProps {
   /** Live run status per agent name (S47 `parseStatus` output). Omit in-app (self-loads via `transport`); inject in tests. */
   statuses?: Record<string, AgentStatus | null>
-  /** Read seam. Defaults to a fresh GitTransport. */
+  /** Read seam. Defaults to the shared process-wide vault transport (S66/#176). */
   transport?: VaultTransport
   /** Injected "now" (ms since epoch) for deterministic health + relative-time in tests. Defaults to Date.now(). */
   now?: number
@@ -63,7 +63,7 @@ export function FleetStrip({ statuses: statusesProp, transport, now }: FleetStri
     let live = true
     ;(async () => {
       try {
-        const t = transport ?? new GitTransport()
+        const t = transport ?? getVaultTransport()
         const files = await t.readFiles()
         if (!live) return
         const next: Record<string, AgentStatus | null> = {}

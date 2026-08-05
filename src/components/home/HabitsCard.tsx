@@ -4,7 +4,7 @@ import { Card } from '../glass/Card'
 import type { Domain } from '../../data/domains'
 import { parseHabits, parseHabitLog, weekGrid, streak, type Habit, type HabitHit } from '../../vault/habits'
 import { appendHabitHit } from '../../vault/habitsWrite'
-import { GitTransport, type VaultTransport } from '../../vault/transport'
+import { getVaultTransport, type VaultTransport } from '../../vault/transport'
 
 /**
  * HabitsCard — the Home right-stack Habits card (DESIGN_LANGUAGE §4.6, §5,
@@ -89,7 +89,7 @@ export interface HabitsCardProps {
   habits?: Habit[]
   /** Habit hits. Same injection/short-circuit contract as `habits`. */
   hits?: HabitHit[]
-  /** Write (and, when `habits`/`hits` are omitted, read) seam. Defaults to a fresh GitTransport. */
+  /** Write (and, when `habits`/`hits` are omitted, read) seam. Defaults to the shared vault transport (S66/#176). */
   transport?: VaultTransport
   /** Reference date (`YYYY-MM-DD`) the week grid/streak are computed against — inject for deterministic tests. */
   today?: string
@@ -121,7 +121,7 @@ export function HabitsCard({
     let live = true
     ;(async () => {
       try {
-        const t = transport ?? new GitTransport()
+        const t = transport ?? getVaultTransport()
         const files = await t.readFiles()
         if (!live) return
         const habitsMd = files.find((f) => f.path === 'Habits/habits.md')?.content ?? ''
@@ -153,7 +153,7 @@ export function HabitsCard({
       // Optimistic flip — the square updates before the write settles.
       setHits((prev) => [...prev, hit])
 
-      void appendHabitHit(transport ?? new GitTransport(), hit).catch(() => {
+      void appendHabitHit(transport ?? getVaultTransport(), hit).catch(() => {
         // Transport is a never-throw seam by contract (ADR-0003); guard
         // anyway so a write hiccup can't surface as an unhandled rejection.
       })

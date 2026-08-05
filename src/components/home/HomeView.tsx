@@ -11,7 +11,7 @@ import { FleetStrip } from './FleetStrip'
 import { useTimeOfDay } from '../../hooks/useTimeOfDay'
 import type { CockpitMode } from '../../lib/timeOfDay'
 import { parseBrief, latestBriefPath } from '../../vault/briefs'
-import { GitTransport, type VaultTransport } from '../../vault/transport'
+import { getVaultTransport, type VaultTransport } from '../../vault/transport'
 
 /**
  * HomeView — the Home tab.
@@ -90,7 +90,7 @@ interface HomeViewProps {
    * `statuses`.
    */
   briefLines?: string[]
-  /** Read seam for the brief self-load. Defaults to a fresh GitTransport. */
+  /** Read seam for the brief self-load. Defaults to the shared vault transport (S66/#176). */
   briefTransport?: VaultTransport
 }
 
@@ -127,7 +127,7 @@ export function HomeView({
     let live = true
     ;(async () => {
       try {
-        const t = briefTransport ?? new GitTransport()
+        const t = briefTransport ?? getVaultTransport()
         const files = await t.readFiles()
         if (!live) return
         const path = latestBriefPath(new Date())
