@@ -70,9 +70,15 @@ Done** (numbered, testable — the eval gate checks the PR against these) ·
 ## Numbering
 
 S1–S19 = v1 (archived, `docs/archive/V1_ARCHIVE.md`). S20–S57 = v2, per
-`docs/LIFEOS_V2_ROADMAP.md`. S58+ = post-v2 (below). Kanban cards `s20…s62` in
-`kanban.html` mirror these tickets; `blockedBy` encodes the true dep graph +
-hotspot serialization.
+`docs/LIFEOS_V2_ROADMAP.md`. S58+ = post-v2 (below).
+
+**Tracking moved to GitHub issues on 2026-08-05.** `kanban.html` and its
+`blockedBy` dep graph are gone (recoverable at `git show 7a06f62:kanban.html`),
+and **so are waves**. An issue's labels are its state; dependencies are a
+`Blocked by: #N` line in the issue body. Slice tickets in this directory remain
+the dispatch input — they are the spec, not the tracker. **Hotspot
+serialization is no longer computed for you:** before batching two slices, read
+both write-sets and confirm they are disjoint by hand.
 
 ## Post-v2 wave (S58–S62)
 

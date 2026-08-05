@@ -1,7 +1,17 @@
 #!/usr/bin/env node
-// LifeOS boot: derive project state from kanban.html #board-data + git + gh.
+// LifeOS boot: derive project state from GitHub issues + labels + git.
 // Read-only. Prints one JSON object.
-import fs from 'node:fs';
+//
+// GitHub is the single source of truth (2026-08-05). kanban.html and the hub
+// were deleted; there is no local board file and no wave concept any more.
+//
+// State model — an issue's LABELS are its state:
+//   status:in-progress  work started (an agent or a PR is live on it)
+//   status:ready        unblocked, startable now
+//   status:blocked      waiting on another issue (see "Blocked by: #N" in the body)
+//   cold-storage        parked on purpose; CLOSED, not abandoned — reopen to revive
+//   needs-triage        filed, not yet ruled on
+//   closed, no cold-storage label  =  done
 import { execSync } from 'node:child_process';
 
 const sh = (cmd) => {
@@ -9,78 +19,110 @@ const sh = (cmd) => {
   catch { return null; }
 };
 
-// --- board ---
-const html = fs.readFileSync('kanban.html', 'utf8');
-const i = html.lastIndexOf('<script id="board-data"');
-const board = JSON.parse(html.slice(html.indexOf('>', i) + 1, html.indexOf('</script>', i)));
-const cards = board.cards;
-const byId = new Map(cards.map(c => [c.id, c]));
-const doneIds = new Set(cards.filter(c => c.column === 'done').map(c => c.id));
-
-const counts = {};
-for (const col of board.columns) counts[col.id] = cards.filter(c => c.column === col.id).length;
-
-const inProgress = cards.filter(c => c.column === 'progress')
-  .map(c => ({ id: c.id, title: c.title, issue: c.issue, pr: c.pr }));
-
-const waveOf = (c) => {
-  const m = /Wave (\d+)/.exec(c.notes || '');
-  return m ? +m[1] : 99;
-};
-const ticketOf = (c) => {
-  const m = /ticket: (\S+\.md)/.exec(c.notes || '');
-  return m ? m[1] : null;
+const json = (cmd) => {
+  const raw = sh(cmd);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
 };
 
-const unblocked = cards
-  .filter(c => (c.column === 'backlog' || c.column === 'ready'))
-  .filter(c => (c.blockedBy || []).every(b => doneIds.has(b)))
-  .sort((a, b) => waveOf(a) - waveOf(b))
-  .map(c => ({ id: c.id, title: c.title, wave: waveOf(c), ticket: ticketOf(c), column: c.column }));
+// --- issues (source of truth) ---
+const open = json('gh issue list --state open --json number,title,labels,body --limit 100') || [];
+const closed = json('gh issue list --state closed --json number,title,labels,closedAt --limit 100') || [];
 
-// hotspot conflict flags among currently-unblocked cards (from docs/slices/README chains)
-const CHAINS = {
-  'App.tsx': ['s24', 's58'],
-  'HomeView.tsx': ['s27', 's28', 's29', 's32', 's34', 's37', 's48', 's50', 's58', 's62'],
-  'TabBar.tsx': ['s58', 's59'],
-  'VitalsRow.tsx': ['s26', 's41', 's45', 's60'],
-  'AgentsView.tsx': ['s49', 's53', 's54'],
-  'vault/transport.ts': ['s61', 's62'],
+const labelsOf = (i) => (i.labels || []).map((l) => l.name);
+const has = (i, name) => labelsOf(i).includes(name);
+
+// "Blocked by: #178" / "Blocked by #178, #180" anywhere in the body.
+const blockedByOf = (i) => {
+  const out = new Set();
+  for (const m of (i.body || '').matchAll(/blocked\s*by:?\s*((?:#\d+[,\s]*)+)/gi)) {
+    for (const n of m[1].matchAll(/#(\d+)/g)) out.add(+n[1]);
+  }
+  return [...out];
 };
-const unblockedIds = new Set(unblocked.map(u => u.id));
-const hotspotConflicts = Object.entries(CHAINS)
-  .map(([file, chain]) => ({ file, unblocked: chain.filter(id => unblockedIds.has(id)) }))
-  .filter(x => x.unblocked.length > 1);
+
+const openNumbers = new Set(open.map((i) => i.number));
+const coldNumbers = new Set(closed.filter((i) => has(i, 'cold-storage')).map((i) => i.number));
+
+const enrich = (i) => {
+  const blockedBy = blockedByOf(i);
+  // A dependency still counts as blocking only while it is open. A cold-stored
+  // blocker is a REAL block — flagged, because reviving the blocker is a decision.
+  const openBlockers = blockedBy.filter((n) => openNumbers.has(n));
+  const coldBlockers = blockedBy.filter((n) => coldNumbers.has(n));
+  return {
+    number: i.number,
+    title: i.title,
+    labels: labelsOf(i),
+    blockedBy,
+    openBlockers,
+    coldBlockers,
+  };
+};
+
+const all = open.map(enrich);
+const inProgress = all.filter((i) => i.labels.includes('status:in-progress'));
+const ready = all
+  .filter((i) => !i.labels.includes('status:in-progress'))
+  .filter((i) => i.openBlockers.length === 0 && i.coldBlockers.length === 0)
+  .filter((i) => !i.labels.includes('needs-triage'));
+const blocked = all.filter((i) => i.openBlockers.length > 0 || i.coldBlockers.length > 0);
+const needsTriage = all.filter((i) => i.labels.includes('needs-triage'));
+
+// Label hygiene: a label that contradicts the computed frontier is a bug in the
+// board, so surface it rather than silently trusting either side.
+const labelDrift = [
+  ...ready.filter((i) => i.labels.includes('status:blocked'))
+    .map((i) => ({ number: i.number, problem: 'labelled status:blocked but nothing open blocks it' })),
+  ...blocked.filter((i) => i.labels.includes('status:ready'))
+    .map((i) => ({ number: i.number, problem: `labelled status:ready but blocked by ${[...i.openBlockers, ...i.coldBlockers].map((n) => '#' + n).join(', ')}` })),
+  ...all.filter((i) => !i.labels.some((l) => l.startsWith('status:')) && !i.labels.includes('needs-triage'))
+    .map((i) => ({ number: i.number, problem: 'no status: label and not needs-triage' })),
+];
 
 // --- git / gh (tolerant: nulls when offline) ---
+sh('git fetch origin --quiet'); // ahead/behind is a lie against a stale remote ref
 const dirty = (sh('git status --porcelain') || '').split('\n').filter(Boolean);
 const branch = sh('git branch --show-current');
-const behind = sh('git rev-list --count HEAD..origin/master 2>nul') || sh('git rev-list --count HEAD..origin/master');
-const prsRaw = sh('gh pr list --state open --json number,title,headRefName,statusCheckRollup --limit 20');
-let openPRs = null;
-if (prsRaw) {
-  try {
-    openPRs = JSON.parse(prsRaw).map(p => ({
-      number: p.number, title: p.title, branch: p.headRefName,
-      ci: (p.statusCheckRollup || []).some(s => (s.conclusion || s.state) === 'FAILURE') ? 'red'
-        : (p.statusCheckRollup || []).every(s => ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(s.conclusion || s.state)) ? 'green' : 'pending',
-    }));
-  } catch { openPRs = null; }
-}
-const issuesRaw = sh('gh issue list --state open --json number,title,labels --limit 30');
-let openIssues = null;
-if (issuesRaw) {
-  try { openIssues = JSON.parse(issuesRaw).map(x => ({ number: x.number, title: x.title, labels: x.labels.map(l => l.name) })); }
-  catch { openIssues = null; }
-}
+// left = ahead, right = behind. The ahead count is why a handoff can claim
+// "pushed" while a commit sits stranded — it was missing before 2026-08-05.
+const counts = (sh('git rev-list --left-right --count HEAD...origin/master') || '').split(/\s+/);
+const ahead = counts[0] === undefined ? null : +counts[0];
+const behind = counts[1] === undefined ? null : +counts[1];
+
+const prs = json('gh pr list --state open --json number,title,headRefName,statusCheckRollup --limit 20');
+const openPRs = prs && prs.map((p) => ({
+  number: p.number,
+  title: p.title,
+  branch: p.headRefName,
+  ci: (p.statusCheckRollup || []).some((s) => (s.conclusion || s.state) === 'FAILURE') ? 'red'
+    : (p.statusCheckRollup || []).every((s) => ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(s.conclusion || s.state)) ? 'green'
+      : 'pending',
+}));
 
 console.log(JSON.stringify({
-  meta: { updated: board.meta.updated, note: board.meta.note },
-  board: counts,
+  source: 'github-issues',
+  counts: {
+    open: open.length,
+    inProgress: inProgress.length,
+    ready: ready.length,
+    blocked: blocked.length,
+    needsTriage: needsTriage.length,
+    coldStorage: coldNumbers.size,
+    done: closed.length - coldNumbers.size,
+  },
   inProgress,
-  unblocked: unblocked.slice(0, 8),
-  unblockedTotal: unblocked.length,
-  hotspotConflicts,
-  git: { branch, dirtyFiles: dirty.length, dirty: dirty.slice(0, 10), behindOriginMaster: behind === null ? null : +behind },
-  github: { openPRs, openIssues },
+  ready,
+  blocked,
+  needsTriage,
+  labelDrift,
+  coldStorage: closed.filter((i) => has(i, 'cold-storage')).map((i) => ({ number: i.number, title: i.title })),
+  git: {
+    branch,
+    dirtyFiles: dirty.length,
+    dirty: dirty.slice(0, 10),
+    aheadOfOrigin: ahead,
+    behindOrigin: behind,
+  },
+  github: { openPRs },
 }, null, 2));

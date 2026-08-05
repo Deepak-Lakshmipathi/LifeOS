@@ -24,11 +24,13 @@ Treat any red NOT matching an entry below as real until proven otherwise (inspec
 
 ## Labels
 
-Canonical vocabulary in [triage-labels.md](triage-labels.md): `ready-for-agent`, `needs-triage`, `needs-info`, `ready-for-human`, `wontfix`, `bug`, `enhancement`, plus kanban states `status:ready`, `status:blocked`, `status:in-progress`, `status:done`. No new labels, no `wave-N`; token lacks `project` scope (no Projects board).
+Canonical vocabulary in [triage-labels.md](triage-labels.md): `ready-for-agent`, `needs-triage`, `needs-info`, `ready-for-human`, `wontfix`, `bug`, `enhancement`, `cold-storage`, plus workflow states `status:ready`, `status:blocked`, `status:in-progress`. No new labels, no `wave-N`; token lacks `project` scope (no Projects board).
+
+**GitHub issues are the single source of truth (2026-08-05).** `kanban.html`, `lifeos-hub.html` and `scripts/build-hub.mjs` are deleted — there is no board file to update and **no waves**. P4 does not sync a board; it commits doc edits only. Issue state moves via labels: `status:in-progress` before dispatch, closed by the PR's `closes #N` on merge. Parked work gets `cold-storage` **and** is closed. Batching is decided by **write-set disjointness alone**, checked by hand against the tickets — nothing computes it for you now that waves are gone.
 
 ## Model tiers (P5 dispatch routing)
 
-- **Haiku** — mechanical PRs: kanban board flips, docs-only sync commits.
+- **Haiku** — mechanical PRs: docs-only sync commits, label reconciliation.
 - **Sonnet** — feature/bug slices (pre-resolved baseline, unchanged).
 - **Opus** — escalation tier: a slice's 2nd review reject re-dispatches one tier up instead of burning a 3rd same-model attempt.
 

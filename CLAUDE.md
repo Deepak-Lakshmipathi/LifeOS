@@ -8,7 +8,9 @@ Issues live in GitHub Issues on `Deepak-Lakshmipathi/LifeOS` (via the `gh` CLI);
 
 ### Triage labels
 
-Canonical label names (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`); `status:ready`/`status:blocked` are kanban states, not triage roles. See `docs/agents/triage-labels.md`.
+Canonical label names (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`); `status:ready`/`status:blocked`/`status:in-progress` are workflow states, not triage roles; `cold-storage` + closed means parked on purpose. See `docs/agents/triage-labels.md`.
+
+**GitHub issues are the single source of truth for project state (since 2026-08-05)** — an issue's labels ARE its state. `kanban.html`, `lifeos-hub.html` and `scripts/build-hub.mjs` were deleted; there is no local board and no wave concept. Recover the old board from git history if you ever need it (`git show 7a06f62:kanban.html`).
 
 ### Domain docs
 
