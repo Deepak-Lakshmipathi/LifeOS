@@ -70,9 +70,16 @@ describe('S24 cockpit shell', () => {
     expect(labels).toEqual(['Home', 'Tasks', 'Money', 'Career', 'Agents'])
   })
 
-  it('defaults to Home with the v1 capture flow still reachable', async () => {
+  it('defaults to Home, with the v1 capture flow still reachable on the Tasks tab', async () => {
     render(<App />)
-    // Home is the default section; its capture affordance (v1 add flow) is present.
+    // Home is the default section. #183 moved capture off it, so Home's
+    // marker is MissionCard and the capture affordance is asserted where it
+    // now lives — the point of the original test (no functionality lost in
+    // the shell restructure) is preserved, just relocated.
+    expect(await screen.findByText("Today's Mission")).toBeInTheDocument()
+    expect(screen.queryByText('+ New task')).not.toBeInTheDocument()
+
+    fireEvent.click(within(screen.getByTestId('tab-bar')).getByText('Tasks'))
     expect(await screen.findByText('+ New task')).toBeInTheDocument()
   })
 
@@ -81,14 +88,14 @@ describe('S24 cockpit shell', () => {
     const bar = () => screen.getByTestId('tab-bar')
 
     // Home visible first.
-    expect(await screen.findByText('+ New task')).toBeInTheDocument()
+    expect(await screen.findByText("Today's Mission")).toBeInTheDocument()
 
-    // → Money: real S40 view shows, Home's capture button gone. (S40 filled
-    // in the stub this test used to key off of — "money-networth-card" is
+    // → Money: real S40 view shows, Home's content gone. (S40 filled in the
+    // stub this test used to key off of — "money-networth-card" is
     // MoneyView's own Net worth Card, present per its Definition of Done #1.)
     fireEvent.click(within(bar()).getByText('Money'))
     expect(await screen.findByTestId('money-networth-card')).toBeInTheDocument()
-    await waitFor(() => expect(screen.queryByText('+ New task')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText("Today's Mission")).not.toBeInTheDocument())
 
     // → Agents: real S49 view shows, Money gone. (S49 filled in the stub this
     // test used to key off of — "fleet-table" is AgentsView's own fleet table
@@ -192,7 +199,7 @@ describe('S58 — Tasks tab re-parenting', () => {
     const noopUpdate = () => Promise.resolve(undefined)
 
     const { container: homeContainer } = render(
-      <HomeView tasks={FIXTURE_TASKS} onToggle={noopToggle} onAdd={noopToggle} modeOverride="am" />,
+      <HomeView tasks={FIXTURE_TASKS} onToggle={noopToggle} modeOverride="am" />,
     )
     // MissionCard's top-3 picks (ranks 1-3) — exactly once each, never twice.
     for (const t of FIXTURE_TASKS.slice(0, 3)) {
@@ -207,6 +214,7 @@ describe('S58 — Tasks tab re-parenting', () => {
       <TasksView
         tasks={FIXTURE_TASKS}
         onToggle={noopToggle}
+        onAdd={noopToggle}
         onDelete={noopDelete}
         onUpdate={noopUpdate}
         projects={[]}
