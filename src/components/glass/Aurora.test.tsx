@@ -6,17 +6,22 @@
  * component makes (clearRect, createRadialGradient/addColorStop, arc/fill).
  * This lets us assert on *what* gets drawn without a real canvas backend.
  *
- * S60 (owner feedback items 3+4): Warmth's vital tile is gone — Aurora now
- * self-loads the task list (same provider seam as VitalsRow) and renders a
- * static warmth tint layer. Every render below passes `tasks` explicitly so
- * no test ever reaches the real provider (hard project rule) — a dedicated
- * describe block asserts that short-circuit directly (DoD #4).
+ * S60 (owner feedback items 3+4): Warmth's vital tile is gone — Aurora
+ * renders a static warmth tint layer instead. #186 removed the self-load:
+ * `tasks` is now a required prop fed by the single `useTasks` owner in
+ * App.tsx, so no test here can reach a provider even in principle. Every
+ * render below passes `tasks` explicitly, as they always did.
+ *
+ * These tests cover the tint's MATH (computeWarmth → warmthTint → opacity),
+ * not its liveness after a write. That liveness is guarded once, at the App
+ * level, by `src/test/completionLiveUpdate.test.tsx` — Aurora and VitalsRow
+ * receive the same prop from the same owner, so the tint cannot go stale
+ * unless the Completion tile does too.
  */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { render, cleanup } from '@testing-library/react'
 import { Aurora, MORNING_PALETTE } from './Aurora'
-import { LocalOnly } from '../../sync/LocalOnly'
 import type { Task } from '../../types'
 
 afterEach(cleanup)
@@ -210,18 +215,13 @@ describe('Aurora — warmth tint layer (S60)', () => {
     expect(hotAlpha).toBeLessThanOrEqual(0.1)
   })
 
-  it('injecting tasks short-circuits the provider load entirely — the provider is never called under test', async () => {
-    setReducedMotion(true)
-    const listSpy = vi.spyOn(LocalOnly.prototype, 'list')
-
-    render(<Aurora tasks={[]} now={NOW} />)
-
-    // Flush microtasks so a wrongly-fired load would have resolved by now.
-    await Promise.resolve()
-    await Promise.resolve()
-
-    expect(listSpy).not.toHaveBeenCalled()
-  })
+  // #186 deleted the "injecting tasks short-circuits the provider load" test
+  // that used to sit here. Aurora no longer HAS a load path — `tasks` is a
+  // required prop off the single `useTasks` owner — so spying on
+  // `LocalOnly.prototype.list` and asserting it was never called had become a
+  // tautology that could not fail. A test whose name advertises a guard the
+  // code no longer contains is the #120 failure mode; deleted rather than
+  // rewritten, because the property it claimed is now structural.
 
   it('does not schedule requestAnimationFrame for the tint layer (static, no reduced-motion branch needed)', () => {
     setReducedMotion(false)

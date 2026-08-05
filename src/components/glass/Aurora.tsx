@@ -15,19 +15,18 @@
  *
  * S60 (owner feedback items 3+4): Warmth's vital tile is gone — warmth now
  * tints THIS background instead, so the whole app is colored by how hot the
- * owner's domains are. Aurora self-loads the task list via `selfLoadTasks`
- * (`src/sync/selfLoadTasks.ts`) — the same provider seam `VitalsRow` uses,
- * with the load itself memoized so the two components share one `.list()`
- * call instead of firing two concurrent reads (issue #165). Tests inject
- * `tasks` directly, which short-circuits the load entirely so no test ever
- * touches the provider. Aurora runs `computeWarmth` over the loaded tasks
+ * owner's domains are. #186: Aurora used to self-load the list through the
+ * memoized `selfLoadTasks` module, which had no production invalidation
+ * path — so the tint froze at the first read and no write through
+ * `useTasks` could reach it. The list now has ONE owner (`useTasks` in
+ * `App.tsx`) and arrives as a required prop. Aurora runs `computeWarmth`
+ * over those tasks
  * and derives `{ color, alpha }` via the pure `warmthTint` module. The tint
  * renders as one extra `fixed inset-0` layer, static — no new
  * `requestAnimationFrame` scheduling, no reduced-motion branch needed (§7):
  * it never animates in the first place.
  */
-import { useEffect, useRef, useState } from 'react'
-import { selfLoadTasks } from '../../sync/selfLoadTasks'
+import { useEffect, useRef } from 'react'
 import type { Task } from '../../types'
 import { computeWarmth } from '../../warmth/computeWarmth'
 import { warmthTint } from '../../lib/warmthTint'
@@ -40,8 +39,8 @@ export const MORNING_PALETTE: AuroraPalette = ['#312e81', '#155e75', '#4c1d95', 
 interface AuroraProps {
   /** 4 blob colors, fixed anatomical order: top-left, top-right, bottom-center, bottom-left. */
   palette?: AuroraPalette
-  /** Loaded task list, for the warmth tint. Omit in-app (self-loads); inject in tests. */
-  tasks?: Task[]
+  /** Loaded task list, for the warmth tint — owned by `useTasks` in App.tsx (#186). */
+  tasks: Task[]
   /** Current time in ms, for the warmth tint — inject for deterministic tests. */
   now?: number
 }
@@ -54,28 +53,8 @@ const BLOB_LAYOUT: ReadonlyArray<{ x: number; y: number; r: number }> = [
   { x: 0.1, y: 0.8, r: 280 },
 ]
 
-export function Aurora({ palette = MORNING_PALETTE, tasks: tasksProp, now }: AuroraProps) {
+export function Aurora({ palette = MORNING_PALETTE, tasks, now }: AuroraProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [loaded, setLoaded] = useState<Task[]>([])
-  const tasks = tasksProp ?? loaded
-
-  useEffect(() => {
-    // Tests inject tasks; skip the async load entirely so the provider (and
-    // its Dexie/vault I/O) is never reached under test.
-    if (tasksProp) return
-    let live = true
-    selfLoadTasks()
-      .then((all) => {
-        if (live) setLoaded(all)
-      })
-      .catch(() => {
-        // The tint is non-critical chrome — a failed read just leaves every
-        // domain cold rather than surfacing an error behind the glass.
-      })
-    return () => {
-      live = false
-    }
-  }, [tasksProp])
 
   const warmth = computeWarmth(tasks, now ?? Date.now())
   const tint = warmthTint(warmth)

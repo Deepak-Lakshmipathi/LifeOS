@@ -100,11 +100,11 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen text-txt">
-      <Aurora />
+      <Aurora tasks={tasks} />
 
       <div className="relative z-[1] mx-auto max-w-shell px-4 pt-10 pb-16 sm:px-6">
         <Header />
-        <VitalsRow />
+        <VitalsRow tasks={tasks} />
         <TabBar active={tab} onTabChange={setTab} />
 
         <main>

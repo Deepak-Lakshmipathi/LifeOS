@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react'
-import { selfLoadTasks } from '../../sync/selfLoadTasks'
 import type { Task } from '../../types'
 import { Vital } from '../glass/Vital'
 import { formatINR } from '../../vault/finance'
@@ -19,14 +17,13 @@ import { netWorthVital, burnVital, pipelineVital, completionVital } from '../../
  * selector — takes the vacated first slot. Net worth, Burn/income, and
  * Pipeline are unchanged by this move.
  *
- * App.tsx mounts `<VitalsRow />` with no props (it never edits this mount
- * point again), so the component sources its own task list via
- * `selfLoadTasks` (`src/sync/selfLoadTasks.ts`) — the same provider seam
- * App uses, with the load itself memoized so VitalsRow and Aurora (which
- * self-loads the same list for the warmth tint) share one `.list()` call
- * instead of firing two concurrent reads (issue #165). Tests inject `tasks`
- * directly, which short-circuits the load — the provider is never touched
- * under test.
+ * #186: VitalsRow used to self-load its own task list through the memoized
+ * `selfLoadTasks` module. That module had no production invalidation path,
+ * so Completion froze at the first read for the life of the page — a write
+ * through `useTasks` could never reach a cache it did not own. The list now
+ * has ONE owner (`useTasks` in `App.tsx`) and arrives as a required prop, so
+ * a completed task re-renders this tile like any other consumer. Same shape
+ * ADR-0016 applied to the vault transport.
  *
  * S41 fills the Net worth + Burn/income tiles from S39 finance-parser
  * output, passed in as the `networth`/`burn` props. VitalsRow does no
@@ -41,8 +38,8 @@ import { netWorthVital, burnVital, pipelineVital, completionVital } from '../../
  */
 
 export interface VitalsRowProps {
-  /** Loaded task list. Omit in-app (component self-loads); inject in tests. */
-  tasks?: Task[]
+  /** Loaded task list — owned by `useTasks` in App.tsx (#186). */
+  tasks: Task[]
   /** Net-worth series, ascending by date (`parseNetworthHistory` output). */
   networth?: NetworthPoint[]
   /** Income/spend per month, ascending (`parseBurn` output). */
@@ -51,33 +48,7 @@ export interface VitalsRowProps {
   pipeline?: JobEntry[]
 }
 
-export function VitalsRow({
-  tasks: tasksProp,
-  networth = [],
-  burn = [],
-  pipeline = [],
-}: VitalsRowProps = {}) {
-  const [loaded, setLoaded] = useState<Task[]>([])
-  const tasks = tasksProp ?? loaded
-
-  useEffect(() => {
-    // Tests inject tasks; skip the async load entirely so the provider (and
-    // its Dexie/vault I/O) is never reached under test.
-    if (tasksProp) return
-    let live = true
-    selfLoadTasks()
-      .then((all) => {
-        if (live) setLoaded(all)
-      })
-      .catch(() => {
-        // Completion is non-critical chrome — a failed read just leaves the
-        // tile at the honest no-data stub rather than surfacing an error.
-      })
-    return () => {
-      live = false
-    }
-  }, [tasksProp])
-
+export function VitalsRow({ tasks, networth = [], burn = [], pipeline = [] }: VitalsRowProps) {
   const completion = completionVital(tasks)
   const netWorth = netWorthVital(networth)
   const burnTile = burnVital(burn)
