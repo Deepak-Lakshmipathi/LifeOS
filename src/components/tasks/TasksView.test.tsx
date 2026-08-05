@@ -91,6 +91,9 @@ describe('TasksView — capture (#183)', () => {
   it.each(['Domains', 'Pulse'])('keeps the button on the %s segment', (segment) => {
     render(<TasksView {...baseProps} tasks={[]} />)
     fireEvent.click(screen.getByRole('tab', { name: segment }))
+    // Assert the switch actually happened — otherwise a no-op click would
+    // leave us on `tasks` and this would pass without testing anything.
+    expect(screen.getByRole('tab', { name: segment })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByLabelText('Add task')).toBeInTheDocument()
   })
 

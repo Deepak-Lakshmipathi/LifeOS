@@ -145,10 +145,10 @@ describe('S58 — Tasks tab re-parenting', () => {
   it('Home no longer shows the Up next / Later folds', async () => {
     render(<App />)
     // Wait for the real (fixture) task data to load and rank — checking
-    // immediately after mount (e.g. against the static "+ New task" button)
-    // would pass whether or not NowView is mounted, since the task list
-    // hasn't loaded yet at that instant. Waiting for a data-dependent pick
-    // makes the absence check below meaningful.
+    // immediately after mount (e.g. against a static element like the
+    // "Today's Mission" heading) would pass whether or not NowView is
+    // mounted, since the task list hasn't loaded yet at that instant.
+    // Waiting for a data-dependent pick makes the absence check meaningful.
     expect(await screen.findByText('Fixture task 1')).toBeInTheDocument()
     expect(screen.queryByText(/Up next/)).not.toBeInTheDocument()
     expect(screen.queryByText(/^Later/)).not.toBeInTheDocument()
