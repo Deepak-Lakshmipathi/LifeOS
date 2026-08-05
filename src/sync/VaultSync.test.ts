@@ -639,4 +639,31 @@ describe('VaultSync snapshot consistency after mutations', () => {
       `- [x] Track spending id:: ${task.id} priority:: 2\n`,
     )
   })
+
+  // ── S66/#176 — a corrupt vault FS can hand back a non-string content ───────
+  //
+  // `GitTransport` now drops these at the read site, but `list()` is the
+  // user-visible harm: a single ghost entry made `content.split('\n')` throw
+  // and rejected the WHOLE list, which post-S64 (no `refresh()` retry on the
+  // write paths) means an empty task list or a full-screen error card until
+  // the user reloads. Degrading to "one file missing" is the deliberate
+  // availability trade — the surfacing channel belongs to S68/#178.
+  it('list() survives an entry whose content is not a string, and still parses the good file (S66/#176)', async () => {
+    const transport: VaultTransport = {
+      readFiles: async () => [
+        // The ghost — `pfs.readFile` RESOLVED `undefined` for this path.
+        { path: 'Career/x.md', content: undefined as unknown as string },
+        { path: 'Growth/Reading.md', content: '- [ ] Real task\n' },
+      ],
+      writeFile: async () => {},
+    }
+
+    const sync = new VaultSync(transport)
+
+    const tasks = await sync.list()
+
+    // Anti-vacuity control: an implementation that swallowed the whole read
+    // would also "not throw", so pin the surviving task.
+    expect(tasks.map((t) => t.title)).toEqual(['Real task'])
+  })
 })

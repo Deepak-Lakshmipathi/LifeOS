@@ -29,7 +29,7 @@
 import type { SyncProvider } from './SyncProvider'
 import type { Task } from '../types'
 import type { VaultTransport } from '../vault/transport'
-import { GitTransport } from '../vault/transport'
+import { getVaultTransport } from '../vault/transport'
 import { parseTaskLine } from '../vault/parseVault'
 import { serializeTaskLine } from '../vault/serialize'
 import { isDomain } from '../data/domains'
@@ -83,9 +83,14 @@ interface SnapshotEntry {
 export class VaultSync implements SyncProvider {
   private readonly transport: VaultTransport
 
-  /** Allow injection for testing; defaults to the git-backed transport. */
+  /**
+   * Allow injection for testing; defaults to the process-wide vault
+   * transport. Both module-level `VaultSync` singletons (`App.tsx:22` and
+   * `selfLoadTasks.ts:31`) come through this one line, which is why S66 needs
+   * to touch neither file (#176, ADR-0016).
+   */
   constructor(transport?: VaultTransport) {
-    this.transport = transport ?? new GitTransport()
+    this.transport = transport ?? getVaultTransport()
   }
 
   // ── State ──────────────────────────────────────────────────────────────────
@@ -139,6 +144,16 @@ export class VaultSync implements SyncProvider {
     const snapshot = new Map<string, SnapshotEntry>()
 
     for (const { path, content } of files) {
+      // A corrupt IndexedDB store can surface an entry whose content is not a
+      // string (S66/#176 — `pfs.readFile` resolves `undefined` rather than
+      // throwing). `GitTransport` now drops those at the read site, but any
+      // transport reaching this seam must degrade to "one file missing"
+      // rather than `content.split('\n')` TypeError-ing and rejecting the
+      // entire list() — post-S64 there is no refresh() retry on the write
+      // paths, so a rejected mount list() means an empty list or a
+      // full-screen error card until the user reloads.
+      if (typeof content !== 'string') continue
+
       // ── Path → domain / project (same logic as parseVault) ──────────────
       const parts = path.replace(/\\/g, '/').split('/')
       if (parts.length < 2) continue

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { Card } from '../glass/Card'
 import { parseAttention, type AttentionItem, type AttentionLabel } from '../../vault/mail'
-import { GitTransport, type VaultTransport } from '../../vault/transport'
+import { getVaultTransport, type VaultTransport } from '../../vault/transport'
 
 /**
  * AttentionCard — the Home left-stack "Needs you" attention stack
@@ -55,7 +55,7 @@ function labelDisplay(label: AttentionLabel): string {
 export interface AttentionCardProps {
   /** Parsed attention items (open + handled). Omit in-app (self-loads via `transport`); inject in tests. */
   items?: AttentionItem[]
-  /** Read seam. Defaults to a fresh GitTransport. */
+  /** Read seam. Defaults to the shared process-wide vault transport (S66/#176). */
   transport?: VaultTransport
 }
 
@@ -77,7 +77,7 @@ export function AttentionCard({ items: itemsProp, transport }: AttentionCardProp
     let live = true
     ;(async () => {
       try {
-        const t = transport ?? new GitTransport()
+        const t = transport ?? getVaultTransport()
         const files = await t.readFiles()
         if (!live) return
         const md = files.find((f) => f.path === 'Mail/attention.md')?.content ?? ''

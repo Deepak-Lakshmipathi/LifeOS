@@ -20,6 +20,19 @@ const h = vi.hoisted(() => {
   const log = vi.fn().mockRejectedValue(new Error('no local repo'))
   const add = vi.fn().mockResolvedValue(undefined)
   const commit = vi.fn().mockResolvedValue(undefined)
+  const currentBranch = vi.fn().mockResolvedValue('main')
+  const resolveRef = vi.fn().mockRejectedValue(new Error('no remote ref'))
+  // S66/#176 spies. `fsCtor` counts LightningFS *constructions* — the whole
+  // point of the single-owner change is that this stops scaling with the
+  // number of readers. `fsInit` counts in-place `fs.init(name, opts)` calls,
+  // which is how the non-stealing reset replaces `new LightningFS(name,
+  // {wipe:true})`.
+  const fsCtor = vi.fn()
+  const fsInit = vi.fn()
+  // S66/#176 — paths whose readFile must RESOLVE `undefined` instead of
+  // throwing, mirroring DefaultBackend.readFile on an already-corrupt store
+  // (see FakeFS.readFile below).
+  const ghosts = new Set<string>()
   // Set to true the moment each mocked module's factory actually runs — i.e.
   // the moment GitTransport's dynamic `import(...)` for that specifier is
   // reached. vi.mock factories are lazy: they only execute on first import of
@@ -47,6 +60,24 @@ const h = vi.hoisted(() => {
   // `agents/<name>/status.json`).
   class FakeFS {
     private files = new Map<string, string>()
+
+    // Mirrors @isomorphic-git/lightning-fs@4.6.2 `index.js`: the FS ctor
+    // builds a PromisifiedFS which calls `init(name, options)` when a name is
+    // given, and `init` is public API in its own right (`index.js:34-36`).
+    // S66 relies on that second fact — it resets in place through `init`
+    // rather than constructing a second FS over the same store.
+    constructor(name?: string, options?: { wipe?: boolean }) {
+      fsCtor(name, options)
+      if (name) void this.init(name, options)
+    }
+
+    async init(name: string, options?: { wipe?: boolean }): Promise<void> {
+      fsInit(name, options)
+      // `{wipe:true}` is `idb.clear(store)` in the real backend — everything
+      // goes, including the superblock.
+      if (options?.wipe) this.files.clear()
+    }
+
     promises = {
       readdir: async (dirPath: string): Promise<string[]> => {
         const prefix = dirPath.endsWith('/') ? dirPath : `${dirPath}/`
@@ -61,7 +92,19 @@ const h = vi.hoisted(() => {
         if (entries.size === 0) throw new Error('ENOENT: no such directory')
         return [...entries]
       },
-      readFile: async (filePath: string): Promise<string> => {
+      // S66/#176 — the ghost-file case. Until this slice this mock *threw*
+      // for anything missing, which is precisely why the suite never caught
+      // the bug: the real backend does not throw. On a store that another
+      // LightningFS instance wiped mid-flight, `DefaultBackend.readFile`
+      // (`:100-127`) hits `stat = this._cache.stat(filepath)` — truthy, from
+      // the surviving in-memory tree — then `data = await this._idb.readFile
+      // (stat.ino)`, and `idb.get` RESOLVES `undefined` for a missing key.
+      // `this._http` is undefined (we never pass `url`), `if (!stat) throw
+      // ENOENT` is skipped because `stat` is truthy, so the function returns
+      // `undefined` **without throwing** and `transport.ts`'s `catch` never
+      // fires. `h.ghosts` seeds exactly that shape for a chosen path.
+      readFile: async (filePath: string): Promise<string | undefined> => {
+        if (ghosts.has(filePath)) return undefined
         const content = this.files.get(filePath)
         if (content === undefined) throw new Error('ENOENT: no such file')
         return content
@@ -72,13 +115,36 @@ const h = vi.hoisted(() => {
       mkdir: async (): Promise<void> => {},
     }
   }
-  return { clone, pull, push, log, add, commit, FakeFS, moduleReached }
+  return {
+    clone,
+    pull,
+    push,
+    log,
+    add,
+    commit,
+    currentBranch,
+    resolveRef,
+    fsCtor,
+    fsInit,
+    ghosts,
+    FakeFS,
+    moduleReached,
+  }
 })
 
 vi.mock('isomorphic-git', () => {
   h.moduleReached.isomorphicGit = true
   return {
-    default: { clone: h.clone, pull: h.pull, push: h.push, log: h.log, add: h.add, commit: h.commit },
+    default: {
+      clone: h.clone,
+      pull: h.pull,
+      push: h.push,
+      log: h.log,
+      add: h.add,
+      commit: h.commit,
+      currentBranch: h.currentBranch,
+      resolveRef: h.resolveRef,
+    },
   }
 })
 vi.mock('isomorphic-git/http/web', () => {
@@ -91,7 +157,8 @@ vi.mock('@isomorphic-git/lightning-fs', () => {
 })
 vi.mock('./pat', () => ({ getVaultPat: () => undefined, clearVaultPat: () => {} }))
 
-import { GitTransport } from './transport'
+import { GitTransport, getVaultTransport, __resetVaultTransport } from './transport'
+import { VaultSync } from '../sync/VaultSync'
 import { appendHabitHit } from './habitsWrite'
 import type { HabitHit } from './habits'
 
@@ -368,5 +435,246 @@ describe('GitTransport — recursive descent + agents/ .json allowlist (S61/#158
     const files = await transport.readFiles()
 
     expect(files.find((f) => f.path === deepPath)).toBeUndefined()
+  })
+})
+
+// ─── S66 / #176 — one owner of FS_NAME, non-stealing reset, ghost-file guard ──
+//
+// Harness rules for everything below (both are load-bearing):
+//
+//  1. **`vi.stubEnv('VITE_VAULT_REPO_URL', …)` is mandatory in every test that
+//     counts anything.** Without it `loadGit()` throws on S62's synchronous
+//     `if (!url)` guard before it ever constructs a LightningFS or calls
+//     `git.pull`, so every counter reads 0 and the test is vacuously green on
+//     master *and* on the fix.
+//  2. **`__resetVaultTransport()` in `beforeEach`.** The owner is a
+//     module-scoped memo (same idiom as `selfLoadTasks.ts:30-51`); without the
+//     reset, one test's transport — and its already-initialised `fs` — bleeds
+//     into the next.
+//
+// What these tests deliberately do NOT do: mock `navigator.locks`. jsdom has
+// none, so `DefaultBackend.init` (`:31`) picks the IDB `Mutex`, not `Mutex2`,
+// and the steal path that emits `AbortError: Lock broken by another request`
+// is structurally absent from this environment. A test that mocked it would
+// assert the mock's behaviour, not the browser's (the #120 failure mode).
+// Zero-`AbortError` is verified HITL against the deployed build — DoD #12.
+
+describe('GitTransport — single process-wide owner of FS_NAME (S66/#176)', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_VAULT_REPO_URL', 'https://example.invalid/vault.git')
+    __resetVaultTransport()
+    h.ghosts.clear()
+    h.fsCtor.mockClear()
+    h.fsInit.mockClear()
+    h.clone.mockClear()
+    h.pull.mockClear()
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    __resetVaultTransport()
+    h.ghosts.clear()
+    h.pull.mockRejectedValue(new Error('no pull'))
+  })
+
+  it('(i-a) constructs exactly ONE LightningFS across the 5 card defaults + both VaultSync singletons', async () => {
+    // `pull` succeeds so this measures the *fan-out* alone, with no reclone
+    // in the picture (a rejecting pull would additionally construct a second
+    // FS per instance on master and muddy the number).
+    h.pull.mockResolvedValue(undefined)
+
+    // The five self-loading cards' defaults — AttentionCard:80, FleetStrip:66,
+    // HabitsCard:124, HomeView:130, TodayCard:92 — each `transport ??
+    // getVaultTransport()`; plus the two module-level VaultSync singletons
+    // (App.tsx:22 and selfLoadTasks.ts:31), which both route through
+    // VaultSync.ts:88. Seven owners on master, one after this slice.
+    const appSync = new VaultSync()
+    const selfLoadSync = new VaultSync()
+    const readers: (() => Promise<unknown>)[] = [
+      () => getVaultTransport().readFiles(),
+      () => getVaultTransport().readFiles(),
+      () => getVaultTransport().readFiles(),
+      () => getVaultTransport().readFiles(),
+      () => getVaultTransport().readFiles(),
+      () => appSync.list(),
+      () => selfLoadSync.list(),
+    ]
+
+    // Sequential on purpose — see the harness note above (i-b): two
+    // GitTransports importing concurrently trips a Vitest mocker race. This
+    // test is about how many FS objects get built, not about overlap, so
+    // serialising costs it nothing.
+    for (const read of readers) await read()
+
+    expect(h.fsCtor).toHaveBeenCalledTimes(1)
+  })
+
+  it('(i-b) two overlapping reads from DIFFERENT consumers collapse to exactly one git.pull', async () => {
+    // The behavioural assertion, ranked above (i-a): object identity can be
+    // right while callers still construct their own transports, and this is
+    // the test that catches that half-fix. It is also the measured live win —
+    // seven `info/refs` handshakes per cold load collapse to one (#176).
+    //
+    // ── Harness note: why this is gated rather than a plain Promise.all ──
+    // Vitest's module mocker races when two dynamic `import()`s of the same
+    // `vi.mock`-ed specifier are in flight simultaneously: one importer gets
+    // the mock and the other gets the REAL `isomorphic-git`, which then tries
+    // to reach the network (verified in this worktree — a plain
+    // `Promise.all([a.readFiles(), b.readFiles()])` on two transports yields
+    // `fulfilled,rejected` with `getaddrinfo ENOTFOUND example.invalid`,
+    // while the same two reads run back-to-back give a clean `pull === 2`).
+    // Priming the modules first does not close the window. That race can only
+    // fire when more than one transport exists — i.e. only on the pre-fix
+    // code — so left unhandled it would corrupt this test's RED into a
+    // network error instead of the count it is supposed to report.
+    //
+    // The gate below sidesteps it without weakening the assertion: reader A
+    // is held *inside* `git.pull` (so its imports have already completed)
+    // before reader B starts, so the two imports never overlap while the two
+    // READS still do — which is the property under test.
+    let releasePull!: () => void
+    let signalPullEntered!: () => void
+    const pullReleased = new Promise<void>((r) => {
+      releasePull = r
+    })
+    const pullEntered = new Promise<void>((r) => {
+      signalPullEntered = r
+    })
+    h.pull.mockImplementation(async () => {
+      signalPullEntered()
+      await pullReleased
+    })
+
+    const card = getVaultTransport()
+    const sync = new VaultSync()
+
+    const cardRead = card.readFiles()
+    await pullEntered
+    const syncRead = sync.list()
+    releasePull()
+
+    await Promise.all([cardRead, syncRead])
+
+    expect(h.pull).toHaveBeenCalledTimes(1)
+  })
+
+  it('(DoD #8, forward guard — NOT red-first) each caller of one shared read gets its OWN entry objects', async () => {
+    // Honest label: on master the five cards and both VaultSyncs each own a
+    // transport, so each gets a freshly-built `result` array and this cannot
+    // fail for the reason S66 cares about. The singleton is what creates the
+    // hazard: `inflight` hands every sharer the identical array of identical
+    // objects, and VaultSync mutates entries in place (`VaultSync.ts:136`
+    // aliases it; `:240 :334 :379 :414` assign `fileEntry.content`; `:242`
+    // pushes). One VaultSync's write would otherwise rewrite what a card is
+    // rendering.
+    h.pull.mockResolvedValue(undefined)
+
+    const t = getVaultTransport()
+    await t.writeFile('Growth/Reading.md', '- [ ] Real task\n', 'seed')
+
+    const [first, second] = await Promise.all([t.readFiles(), t.readFiles()])
+
+    expect(first).not.toBe(second)
+
+    const a = first.find((f) => f.path === 'Growth/Reading.md')
+    const b = second.find((f) => f.path === 'Growth/Reading.md')
+    expect(a).toBeDefined()
+    expect(b).toBeDefined()
+    expect(a).not.toBe(b)
+
+    a!.content = 'MUTATED BY ANOTHER CONSUMER'
+    expect(b!.content).toBe('- [ ] Real task\n')
+  })
+
+  it('(ii) drops a ghost entry whose readFile RESOLVES undefined, and still returns the good file', async () => {
+    h.pull.mockResolvedValue(undefined)
+
+    const t = getVaultTransport()
+    await t.writeFile('Growth/good.md', '- [ ] Real task\n', 'seed good')
+    await t.writeFile('Growth/ghost.md', '- [ ] Lost task\n', 'seed ghost')
+    // Both files remain in the directory tree (readdir still lists them) —
+    // only the *content* read comes back undefined, exactly as a wiped IDB
+    // store behaves against a surviving cached superblock.
+    h.ghosts.add('/vault/Growth/ghost.md')
+
+    const files = await t.readFiles()
+
+    // Anti-vacuity control (#120 lesson): asserting only "no non-string
+    // content" is satisfied by an over-correcting implementation that drops
+    // *everything*, so pin the surviving path exactly.
+    expect(files.filter((f) => f.path.startsWith('Growth/')).map((f) => f.path)).toEqual([
+      'Growth/good.md',
+    ])
+    expect(files.every((f) => typeof f.content === 'string')).toBe(true)
+  })
+
+  it('(iii) pull-fail → reset → clone constructs NO second LightningFS and clones onto the same fs object', async () => {
+    // `pull` rejects (default) → `push` rejects → `log` rejects → ahead-count
+    // 0 → the reset path runs. This is the only test that pins the reset
+    // change; without it that one line ships untested.
+    const t = getVaultTransport()
+    await t.readFiles()
+
+    // (c) the reset genuinely still resets — a reset that silently stops
+    // resetting would make S66 *cause* #177's permanent staleness.
+    expect(h.clone).toHaveBeenCalledTimes(1)
+    expect(h.fsInit).toHaveBeenCalledWith('lifeos-vault', { wipe: true })
+
+    // (a) no second instance over the same IndexedDB store / lock name.
+    expect(h.fsCtor).toHaveBeenCalledTimes(1)
+
+    // (b) clone runs against the very object pull ran against.
+    const pullOpts = h.pull.mock.calls[0]![0]
+    const cloneOpts = h.clone.mock.calls[0]![0]
+    expect(cloneOpts.fs).toBe(pullOpts.fs)
+  })
+
+  it('(iv) ADR-0010 fence: unpushed local commits ⇒ refuses to wipe and never enters the reset path', async () => {
+    // pull rejects (default) → push rejects (default) → log resolves two local
+    // commits with an unresolvable remote ref ⇒ countCommitsAhead returns 2.
+    h.log.mockResolvedValueOnce([{ oid: 'aaaaaaa' }, { oid: 'bbbbbbb' }])
+
+    const t = getVaultTransport()
+
+    await expect(t.readFiles()).rejects.toThrow(
+      'vault pull failed and local commits are unpushed; refusing to wipe',
+    )
+
+    expect(h.clone).not.toHaveBeenCalled()
+    expect(h.fsInit).not.toHaveBeenCalledWith('lifeos-vault', { wipe: true })
+  })
+})
+
+describe('getVaultTransport — lazy module-scoped owner (S66/#176, DoD #2/#11)', () => {
+  beforeEach(() => {
+    __resetVaultTransport()
+  })
+  afterEach(() => {
+    __resetVaultTransport()
+  })
+
+  it('returns the same instance across calls', () => {
+    expect(getVaultTransport()).toBe(getVaultTransport())
+  })
+
+  it('__resetVaultTransport() mints a fresh owner (test seam, mirrors selfLoadTasks.ts:49)', () => {
+    const before = getVaultTransport()
+    __resetVaultTransport()
+    expect(getVaultTransport()).not.toBe(before)
+  })
+
+  it('is LAZY — no vault work happens until a caller actually reads', async () => {
+    // DoD #11: an eagerly-constructed `export const t = new GitTransport()`
+    // would be a module-import side effect, reviving #155's render budget and
+    // getVaultPat()'s blocking window.prompt. Merely *getting* the owner must
+    // touch neither the dynamic imports nor LightningFS. Note the env is
+    // deliberately NOT stubbed here.
+    h.fsCtor.mockClear()
+    getVaultTransport()
+    expect(h.fsCtor).not.toHaveBeenCalled()
+
+    await expect(getVaultTransport().readFiles()).rejects.toThrow(
+      'VITE_VAULT_REPO_URL is not configured',
+    )
+    expect(h.fsCtor).not.toHaveBeenCalled()
   })
 })

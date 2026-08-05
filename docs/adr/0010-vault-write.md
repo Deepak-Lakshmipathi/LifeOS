@@ -72,3 +72,5 @@ Regenerate the fine-grained PAT with **Contents: Read *and* Write** on the singl
 ## Slicing
 - **S15a (AFK):** pure serializer + `VaultSync` real mutations (splice, source-map, write-queue), driven by a **fake transport** → fully Vitest-covered, dual-green in CI. Adds `writeFile` to the `VaultTransport` interface + a throwing `GitTransport` stub. Write-set: `src/vault/serialize.ts`, `src/vault/serialize.test.ts`, `src/sync/VaultSync.ts`, `src/sync/VaultSync.test.ts`, `src/vault/transport.ts` (interface line + stub).
 - **S15b (HITL):** real `GitTransport.writeFile` (add/commit/best-effort push) + the wipe-reclone hazard fix + `Inbox/` folder scan + `parseVault` Inbox-filename rule. Not CI-testable → hand-verify against the real vault with the write PAT. Write-set: `src/vault/transport.ts`, `src/vault/parseVault.ts`. Blocked by S15a.
+
+See also: [ADR-0016](0016-single-owner-vault-fs.md) — single owner of the vault FS and non-stealing reset (S66/#176); it changes *how* a reset is performed and leaves this ADR's `commitsAhead === 0` gate byte-identical.
