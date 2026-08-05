@@ -1,0 +1,59 @@
+{
+  "slug": "s66-vault-fs-single-owner",
+  "slice": "S66",
+  "issue": 176,
+  "pr": 192,
+  "mode": "auto",
+  "path": "light / resume-at-P5",
+  "date": "2026-08-05",
+  "phases": {
+    "P0": "config + LESSONS.md read; dedupe hit — ticket, issue #176 and kanban card all pre-existed, DoD pre-resolved, so P1–P4 were already done in prior sessions",
+    "P0.5": "skipped — diagnosis already in the ticket (root causes #1–#3 verified against lightning-fs 4.6.2 source)",
+    "P1": "skipped — grill already done at authoring time; 8 owner decisions confirmed as a block at dispatch",
+    "P2": "skipped — light path, ticket carries its own PRD-lite + DoD",
+    "P3": "skipped — slice already cut",
+    "P3.5": "orchestrator re-verified the ticket's line references against master before dispatch (:217, :169-176, :209-214, :286-288, 7 construction sites) — no drift",
+    "P4": "no docs branch — ADR-0016 and the ADR-0010 cross-reference shipped inside the slice PR",
+    "P5": "1 implementer (Opus, fresh worktree) + 2 gate agents run concurrently against the frozen diff during the CI wait",
+    "P6": "manifest + lessons; kanban flip committed separately per the 2026-07-05 lesson"
+  },
+  "owner_decisions": {
+    "1": "re-scope #176 console-noise → data-integrity/High + re-title — DONE before dispatch",
+    "2": "in-place fs.init(FS_NAME,{wipe:true}) reset, option (c)",
+    "3": "no global unhandledrejection filter, not even as defence-in-depth",
+    "4": "cross-tab defers → #188; owner confirmed single-tab usage",
+    "5": "n/a — S67 was never dispatched",
+    "6": "DoD #12 HITL, owner-sanctioned",
+    "7": "new ADR + link-only amendment to ADR-0010",
+    "8": "file 4 follow-ups, implement none → #188 #189 #190 #191"
+  },
+  "counts": {
+    "implementer_attempts": 1,
+    "review_rejects": 0,
+    "eval_rejects": 0,
+    "flake_reruns": 0,
+    "model_escalations": 0,
+    "fallbacks_fired": 0,
+    "subagents_concurrent_max": 2
+  },
+  "ci": {
+    "build-test": "pass 1m16s (first attempt)",
+    "pwa-e2e": "pass 1m45s (first attempt — offline-persistence fingerprint did NOT fire)",
+    "bot-test": "pass 14s (first attempt)"
+  },
+  "gates": {
+    "ci": "green, re-read by orchestrator at merge time",
+    "eval": "PASS — mutation-verified in an isolated worktree, all 3 implementer claims independently confirmed",
+    "review": "GREEN — 1 non-blocking finding (doc-comment duplication, ~15-20 lines at transport.ts:461-467/:477-485)"
+  },
+  "ticket_defects_found": [
+    "owner decision 7 named ADR-0011, which has been Accepted since S16 (bot-transport-identity-router); 0011–0015 all occupied. Filed as 0016.",
+    "DoD #6 was unreachable from the declared write-set — VaultSync.list() splits on whatever the INJECTED transport returns, and the DoD's own test injects a fake, so a transport-level guard cannot satisfy it. Needed a guard inside list().",
+    "the naive Promise.all shape of test (i-b) would have passed on master for the wrong reason — a Vitest race between concurrent dynamic import()s of a vi.mock-ed specifier lets one importer reach the real isomorphic-git and hit the network, yielding pull===1 on unfixed code."
+  ],
+  "outcome": "merged squash a3245df; #176 closed; S67a unblocked; DoD #12 HITL-pending",
+  "open_after_run": {
+    "hitl": "DoD #12 — zero 'Lock broken by another request' across two full mount cycles of the deployed build, including one where the remote 401s",
+    "deferred": [188, 189, 190, 191]
+  }
+}
