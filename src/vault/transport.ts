@@ -471,8 +471,7 @@ let sharedTransport: GitTransport | null = null
  * module-import side effect, which is the one thing this file is organised to
  * avoid (deferred dynamic imports; S62's synchronous config check ahead of
  * `import()`) — it would revive #155's render budget and `getVaultPat()`'s
- * blocking `window.prompt` on unconfigured builds. Same lazy-memo + test-reset
- * idiom as `selfLoadTasks.ts:30-51`.
+ * blocking `window.prompt` on unconfigured builds.
  *
  * **Known limitation — cross-tab contention (tracked as #188).** This memo is
  * per JavaScript realm, so two tabs of the PWA are still two owners of one
@@ -491,7 +490,7 @@ export function getVaultTransport(): VaultTransport {
 /**
  * Test-only: clear the module-scoped owner so state cannot bleed between
  * tests. Call from `beforeEach` in any suite that exercises the real read
- * path. Mirrors `__resetSelfLoadTasksCache()` (`selfLoadTasks.ts:49`).
+ * path.
  */
 export function __resetVaultTransport(): void {
   sharedTransport = null

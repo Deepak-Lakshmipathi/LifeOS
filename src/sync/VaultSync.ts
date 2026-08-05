@@ -85,9 +85,9 @@ export class VaultSync implements SyncProvider {
 
   /**
    * Allow injection for testing; defaults to the process-wide vault
-   * transport. Both module-level `VaultSync` singletons (`App.tsx:22` and
-   * `selfLoadTasks.ts:31`) come through this one line, which is why S66 needs
-   * to touch neither file (#176, ADR-0016).
+   * transport. Every module-level `VaultSync` comes through this one line,
+   * which is why S66 needs to touch none of them (#176, ADR-0016). #186
+   * deleted the second one (`selfLoadTasks.ts`), leaving `App.tsx:22`.
    */
   constructor(transport?: VaultTransport) {
     this.transport = transport ?? getVaultTransport()
