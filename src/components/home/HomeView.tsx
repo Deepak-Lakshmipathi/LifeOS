@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../../types'
-import { CaptureSheet } from '../CaptureSheet'
 import { MissionCard } from './MissionCard'
 import { DayReview } from './DayReview'
 import { HabitsCard } from './HabitsCard'
@@ -55,27 +53,23 @@ import { getVaultTransport, type VaultTransport } from '../../vault/transport'
  * Up next / Later folds (`NowView`, previously rendered here with
  * `hideLive`) move out entirely into the new Tasks tab
  * (`src/components/tasks/TasksView.tsx`), alongside the old Domains/Pulse
- * top-level tabs as `Segmented` sub-nav segments. Home keeps + New task,
- * MissionCard, AttentionCard and the whole right stack (Today, Habits,
- * Fleet strip) — nothing else changes.
+ * top-level tabs as `Segmented` sub-nav segments. Home keeps MissionCard,
+ * AttentionCard and the whole right stack (Today, Habits, Fleet strip).
  *
- * Capture used to live on the bottom TabBar's `+` button; the cockpit's tab
- * bar is a top pill with no `+`, so the add flow moves in here as a "New task"
- * button that opens the same bottom sheet.
+ * **Capture is NOT here — do not add it back.** History, so this isn't
+ * re-litigated a third time: v1 put capture on the bottom TabBar's `+`; the
+ * cockpit's tab bar is a top pill with no `+`, so S58 parked the add flow on
+ * Home as a "+ New task" button. #183 finished the S58 thought the owner had
+ * actually asked for — if Home is only the check-in surface, a write
+ * affordance does not belong on it. The button and its bottom sheet now live
+ * in `TasksView`, which is the only capture surface in the app. HomeView
+ * takes no `onAdd` prop at all, so re-adding capture here is a deliberate
+ * act, not an accident.
  */
-
-type AddInput = {
-  title: string
-  done_when?: string
-  priority?: 1 | 2 | 3
-  project?: string
-  domain?: string
-}
 
 interface HomeViewProps {
   tasks: Task[]
   onToggle: (id: string) => Promise<void>
-  onAdd: (input: AddInput) => Promise<void>
   /**
    * S29: forces `useTimeOfDay`'s mode for deterministic Day Review
    * visibility tests (same injection pattern Header's own seg-control
@@ -97,12 +91,10 @@ interface HomeViewProps {
 export function HomeView({
   tasks,
   onToggle,
-  onAdd,
   modeOverride,
   briefLines: briefLinesProp,
   briefTransport,
 }: HomeViewProps) {
-  const [addOpen, setAddOpen] = useState(false)
   const [loadedBriefLines, setLoadedBriefLines] = useState<string[]>([])
   // Own useTimeOfDay instance (mirrors Header's, same wall clock — both
   // agree under normal operation). Known gap, out of this slice's write-set
@@ -144,11 +136,6 @@ export function HomeView({
 
   const briefLines = briefLinesProp ?? loadedBriefLines
 
-  const handleAdd = async (input: AddInput) => {
-    await onAdd(input)
-    setAddOpen(false)
-  }
-
   return (
     <div>
       {mode === 'am' && briefLines.length > 0 && (
@@ -167,17 +154,6 @@ export function HomeView({
 
       <div className="grid grid-cols-1 gap-3.5 [@media(min-width:841px)]:grid-cols-[1.5fr_1fr]">
         <div>
-          <div className="mb-3 flex justify-end">
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              aria-label="Add task"
-              className="rounded-[999px] border border-panel-brd bg-panel px-4 py-[7px] text-[13px] text-txt backdrop-blur-seg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-txt"
-            >
-              + New task
-            </button>
-          </div>
-
           <div className="mb-3">
             <MissionCard tasks={tasks} onToggle={onToggle} />
           </div>
@@ -195,46 +171,6 @@ export function HomeView({
         </div>
       </div>
 
-      {/* Add task sheet — slides up from bottom (v1 capture flow, unchanged behavior). */}
-      <AnimatePresence>
-        {addOpen && (
-          <motion.div
-            key="add-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-30"
-            style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
-            onClick={() => setAddOpen(false)}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="absolute bottom-0 left-0 right-0 mx-auto max-w-shell rounded-t-card border border-panel-brd bg-panel backdrop-blur-card"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="h-1 w-10 rounded-full bg-white/20" />
-              </div>
-              <div className="flex items-center justify-between px-4 pb-1">
-                <span className="text-base font-semibold text-txt">New Task</span>
-                <button
-                  type="button"
-                  onClick={() => setAddOpen(false)}
-                  className="text-sm font-medium text-dim focus:outline-none"
-                >
-                  Cancel
-                </button>
-              </div>
-              <CaptureSheet onAdd={handleAdd} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }

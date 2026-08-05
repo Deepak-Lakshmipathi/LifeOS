@@ -18,7 +18,6 @@ function noopAsync() {
 const baseProps = {
   tasks: [] as Task[],
   onToggle: noopAsync(),
-  onAdd: noopAsync(),
 }
 
 describe('HomeView — Day Review visibility (§6)', () => {
@@ -51,10 +50,25 @@ describe('HomeView — right stack mounts HabitsCard (S32)', () => {
     expect(screen.getByTestId('habits-card')).toBeInTheDocument()
   })
 
-  it('does not break existing HomeView mount points (add-task button, mission card)', () => {
+  it('does not break the existing HomeView mission-card mount point', () => {
     render(<HomeView {...baseProps} modeOverride="am" />)
-    expect(screen.getByLabelText('Add task')).toBeInTheDocument()
     expect(screen.getByText("Today's Mission")).toBeInTheDocument()
+  })
+})
+
+describe('HomeView — capture is gone (#183)', () => {
+  // Home is the check-in surface; the write affordance lives on the Tasks tab
+  // (`TasksView`) and nowhere else. Asserted here rather than only in
+  // TasksView's suite so that re-adding a button to Home turns something red.
+  it('renders no capture affordance', () => {
+    render(<HomeView {...baseProps} modeOverride="am" />)
+    expect(screen.queryByLabelText('Add task')).not.toBeInTheDocument()
+    expect(screen.queryByText('+ New task')).not.toBeInTheDocument()
+  })
+
+  it('renders no capture affordance in pm mode either', () => {
+    render(<HomeView {...baseProps} modeOverride="pm" />)
+    expect(screen.queryByLabelText('Add task')).not.toBeInTheDocument()
   })
 })
 
@@ -140,7 +154,7 @@ describe('HomeView — daily-brief morning-only surface (S50)', () => {
 
   it('does not break existing mount points when the brief is present', () => {
     render(<HomeView {...baseProps} modeOverride="am" briefLines={FIVE_BRIEF_LINES} />)
-    expect(screen.getByLabelText('Add task')).toBeInTheDocument()
+    expect(screen.getByText("Today's Mission")).toBeInTheDocument()
     expect(screen.getByTestId('habits-card')).toBeInTheDocument()
   })
 })

@@ -86,7 +86,7 @@ describe('S63 — shell navigation is independent of panel animation behaviour',
 
     // Home is the default tab and exits cleanly — establishes that the shell
     // navigates at all, so a failure below is attributable to the trap panel.
-    expect(await screen.findByText('+ New task')).toBeInTheDocument()
+    expect(await screen.findByText("Today's Mission")).toBeInTheDocument()
 
     // Mount the trap panel. (Guards against a vacuous pass: if the module mock
     // silently failed, the real MoneyView would render and this would fail
@@ -102,7 +102,7 @@ describe('S63 — shell navigation is independent of panel animation behaviour',
     //    so one missing ack is a total blackout — this is the #173 assertion.
     await waitFor(() =>
       expect(
-        screen.queryByText('+ New task'),
+        screen.queryByText("Today's Mission"),
         'the incoming tab panel never mounted: the shell is blocked waiting on a presence acknowledgement that will never arrive (#173)',
       ).not.toBeNull(),
     )

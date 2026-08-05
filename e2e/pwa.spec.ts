@@ -88,18 +88,21 @@ test('app shell renders offline after SW caches it', async ({ page, context }) =
 // 4. Offline persistence (IndexedDB survives offline cold reload)
 // ---------------------------------------------------------------------------
 test('tasks added online persist after going offline and reloading', async ({ page, context }) => {
-  // --- Online: add a task via the + tab ---
+  // --- Online: add a task from the Tasks tab ---
   await page.goto('/?noseed')
   await page.evaluate(() => navigator.serviceWorker.ready)
 
-  // S7: tasks are added via the + tab which opens a bottom sheet
+  // Capture opens a bottom sheet. #183 moved that affordance off Home (the
+  // check-in surface) onto the Tasks tab, so navigate there first — Home no
+  // longer has an "Add task" button at all.
+  await page.getByTestId('tab-bar').getByText('Tasks').click()
   await page.getByRole('button', { name: 'Add task' }).click()
 
   const input = page.getByLabel('Capture task')
   await input.fill('emu-test')
   await input.press('Enter')
 
-  // Sheet closes and task is visible in the Now view (default tab)
+  // Sheet closes and the task is visible in NowView on the Tasks tab.
   await expect(page.getByText('emu-test')).toBeVisible()
 
   // --- Go offline and cold-reload ---
@@ -109,7 +112,10 @@ test('tasks added online persist after going offline and reloading', async ({ pa
   // App shell must render (tab bar = shell-rendered signal)
   await expect(page.getByTestId('tab-bar')).toBeVisible()
 
-  // Task data from IndexedDB must still be listed
+  // Task data from IndexedDB must still be listed. The reload lands on Home
+  // (the default tab), where the task shows in MissionCard's picks — this
+  // assertion read Home before #183 too, so the surface under test here is
+  // unchanged by that move.
   await expect(page.getByText('emu-test')).toBeVisible()
 })
 

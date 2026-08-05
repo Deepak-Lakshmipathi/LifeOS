@@ -141,13 +141,12 @@ export default function App() {
                `key` change is what swaps tabs: React unmounts the outgoing
                section synchronously and the incoming one fades in. */
             <motion.section key={tab} {...tabMotion}>
-              {tab === 'home' && (
-                <HomeView tasks={tasks} onToggle={toggleDone} onAdd={addTask} />
-              )}
+              {tab === 'home' && <HomeView tasks={tasks} onToggle={toggleDone} />}
               {tab === 'tasks' && (
                 <TasksView
                   tasks={tasks}
                   onToggle={toggleDone}
+                  onAdd={addTask}
                   onDelete={deleteTask}
                   onUpdate={updateTask}
                   projects={projects}
